@@ -12,7 +12,7 @@ enable_testing()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-list(APPEND CMAKE_MODULE_PATH
+list(PREPEND CMAKE_MODULE_PATH
 	"${CMAKE_SOURCE_DIR}/CMake/"
 	"${CMAKE_SOURCE_DIR}/CMake/Modules/"
 	"${CMAKE_BINARY_DIR}"
@@ -65,8 +65,19 @@ else()
 endif()
 
 #-------------------------------------------------------------
-# Dependency options
+# Dependencies and options
 #-------------------------------------------------------------
+include_directories(
+	external/cxxtimer-1.0.0
+	external/px-4799d7e
+	external/xsimd-7.4.10/include
+)
+if (TRUE) #BUILD_FFT_OCEAN_PLUGIN)
+	# TODO: Have this enabled by default...
+	include_directories(external/xsimd-7.4.10/include)
+	add_subdirectory(external/mufft-47bb086)
+endif()
+
 OPTION(Boost_STATIC_LIBS "Boost use static libs")
 if (Boost_STATIC_LIBS)
 	set(Boost_USE_STATIC_LIBS ON)

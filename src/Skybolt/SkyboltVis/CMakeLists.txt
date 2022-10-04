@@ -23,8 +23,8 @@ if (OSG_STATIC_LIBS)
 	)
 endif()
 
-find_package(OSG REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer ${OSG_STATIC_LINK_PLUGIN_NAMES})
-include_directories(${OSG_INCLUDE_DIR})
+find_package(OpenSceneGraph REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer ${OSG_STATIC_LINK_PLUGIN_NAMES})
+include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS})
 
 find_package(OpenThreads)
 
@@ -44,7 +44,7 @@ set(LIBRARIES
 	SkyboltSim
 	MapAttributesConverter
 	${Boost_LIBRARIES}
-	${OSG_LIBRARIES}
+	${OPENSCENEGRAPH_LIBRARIES}
 	${OPENTHREADS_LIBRARIES}
 	${muFFT_LIBRARIES}
 	cxxtimer::cxxtimer
@@ -71,7 +71,7 @@ endif()
 
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
-target_include_directories(${LIB_NAME} PUBLIC ${OSG_INCLUDE_DIR})
+target_include_directories(${LIB_NAME} PUBLIC ${OPENSCENEGRAPH_INCLUDE_DIR})
 target_link_libraries(${LIB_NAME} ${LIBRARIES})
 
 skybolt_install(${LIB_NAME})

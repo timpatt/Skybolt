@@ -1,3 +1,4 @@
+from pathlib import Path
 from conans import ConanFile, CMake
 import os
 
@@ -21,36 +22,37 @@ class SkyboltConan(ConanFile):
     no_copy_source = True
 
     requires = [
-		"boost/1.75.0@_/_",
-		"catch2/2.13.8@_/_",
-		"cpp-httplib/0.10.1@_/_",
-		"earcut/2.2.3@_/_",
-		"glm/0.9.9.8@_/_",
-		"nlohmann_json/3.10.5@_/_",
-		"zlib/1.2.12@_/_" # Indirect dependency. Specified to resolve version clash between boost and freetype.
+		"boost/1.75.0",
+		"catch2/2.13.8",
+		"cpp-httplib/0.10.1",
+		"earcut/2.2.3",
+		"glm/0.9.9.8",
+		"nlohmann_json/3.10.5",
+		"zlib/1.2.12", # Indirect dependency. Specified to resolve version clash between boost and freetype.
+        "openscenegraph-mr/3.7.0@prograda/stable",
 	]
 
-    def include_package(self, name, version, subfolder=None):
-        currentDir = os.path.dirname(os.path.abspath(__file__))
-        recipes_path = os.path.join(currentDir, "Conan/Recipes", name)
-        if (subfolder):
-            recipes_path = os.path.join(recipes_path, subfolder)
-            
-        self.run(("conan export . %s/%s@user/stable" % (name, version)), cwd=recipes_path)
-        self.requires(("%s/%s@user/stable" % (name, version)))
+	# Enable/disable fix - allow fallback to standard openscenegraph?
+	# TODO: Build using conan
+	# conan export Conan/Recipes/openscenegraph-mr openscenegraph-mr/3.7.0@prograda/stable
+	# ... in build directory:
+	# conan install <path-to-top-level-conan-file> -s build_type=[Debug|Release]
+	
+	# ******************
+	# TODO: How to configure cmake to build using default conanfile settings?
+	# ******************
+	
+
+
+
+
 
     def configure(self):
         self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
 
     def requirements(self):
-        self.include_package("cxxtimer", "1.0.0")
-        self.include_package("px_sched", "1.0.0")
-        self.include_package("openscenegraph-mr", "3.7.0", "all")
+        return
 		
-        if self.options.enableFftOcean:
-            self.include_package("mufft", "1.0.0")
-            self.include_package("xsimd", "7.4.10")
-
     def build(self):
         cmake = CMake(self)
 

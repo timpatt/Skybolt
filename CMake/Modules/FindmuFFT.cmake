@@ -3,43 +3,24 @@
 #  muFFT_LIBRARIES, libraries to link against
 #  muFFT_INCLUDE_DIR, where to find headers
 
-FIND_PATH(muFFT_INCLUDE_DIR muFFT/fft.h
-  PATH_SUFFIXES
-  include
+if(TARGET muFFT)
+	set(muFFT_TARGET_FOUND TRUE)
+
+	get_target_property(muFFT_INCLUDE_DIR muFFT INCLUDE_DIRECTORIES)
+
+	set(muFFT_LIBRARIES)
+	list(APPEND muFFT_FIND_COMPONENTS muFFT-sse muFFT-sse3 muFFT-avx)
+	list(REMOVE_DUPLICATES muFFT_FIND_COMPONENTS)
+	foreach(_component ${muFFT_FIND_COMPONENTS})
+		if (TARGET "${_component}")
+			list(APPEND muFFT_LIBRARIES ${_component})
+			set(muFFT_${_component}_FOUND TRUE)
+		endif()
+	endforeach()
+	
+endforeach()
+
+find_package_handle_standard_args(muFFT
+	REQUIRED_VARS muFFT_TARGET_FOUND
+	HANDLE_COMPONENTS
 )
-
-FIND_LIBRARY(muFFT_CORE_LIBRARY
-  NAMES muFFT
-  PATH_SUFFIXES
-  lib
-)
-
-FIND_LIBRARY(muFFT_SSE_LIBRARY
-  NAMES muFFT-sse
-  PATH_SUFFIXES
-  lib
-)
-
-FIND_LIBRARY(muFFT_SSE3_LIBRARY
-  NAMES muFFT-sse3
-  PATH_SUFFIXES
-  lib
-)
-
-
-FIND_LIBRARY(muFFT_AVX_LIBRARY
-  NAMES muFFT-avx
-  PATH_SUFFIXES
-  lib
-)
-
-set(muFFT_LIBRARIES
-	${muFFT_CORE_LIBRARY}
-	${muFFT_SSE_LIBRARY}
-	${muFFT_SSE3_LIBRARY}
-	${muFFT_AVX_LIBRARY}
-)
-
-IF(muFFT_LIBRARIES AND muFFT_INCLUDE_DIR)
-  SET(muFFT_FOUND "YES")
-ENDIF()

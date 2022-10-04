@@ -7,8 +7,8 @@ include_directories("../")
 find_package(Catch2 REQUIRED)
 
 # TODO: Remove this dependency. Common should not need to depend on osg.
-find_package(OSG REQUIRED COMPONENTS osg)
-include_directories(${OSG_INCLUDE_DIR})
+find_package(OpenSceneGraph REQUIRED COMPONENTS osg)
+include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS})
 
 add_executable(${APP_NAME} ${SOURCE_FILES})
 
