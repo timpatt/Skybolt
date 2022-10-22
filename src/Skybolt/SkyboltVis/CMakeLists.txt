@@ -39,8 +39,9 @@ endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(LIBRARIES)
 
-if (OSG_STATIC_LIBS)
+if (FALSE AND OSG_STATIC_LIBS)
 	# Statically link to dependencies of OSG dependencies
+	# (Surely OSG should already link these in if it requires them??)
 	find_package(CURL REQUIRED)
 	find_package(Freetype REQUIRED)
 	find_package(JPEG REQUIRED)
@@ -58,8 +59,8 @@ endif()
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
 target_include_directories(${LIB_NAME} PUBLIC ${OPENSCENEGRAPH_INCLUDE_DIRS})
-message("OSG_STATIC_LIBS = ${OSG_STATIC_LIBS}")
-message(FATAL_ERROR "OPENSCENEGRAPH_LIBRARIES= ${OPENSCENEGRAPH_LIBRARIES}")
+#message("OSG_STATIC_LIBS = ${OSG_STATIC_LIBS}")
+#message(FATAL_ERROR "OPENSCENEGRAPH_LIBRARIES= ${OPENSCENEGRAPH_LIBRARIES}")
 target_link_libraries(${LIB_NAME}
 	SkyboltCommon
 	SkyboltSim

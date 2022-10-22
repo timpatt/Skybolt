@@ -7,27 +7,26 @@ include_directories("../../")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(muFFT REQUIRED)
-include_directories(${muFFT_INCLUDE_DIR})
+find_package(muFFT REQUIRED COMPONENTS sse sse3 avx)
 
-find_package(cxxtimer)
-find_package(xsimd)
+# TODO: Required?
+find_package(cxxtimer REQUIRED)
+find_package(xsimd REQUIRED)
 
 set(LIBS
-	cxxtimer::cxxtimer
-	SkyboltEngine
-	${muFFT_LIBRARIES}
-	xsimd::xsimd
 )
 
 add_definitions(-D_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING) # disable deprecation warning for xsimd
 
 add_library(${TARGET_NAME} ${SKYBOLT_PLUGINS_LIBRARY_TYPE} ${SrcFiles})
 
-target_link_libraries (${TARGET_NAME} ${LIBS})
-
-target_include_directories(${TARGET_NAME} PUBLIC
-	${muFFT_INCLUDE_DIR}
+target_link_libraries (${TARGET_NAME}
+	PRIVATE 
+		cxxtimer::cxxtimer
+		muFFT::muFFT muFFT::sse muFFT::sse3 muFFT::avx
+	PUBLIC
+		SkyboltEngine	
+		xsimd
 )
 
 set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE) #Export symbols for tests

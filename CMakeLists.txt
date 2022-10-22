@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.24)
+cmake_minimum_required (VERSION 3.20)
 cmake_policy(SET CMP0020 NEW)
 cmake_policy(SET CMP0074 NEW) # allow <PackageName>_ROOT variables
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0") 
@@ -67,14 +67,13 @@ endif()
 #-------------------------------------------------------------
 # Dependencies and options
 #-------------------------------------------------------------
-include_directories(
-	external/cxxtimer-1.0.0
-	external/px-4799d7e
-	external/xsimd-7.4.10/include
-)
 if (TRUE) #BUILD_FFT_OCEAN_PLUGIN)
 	# TODO: Have this enabled by default...
-	include_directories(external/xsimd-7.4.10/include)
+	
+	add_subdirectory(external/xsimd-7.4.10)
+	# Allow find_package(xsimd) find the package!
+	set(xsimd_DIR "${CMAKE_CURRENT_BINARY_DIR}/external/xsimd-7.4.10")
+	
 	add_subdirectory(external/mufft-47bb086)
 endif()
 
