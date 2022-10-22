@@ -18,7 +18,7 @@
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/Math/QuadTreeUtility.h>
 
-#include <cxxtimer/cxxtimer.hpp>
+#include <cxxtimer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <mutex>
 

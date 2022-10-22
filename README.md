@@ -203,3 +203,14 @@ The settings file can be loaded by example applications with the --settingsFile 
 By default, the PlanetEarth entity uses mapbox for albedo and elevation data. To use mapbox, you must acquire an API key from https://mapbox.com
 Without an API key, the tiles will not download, the the planet will not render correctly. If desired, PlanetEarth can be edited to use Bing maps for albedo instead. A bing key can be obtained from https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key
 Keys are stored in the engine json settings file (see above).
+
+
+# Tim's Building
+* Require conan on the path
+* `conan export Conan/Recipes/openscenegraph-mr openscenegraph-mr/3.7.0@prograda/stable`
+* `mkdir build`
+* `cd build`
+* These require CMake to be on the path (it's available in Visual Studio 2019 under the Developer Command Prompt):
+  * `conan install .. --build=missing -s build_type=Release`
+  * `conan install .. --build=missing -s build_type=Debug`
+* 

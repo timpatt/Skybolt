@@ -9,7 +9,7 @@
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <nlohmann/json.hpp>
-#include <px_sched/px_sched.h>
+#include <px_sched.h>
 
 namespace skybolt {
 

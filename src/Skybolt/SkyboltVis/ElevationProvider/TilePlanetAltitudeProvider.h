@@ -13,7 +13,7 @@
 #include <SkyboltCommon/Math/QuadTree.h>
 
 #include <osg/Image>
-#include <px_sched/px_sched.h>
+#include <px_sched.h>
 #include <optional>
 
 namespace skybolt {

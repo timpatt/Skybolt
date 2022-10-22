@@ -6,7 +6,7 @@ required_conan_version = ">=1.29.1"
 
 
 class OpenSceneGraphConanFile(ConanFile):
-    name = "openscenegraph-mr"
+    name = "openscenegraph"
     description = "OpenSceneGraph is an open source high performance 3D graphics toolkit"
     topics = ("openscenegraph", "graphics")
     url = "https://github.com/conan-io/conan-center-index"

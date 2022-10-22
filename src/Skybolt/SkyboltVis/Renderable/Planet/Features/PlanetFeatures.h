@@ -14,7 +14,7 @@
 #include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/File/FileLocator.h>
 #include <SkyboltCommon/Math/QuadTree.h>
-#include <px_sched/px_sched.h>
+#include <px_sched.h>
 #include <osg/MatrixTransform>
 
 namespace skybolt {

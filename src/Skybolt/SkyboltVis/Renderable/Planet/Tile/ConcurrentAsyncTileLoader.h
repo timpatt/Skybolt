@@ -8,7 +8,7 @@
 
 #include "AsyncTileLoader.h"
 
-#include <px_sched/px_sched.h>
+#include <px_sched.h>
 
 namespace skybolt {
 namespace vis {

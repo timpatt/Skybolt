@@ -7,7 +7,7 @@
 #include <catch2/catch.hpp>
 
 #define PX_SCHED_IMPLEMENTATION 1
-#include <px_sched/px_sched.h>
+#include <px_sched.h>
 
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/TileSource.h>

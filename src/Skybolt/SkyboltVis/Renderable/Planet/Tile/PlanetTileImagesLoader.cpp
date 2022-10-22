@@ -16,7 +16,7 @@
 
 //#define ENABLE_TILE_IMAGE_LOADER_PROFILING
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
-#include <cxxtimer/cxxtimer.hpp>
+#include <cxxtimer.hpp>
 #endif
 
 using namespace skybolt;

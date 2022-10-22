@@ -24,7 +24,7 @@
 #include "SkyboltVis/Renderable/Planet/Tile/PlanetSubdivisionPredicate.h"
 #include "SkyboltVis/Renderable/Planet/Tile/PlanetTileImagesLoader.h"
 #include <SkyboltCommon/Math/MathUtility.h>
-#include <cxxtimer/cxxtimer.hpp>
+#include <cxxtimer.hpp>
 
 #include <osg/Geode>
 #include <osg/Geometry>

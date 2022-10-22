@@ -17,7 +17,7 @@
 #include <SkyboltCommon/Math/MathUtility.h>
 
 #define PX_SCHED_IMPLEMENTATION 1
-#include <px_sched/px_sched.h>
+#include <px_sched.h>
 
 #include <osgDB/Registry>
 #include <boost/log/trivial.hpp>

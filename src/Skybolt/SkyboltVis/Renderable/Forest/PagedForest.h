@@ -9,7 +9,7 @@
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/DefaultRootNode.h"
 #include "SkyboltVis/OsgBox2.h"
-#include <px_sched/px_sched.h>
+#include <px_sched.h>
 #include <osg/Image>
 #include <atomic>
 #include <functional>
