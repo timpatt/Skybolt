@@ -18,6 +18,8 @@ list(PREPEND CMAKE_MODULE_PATH
 	"${CMAKE_BINARY_DIR}"
 )
 
+set(CMAKE_FIND_DEBUG_MODE FALSE)
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -67,13 +69,12 @@ endif()
 #-------------------------------------------------------------
 # Dependencies and options
 #-------------------------------------------------------------
-if (TRUE) #BUILD_FFT_OCEAN_PLUGIN)
+if (BUILD_FFT_OCEAN_PLUGIN)
 	# TODO: Have this enabled by default...
 	
 	add_subdirectory(external/xsimd-7.4.10)
 	# Allow find_package(xsimd) find the package!
 	set(xsimd_DIR "${CMAKE_CURRENT_BINARY_DIR}/external/xsimd-7.4.10")
-	
 	add_subdirectory(external/mufft-47bb086)
 endif()
 

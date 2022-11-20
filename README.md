@@ -213,4 +213,8 @@ Keys are stored in the engine json settings file (see above).
 * These require CMake to be on the path (it's available in Visual Studio 2019 under the Developer Command Prompt):
   * `conan install .. --build=missing -s build_type=Release`
   * `conan install .. --build=missing -s build_type=Debug`
-* 
+* $ cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release (or equivalent from UI)
+* $ cmake --build
+
+* Troubleshooting 
+* - if you can't find include files - make sure you've run the conan install command with the appropriate build_type (ie. are you building the versions that you've installed?)

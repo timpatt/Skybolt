@@ -9,7 +9,7 @@ find_dependency(earcut)
 find_dependency(glm)
 find_dependency(httplib)
 find_dependency(nlohmann_json)
-find_dependency(px_sched)
+find_dependency(px)
 
 if (@SKYBOLT_PLUGINS_STATIC_BUILD@)
 	if (@BUILD_FFT_OCEAN_PLUGIN@)

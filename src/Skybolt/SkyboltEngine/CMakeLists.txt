@@ -6,6 +6,7 @@ include_directories("../")
 
 find_package(Boost COMPONENTS log program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
+find_package(px REQUIRED)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -15,6 +16,7 @@ set(LIBRARIES
 	SkyboltVis
 	${Boost_LIBRARIES}
 	${CMAKE_DL_LIBS} # Required by gcc
+	px::px
 )
 
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})

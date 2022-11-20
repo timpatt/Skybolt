@@ -21,7 +21,8 @@ if (OSG_STATIC_LIBS)
 		osgdb_tga
 	)
 endif()
-find_package(OpenSceneGraph REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer)# ${OSG_STATIC_LINK_PLUGIN_NAMES})
+
+find_package(OpenSceneGraph MODULE REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer)# ${OSG_STATIC_LINK_PLUGIN_NAMES})
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS})
 
 find_package(OpenThreads)

@@ -22,6 +22,7 @@ if(TARGET muFFT)
 	endforeach()
 endif()
 
+include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(muFFT
 	REQUIRED_VARS muFFT_TARGET_FOUND
 	HANDLE_COMPONENTS
