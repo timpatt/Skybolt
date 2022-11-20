@@ -6,9 +6,9 @@
 
 #include "FftOceanGenerator.h"
 #include <SkyboltCommon/Math/MathUtility.h>
-#include <cxxtimer/cxxtimer.hpp>
+#include <cxxtimer.hpp>
 
-#include <muFFT/fft.h>
+#include <fft.h>
 
 using namespace skybolt;
 
