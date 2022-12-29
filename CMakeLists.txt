@@ -78,15 +78,9 @@ if (BUILD_FFT_OCEAN_PLUGIN)
 	add_subdirectory(external/mufft-47bb086)
 endif()
 
-OPTION(Boost_STATIC_LIBS "Boost use static libs")
-if (Boost_STATIC_LIBS)
-	set(Boost_USE_STATIC_LIBS ON)
-endif()
-
-OPTION(OSG_STATIC_LIBS "OSG use static libs")
-if (OSG_STATIC_LIBS)
-	add_definitions(-DOSG_LIBRARY_STATIC)
-endif()
+# If OpenSceneGraph plugins have been built statically, this option should be set to ensure they 
+# are appropriately linked to Skybolt.
+OPTION(Skybolt_LinkStaticOpenSceneGraphPlugins "Statically link required OpenSceneGraph plugins")
 
 #-------------------------------------------------------------
 # Build tree

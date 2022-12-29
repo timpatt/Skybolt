@@ -4,12 +4,13 @@ add_source_group_tree(. SOURCE_FILES)
 
 include_directories("../")
 
-find_package(Boost COMPONENTS log REQUIRED)
+find_package(Boost REQUIRED COMPONENTS log)
 
-if (OSG_STATIC_LIBS)
+set(OSG_StaticLinkPlugins)
+if (Skybolt_LinkStaticOpenSceneGraphPlugins)
 	# Names of plugins to statically link to
 	# This should match the names defined by USE_OSGPLUGIN() in SkyboltVis/Window/Window.cpp
-	set(OSG_STATIC_LINK_PLUGIN_NAMES
+	set(OSG_StaticLinkPlugins
 		osgdb_bmp
 		osgdb_curl
 		osgdb_dds
@@ -20,9 +21,13 @@ if (OSG_STATIC_LIBS)
 		osgdb_serializers_osg
 		osgdb_tga
 	)
+	list(APPEND SOURCE_FILES OsgStaticLinkPlugins.cpp)
 endif()
 
-find_package(OpenSceneGraph MODULE REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer)# ${OSG_STATIC_LINK_PLUGIN_NAMES})
+find_package(OpenSceneGraph MODULE REQUIRED 
+	COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer 
+	${OSG_StaticLinkPlugins}
+)
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS})
 
 find_package(OpenThreads)
@@ -34,28 +39,11 @@ find_package(px REQUIRED)
 
 OPTION(SKYBOLT_USE_DELL_XPS_RTT_FIX "Workaround for render-to-texture driver bug on Dell XPS")
 if (SKYBOLT_USE_DELL_XPS_RTT_FIX)
-	add_definitions(-USE_DELL_XPS_RTT_FIX)
+	add_definitions(-DUSE_DELL_XPS_RTT_FIX)
 endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(LIBRARIES)
-
-if (FALSE AND OSG_STATIC_LIBS)
-	# Statically link to dependencies of OSG dependencies
-	# (Surely OSG should already link these in if it requires them??)
-	find_package(CURL REQUIRED)
-	find_package(Freetype REQUIRED)
-	find_package(JPEG REQUIRED)
-	find_package(OpenGL REQUIRED)
-
-	list(APPEND LIBRARIES
-		${CMAKE_DL_LIBS}
-		${CURL_LIBRARIES}
-		${Freetype_LIBRARIES}
-		${JPEG_LIBRARIES}
-		${OPENGL_LIBRARIES}
-	)
-endif()
 
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
