@@ -15,7 +15,7 @@ class SkyboltConan(ConanFile):
         "shared": True,
         "enable_fft_ocean": True,
 		"shared_plugins": True,
-        "fixed_osg": True,
+        "fixed_osg": False,
         # Force all dependencies to be shared libraries
 #        "*:shared": True
     }
