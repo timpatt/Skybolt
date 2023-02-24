@@ -21,7 +21,6 @@ if (Skybolt_LinkStaticOpenSceneGraphPlugins)
 		osgdb_serializers_osg
 		osgdb_tga
 	)
-	list(APPEND SOURCE_FILES OsgStaticLinkPlugins.cpp)
 endif()
 
 find_package(OpenSceneGraph MODULE REQUIRED 
@@ -63,5 +62,6 @@ target_link_libraries(${LIB_NAME}
 	httplib::httplib
 	px::px
 )
+target_compile_definitions(${LIB_NAME} PRIVATE $<$<BOOL:OSG_StaticLinkPlugins>:SKYBOLT_VIZ_STATIC_LINK_OSG_PLUGINS>)
 
 skybolt_install(${LIB_NAME})

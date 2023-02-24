@@ -13,6 +13,28 @@
 
 #include <boost/foreach.hpp>
 
+#if defined(SKYBOLT_VIZ_STATIC_LINK_OSG_PLUGINS)
+
+#include <osgDB/Registry>
+
+ // If this file is built, the OSG plugins have been built statically.
+ // We statically reference the plugins we need here to link them into this library.
+USE_OSGPLUGIN(bmp)
+USE_OSGPLUGIN(curl)
+USE_OSGPLUGIN(dds)
+USE_OSGPLUGIN(freetype)
+USE_OSGPLUGIN(jpeg)
+USE_OSGPLUGIN(png)
+USE_OSGPLUGIN(tga)
+
+USE_OSGPLUGIN(osg2)
+USE_SERIALIZER_WRAPPER_LIBRARY(osg)
+
+// include the platform specific GraphicsWindow implementation
+USE_GRAPHICSWINDOW()
+
+#endif
+
 namespace skybolt {
 namespace vis {
 
