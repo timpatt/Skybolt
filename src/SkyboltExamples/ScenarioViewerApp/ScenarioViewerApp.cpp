@@ -195,7 +195,7 @@ static std::unique_ptr<QSplashScreen> createSplashScreen()
 	QString splashScreenFilename = ":/Resources/Splash.png";
 	if (!QFile::exists(splashScreenFilename))
 	{
-		BOOST_LOG_TRIVIAL(error) << "Splash screen image not found: '" << splashScreenFilename.toStdString() << "'";
+		SKYBOLT_LOG(error) << "Splash screen image not found: '" << splashScreenFilename.toStdString() << "'";
 	}
 	QPixmap pixmap(splashScreenFilename);
 	auto splash = std::make_unique<QSplashScreen>(pixmap);
@@ -299,14 +299,15 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 	// Create model for logging application warnings and errors
 	ErrorLogModel errorLogModel;
+#ifdef USE_BOOST_LOG
 	connectToBoostLogger(&errorLogModel);
-
+#endif
 	// Check if python is available
 #ifdef PYTHON_VERSION_MAJOR
 		// Warn user if python is not available
 		if (!isPythonOnPath(PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR))
 		{
-			BOOST_LOG_TRIVIAL(warning) << QString("Python %1.%2 not found in PATH environment variable. Python functionality will be disabled.")
+			SKYBOLT_LOG(warning) << QString("Python %1.%2 not found in PATH environment variable. Python functionality will be disabled.")
 				.arg(PYTHON_VERSION_MAJOR).arg(PYTHON_VERSION_MINOR).toStdString();
 		}
 #endif

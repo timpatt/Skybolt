@@ -14,7 +14,7 @@
 
 #include <osg/Group>
 #include <osg/Switch>
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 
 namespace skybolt {
 namespace vis {

@@ -19,7 +19,7 @@
 #include <osg/Texture2D>
 #include <osgText/Font>
 
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 #include <assert.h>
 #include <cctype>
 
@@ -248,7 +248,7 @@ static void createMarkingsForRunwayEnd(const RunwayEndMarkingsConfig& c)
 			}
 			else
 			{
-				BOOST_LOG_TRIVIAL(error) << "No font character for runway digit '" << digit << "'";
+				SKYBOLT_LOG(error) << "No font character for runway digit '" << digit << "'";
 			}
 		}
 
@@ -266,7 +266,7 @@ static void createMarkingsForRunwayEnd(const RunwayEndMarkingsConfig& c)
 			}
 			else
 			{
-				BOOST_LOG_TRIVIAL(error) << "No font character for runway letter '" << letter << "'";
+				SKYBOLT_LOG(error) << "No font character for runway letter '" << letter << "'";
 			}
 		}
 	}

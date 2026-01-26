@@ -7,11 +7,12 @@
 #pragma once
 
 #include "Exception.h"
+#include "SkyboltCommon/Logging/Logging.h"
 
+#include <functional>
 #include <optional>
 #include <string>
 #include <variant>
-#include <boost/log/trivial.hpp>
 
 namespace skybolt {
 
@@ -50,7 +51,7 @@ template <typename T>
 std::optional<T> valueOrLogWarning(const Expected<T>& expected)
 {
 	return valueOrElse(expected, [](const auto& m) {
-		BOOST_LOG_TRIVIAL(warning) << m.str;
+		SKYBOLT_LOG(warning) << m.str;
 		});
 }
 
@@ -58,7 +59,7 @@ template <typename T>
 std::optional<T> valueOrLogError(const Expected<T>& expected)
 {
 	return valueOrElse(expected, [](const auto& m) {
-		BOOST_LOG_TRIVIAL(error) << m.str;
+		SKYBOLT_LOG(error) << m.str;
 		});
 }
 

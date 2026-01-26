@@ -10,7 +10,7 @@
 #include <SkyboltReflect/Reflection.h>
 #include <SkyboltSim/Component.h>
 
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 
 namespace py = pybind11;
 
@@ -103,7 +103,7 @@ void PyComponentProperty::setValue(const py::handle& value)
 	auto valueInstance = pyHandleToReflInstance(*mTypeRegistry, mProperty->getType(), value);
 	if (!valueInstance)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Could not set property '" << mProperty->getName() << "' from python because data type '" << mProperty->getType()->getName() << "' is not supported";
+		SKYBOLT_LOG(error) << "Could not set property '" << mProperty->getName() << "' from python because data type '" << mProperty->getType()->getName() << "' is not supported";
 		return;
 	}
 

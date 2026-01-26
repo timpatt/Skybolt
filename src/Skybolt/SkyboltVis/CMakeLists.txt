@@ -45,7 +45,7 @@ set(LIBRARIES
 	SkyboltCommon
 	SkyboltSim
 	Boost::boost
-	Boost::log
+	#Boost::log
 	openscenegraph-mr::osg
 	openscenegraph-mr::osgDB
 	openscenegraph-mr::osgGA

@@ -6,7 +6,7 @@
 
 #include "PythonPluginUtil.h"
 
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 
 namespace py = pybind11;
 
@@ -24,7 +24,7 @@ std::vector<pybind11::module> loadPythonPluginModules(const std::vector<std::str
 		{
 			// Module found
 			module.attr("skybolt_register")();
-			BOOST_LOG_TRIVIAL(info) << "Registered python plugin module: " << moduleName;
+			SKYBOLT_LOG(info) << "Registered python plugin module: " << moduleName;
 		}
 		else
 		{

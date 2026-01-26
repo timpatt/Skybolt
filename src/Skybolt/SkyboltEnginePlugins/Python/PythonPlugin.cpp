@@ -70,7 +70,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-			BOOST_LOG_TRIVIAL(error) << e.what();
+			SKYBOLT_LOG(error) << e.what();
 		}
 	}
 

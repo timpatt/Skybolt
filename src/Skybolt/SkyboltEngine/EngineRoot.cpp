@@ -24,7 +24,7 @@
 
 #include <osgDB/Registry>
 #include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 #include <optional>
 
 namespace skybolt {
@@ -77,7 +77,7 @@ static std::optional<int> getMaxUsableCores()
 		}
 		catch (const std::invalid_argument&)
 		{
-			BOOST_LOG_TRIVIAL(error) << maxCoresEnvironmentVariable << " environment variable set to '" << value << "' which is not a valid integer and will be ignored";
+			SKYBOLT_LOG(error) << maxCoresEnvironmentVariable << " environment variable set to '" << value << "' which is not a valid integer and will be ignored";
 		}
 	}
 	return std::nullopt;
@@ -98,7 +98,7 @@ static int determineThreadCountFromHardwareAndUserLimits()
 	}
 
 	int threadCount = std::max(1, coreCount - 1);
-	BOOST_LOG_TRIVIAL(info) << coreCount << " CPU cores detected. " << coreLimitMessage << " Creating " << threadCount << " background threads.";
+	SKYBOLT_LOG(info) << coreCount << " CPU cores detected. " << coreLimitMessage << " Creating " << threadCount << " background threads.";
 	return threadCount;
 }
 
@@ -118,7 +118,7 @@ static file::Path getCacheDir()
 		{
 			return dir;
 		}
-		BOOST_LOG_TRIVIAL(error) << "Environment variable '" << skyboltCacheDirEnvironmentVariable << "' not set to a valid path. Using default location: " << getDefaultCacheDir().string();
+		SKYBOLT_LOG(error) << "Environment variable '" << skyboltCacheDirEnvironmentVariable << "' not set to a valid path. Using default location: " << getDefaultCacheDir().string();
 	}
 	return getDefaultCacheDir();
 }
@@ -158,7 +158,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 			std::string folderName = folder.stem().string();
 			mAssetPackagePaths.push_back(folder.string());
 			registerAssetPackage(folder.string());
-			BOOST_LOG_TRIVIAL(info) << "Registered asset package: " << folderName;
+			SKYBOLT_LOG(info) << "Registered asset package: " << folderName;
 
 			requiredPackages.erase(folderName);
 		}
@@ -191,7 +191,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 
 	tileSourceFactoryRegistry = std::make_shared<vis::JsonTileSourceFactoryRegistry>([&] {
 		file::Path cacheDir = getCacheDir();
-		BOOST_LOG_TRIVIAL(info) << "Using cache directory '" << cacheDir.string() << "'.";
+		SKYBOLT_LOG(info) << "Using cache directory '" << cacheDir.string() << "'.";
 		vis::JsonTileSourceFactoryRegistryConfig c;
 		c.apiKeys = readNameMap<std::string>(config.engineSettings, "tileApiKeys");
 		c.cacheDirectory = cacheDir.string();
@@ -258,7 +258,7 @@ void EngineRoot::loadPlugins(const std::vector<PluginFactory>& pluginFactories)
 		}
 		catch(const std::exception& e)
 		{
-			BOOST_LOG_TRIVIAL(error) << "Error loading plugin: " << e.what();
+			SKYBOLT_LOG(error) << "Error loading plugin: " << e.what();
 		}
 	}
 

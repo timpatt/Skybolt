@@ -5,13 +5,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "CameraInputSystem.h"
+#include <SkyboltCommon/Logging/Logging.h>
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltEngine/Input/InputPlatform.h>
 #include <SkyboltEngine/Input/LogicalAxis.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 
-#include <boost/log/trivial.hpp>
 
 namespace skybolt {
 
@@ -109,7 +109,7 @@ CameraInputAxes createDefaultCameraInputAxes(const skybolt::InputPlatform& input
 {
 	if (inputPlatform.getInputDevicesOfType(InputDeviceTypeKeyboard).empty())
 	{
-		BOOST_LOG_TRIVIAL(warning) << "Keyboard not found. Keyboard input will be ignored.'";
+		SKYBOLT_LOG(warning) << "Keyboard not found. Keyboard input will be ignored.'";
 		return {};
 	}
 
@@ -145,7 +145,7 @@ void configure(CameraInputSystem& system, int screenHeightPixels, const nlohmann
 	float mouseSensitivity = engineSettings.at("mouse").at("sensitivity");
 	if (mouseSensitivity <= 0)
 	{
-		BOOST_LOG_TRIVIAL(warning) << "Invalid mouse sensitivity value '" << mouseSensitivity << "'. Defaulting to 1.";
+		SKYBOLT_LOG(warning) << "Invalid mouse sensitivity value '" << mouseSensitivity << "'. Defaulting to 1.";
 		mouseSensitivity = 1.f;
 	}
 

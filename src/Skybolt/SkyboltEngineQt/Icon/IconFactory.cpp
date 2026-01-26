@@ -13,7 +13,7 @@
 
 #include <SkyboltEngine/EngineRoot.h>
 
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 #include <QBitmap>
 #include <QFile>
 #include <QApplication>
@@ -41,7 +41,7 @@ static std::optional<QPixmap> loadSvgWithQt(const file::Path& filename)
 	QFile file(QString::fromStdString(filename.string()));
 	if (!file.open(QIODevice::ReadOnly))
 	{
-		BOOST_LOG_TRIVIAL(error) << "Could not open file: " << filename;
+		SKYBOLT_LOG(error) << "Could not open file: " << filename;
 		return std::nullopt;
 	}
 
@@ -53,7 +53,7 @@ static std::optional<QPixmap> loadSvgWithQt(const file::Path& filename)
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(error) << "Could not read SVG file: " << filename;
+		SKYBOLT_LOG(error) << "Could not read SVG file: " << filename;
 	}
 	file.close();
 	return std::nullopt;
@@ -80,7 +80,7 @@ static std::optional<QPixmap> loadSvgWithNanoSvg(const file::Path& filename)
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(error) << "Could not read SVG file: " << filename;
+		SKYBOLT_LOG(error) << "Could not read SVG file: " << filename;
 	}
 	return std::nullopt;
 }

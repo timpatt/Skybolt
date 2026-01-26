@@ -9,7 +9,7 @@
 #include "GetExecutablePath.h"
 #include "Plugin/PluginHelpers.h"
 
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 
 using namespace nlohmann;
 
@@ -23,7 +23,7 @@ T getOptionalNodeOrDefaultWithWarning(const json& j, const std::string& name, co
 	{
 		return i.value().get<T>();
 	}
-	BOOST_LOG_TRIVIAL(warning) << "Missing parameter '" << name << "'. Default value of '" << defaultValue << "' will be used.";
+	SKYBOLT_LOG(warning) << "Missing parameter '" << name << "'. Default value of '" << defaultValue << "' will be used.";
 	return defaultValue;
 }
 

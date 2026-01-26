@@ -39,7 +39,7 @@
 #include <osgDB/ReadFile>
 
 #include <future>
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 
 using namespace skybolt::sim;
 
@@ -302,7 +302,7 @@ Planet::Planet(const PlanetConfig& config) :
 			}
 			else
 			{
-				BOOST_LOG_TRIVIAL(error) << "Building types not defined";
+				SKYBOLT_LOG(error) << "Building types not defined";
 			}
 		}
 	}

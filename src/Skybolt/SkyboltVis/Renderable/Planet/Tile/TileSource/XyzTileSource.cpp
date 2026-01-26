@@ -12,7 +12,7 @@
 #include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
 #include <osgDB/ReadFile>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 #include <SkyboltCommon/ShaUtility.h>
 
 using namespace skybolt;
@@ -41,7 +41,7 @@ bool XyzTileSource::validate() const
 	osg::ref_ptr<osg::Image> image = osgDB::readImageFile(toUrl(QuadTreeTileKey()), mImageReadOptions);
 	if (!image)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Could not load image from XyzTileSource with URL template '" << mUrlTemplate << ".";
+		SKYBOLT_LOG(error) << "Could not load image from XyzTileSource with URL template '" << mUrlTemplate << ".";
 		return false;
 	}
 
@@ -49,12 +49,12 @@ bool XyzTileSource::validate() const
 	{
 		if (image->getPixelFormat() != GL_LUMINANCE)
 		{
-			BOOST_LOG_TRIVIAL(error) << "Elevation image with URL template '" << mUrlTemplate << "' is in wrong format: "
+			SKYBOLT_LOG(error) << "Elevation image with URL template '" << mUrlTemplate << "' is in wrong format: "
 				<< image->getPixelFormat() << ". It should be GL_LUMINANCE.'";
 		}
 		if (image->getDataType() != GL_UNSIGNED_SHORT)
 		{
-			BOOST_LOG_TRIVIAL(error) << "Elevation image with URL template '" << mUrlTemplate << "' is in wrong format: "
+			SKYBOLT_LOG(error) << "Elevation image with URL template '" << mUrlTemplate << "' is in wrong format: "
 				<< image->getPixelFormat() << ". It should be GL_UNSIGNED_SHORT.'";
 		}
 		return false;

@@ -11,7 +11,7 @@
 #include <SkyboltCommon/LibraryUtil.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/dll/import.hpp>
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 #include <filesystem>
 #include <functional>
 #include <set>
@@ -39,7 +39,7 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 		std::string pluginName = boostPath.leaf().string();
 		if (loadedPluginNames.find(pluginName) != loadedPluginNames.end())
 		{
-			BOOST_LOG_TRIVIAL(warning) << "Found plugin with same name as already loaded plugin '" << pluginName << "' in directory '" << boostPath.string() << "'. Ignoring the duplicate plugin.";
+			SKYBOLT_LOG(warning) << "Found plugin with same name as already loaded plugin '" << pluginName << "' in directory '" << boostPath.string() << "'. Ignoring the duplicate plugin.";
 			continue;
 		}
 
@@ -55,7 +55,7 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 				);
 
 				loadedPluginNames.insert(pluginName);
-				BOOST_LOG_TRIVIAL(info) << "Loaded plugin: " << pluginName;
+				SKYBOLT_LOG(info) << "Loaded plugin: " << pluginName;
 
 				result.push_back([=](const PluginConfigT& config) { return creator(config); });
 			}
@@ -75,7 +75,7 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 				diagnosticMessage = std::string("Failed to generate diagnostic message because: ") + e.what();
 			}
 
-			BOOST_LOG_TRIVIAL(error) << "Error loading plugin '" << path.string() << "': " << e.what() << (!diagnosticMessage.empty() ? ". " + diagnosticMessage : "");
+			SKYBOLT_LOG(error) << "Error loading plugin '" << path.string() << "': " << e.what() << (!diagnosticMessage.empty() ? ". " + diagnosticMessage : "");
 		}
 	}
 

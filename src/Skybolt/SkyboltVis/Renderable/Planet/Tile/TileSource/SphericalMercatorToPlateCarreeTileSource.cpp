@@ -17,7 +17,7 @@
 #include <osg/Vec2i>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 
 using namespace skybolt;
 

@@ -6,24 +6,30 @@
 
 #include "ConsoleSink.h"
 
+#include <iostream>
+
+#ifdef USE_BOOST_LOG
 #include <boost/core/null_deleter.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/trivial.hpp>
-#include <iostream>
 
-namespace bl = boost::log;
+//namespace bl = boost::log;
+#endif
 
 namespace skybolt {
 
 void addConsoleLogSink()
 {
+#ifdef USE_BOOST_LOG
+
 	using console_sink = bl::sinks::synchronous_sink<bl::sinks::text_ostream_backend>;
     boost::shared_ptr<console_sink> consoleSink = boost::make_shared<console_sink>();
     consoleSink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::cout, boost::null_deleter()));
 
 	bl::core::get()->add_sink(consoleSink);
+#endif
 }
 
 } // namespace skybolt

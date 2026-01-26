@@ -8,7 +8,7 @@
 
 #include <SkyboltCommon/File/OsDirectories.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 
 namespace po = boost::program_options;
 
@@ -50,12 +50,12 @@ std::optional<nlohmann::json> EngineCommandLineParser::readSettings(const boost:
 
 	if (std::filesystem::exists(settingsFilename))
 	{
-		BOOST_LOG_TRIVIAL(info) << "Reading settings file '" << settingsFilename.string() << "'";
+		SKYBOLT_LOG(info) << "Reading settings file '" << settingsFilename.string() << "'";
 		return readJsonFile(settingsFilename.string());
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(warning) << "Settings file not found: '" << settingsFilename.string() << "'";
+		SKYBOLT_LOG(warning) << "Settings file not found: '" << settingsFilename.string() << "'";
 	}
 	return std::nullopt;
 }

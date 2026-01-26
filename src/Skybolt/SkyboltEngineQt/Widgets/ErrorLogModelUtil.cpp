@@ -7,6 +7,8 @@
 #include "ErrorLogModelUtil.h"
 #include <SkyboltWidgets/ErrorLog/ErrorLogModel.h>
 
+#ifdef USE_BOOST_LOG
+
 #include <assert.h>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
@@ -66,3 +68,5 @@ void connectToBoostLogger(QPointer<ErrorLogModel> model)
 	sinkWrapper->set_filter(bl::trivial::severity >= bl::trivial::warning);
     bl::core::get()->add_sink(sinkWrapper);
 }
+
+#endif

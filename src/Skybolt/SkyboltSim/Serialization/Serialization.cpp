@@ -9,7 +9,7 @@
 #include "SkyboltSim/JsonHelpers.h"
 #include <SkyboltCommon/Json/JsonHelpers.h>
 
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 
 namespace skybolt::sim {
 

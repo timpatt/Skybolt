@@ -9,4 +9,6 @@
 #include <SkyboltWidgets/SkyboltWidgetsFwd.h>
 #include <QPointer>
 
+#ifdef USE_BOOST_LOG
 void connectToBoostLogger(QPointer<skybolt::ErrorLogModel> model);
+#endif

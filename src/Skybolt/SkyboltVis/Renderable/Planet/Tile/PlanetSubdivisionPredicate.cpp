@@ -11,9 +11,8 @@
 #include "SkyboltVis/Renderable/Planet/Tile/PlanetTileImagesLoader.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/TileSource.h"
 
+#include <SkyboltCommon/Logging/Logging.h>
 #include <SkyboltCommon/Math/MathUtility.h>
-
-#include <boost/log/trivial.hpp>
 
 using namespace skybolt;
 
@@ -45,7 +44,7 @@ bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeT
 	{
 		if (!mHasMissingElevationBoundsError)
 		{
-			BOOST_LOG_TRIVIAL(error) << "Height map image tile {level=" << key.level << ", x=" << key.x << ", y=" << key.y << "} is missing elevation bounds";
+			SKYBOLT_LOG(error) << "Height map image tile {level=" << key.level << ", x=" << key.x << ", y=" << key.y << "} is missing elevation bounds";
 		}
 		mHasMissingElevationBoundsError = true;
 		return false;

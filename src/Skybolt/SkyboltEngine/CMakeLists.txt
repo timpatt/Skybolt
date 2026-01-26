@@ -13,7 +13,7 @@ set(LIBRARIES
 	SkyboltSim
 	SkyboltVis
 	Boost::boost
-	Boost::log
+	Boost::filesystem
 	Boost::program_options
 	${CMAKE_DL_LIBS} # Required by gcc
 )

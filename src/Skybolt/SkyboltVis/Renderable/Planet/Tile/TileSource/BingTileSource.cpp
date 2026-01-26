@@ -14,7 +14,7 @@
 #include <osg/Vec2i>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/log/trivial.hpp>
+#include <SkyboltCommon/Logging/Logging.h>
 
 using namespace skybolt;
 
@@ -72,12 +72,12 @@ BingTileSource::BingTileSource(const BingTileSourceConfig& config) :
 		}
 		else
 		{
-			BOOST_LOG_TRIVIAL(error) << "BingTileSource received error response '" << res->status << "' from http request";
+			SKYBOLT_LOG(error) << "BingTileSource received error response '" << res->status << "' from http request";
 		}
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(error) << "BingTileSource timed out waiting for http response";
+		SKYBOLT_LOG(error) << "BingTileSource timed out waiting for http response";
 	}
 }
 
