@@ -35,10 +35,28 @@ XyzTileSource::XyzTileSource(const XyzTileSourceConfig& config) :
 	mImageReadOptions->setOptionString("OSG_CURL_SSL_VERIFYPEER=0");
 }
 
+static osg::ref_ptr<osg::Image> readImage(const std::string& filename, const osgDB::Options& imageReadOptions)
+{
+	osg::ref_ptr<osg::Image> image;
+
+	bool supportUserData = filename.ends_with(".pngx");
+	if (supportUserData)
+	{
+		std::ifstream f(filename.c_str(), std::ios::binary);
+		image = readImageWithUserData(f, "png");
+		f.close();
+	}
+	else
+	{
+		image = readImageWithoutWarnings(filename, &imageReadOptions);
+	}
+	return image;
+}
+
 bool XyzTileSource::validate() const
 {
 	// Validate the loader by loading level 0 image
-	osg::ref_ptr<osg::Image> image = osgDB::readImageFile(toUrl(QuadTreeTileKey()), mImageReadOptions);
+	osg::ref_ptr<osg::Image> image = readImage(toUrl(QuadTreeTileKey()), *mImageReadOptions);
 	if (!image)
 	{
 		SKYBOLT_LOG(error) << "Could not load image from XyzTileSource with URL template '" << mUrlTemplate << ".";
@@ -70,7 +88,7 @@ static int flipY(int y, int level)
 
 osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
-	osg::ref_ptr<osg::Image> image = readImageWithoutWarnings(toUrl(key), mImageReadOptions);
+	osg::ref_ptr<osg::Image> image = readImage(toUrl(key), *mImageReadOptions);
 	if (image)
 	{
 		if (mElevationRerange)

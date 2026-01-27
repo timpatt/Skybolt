@@ -62,6 +62,7 @@ GLuint toSrgbInternalFormat(GLuint format);
 
 osg::Image* readImageWithCorrectOrientation(const std::string& filename);
 
+//! Reads an image file without logging any load warnings. Returns nullptr if the image could not be read.
 osg::ref_ptr<osg::Image> readImageWithoutWarnings(const std::string& filename, const osgDB::Options* options = osgDB::Registry::instance()->getOptions());
 
 //! Reads an image from stream including the image's user data stored in osg::UserDataContainer
