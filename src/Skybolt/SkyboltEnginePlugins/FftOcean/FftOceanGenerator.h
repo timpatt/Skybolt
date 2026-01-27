@@ -15,6 +15,15 @@
 #include <xsimd/xsimd.hpp>
 #include <span>
 
+// Enable this to use a reference implementation of the noise generator which *potentially* has less correlation but
+// is not spatially deterministic. We can compare against our faster hash-based spatially deterministic noise generator
+// to verify that the noise generated is similar enough to be visually indistinguishable.
+#ifdef USE_REFERENCE_FFT_NOISE_GENERATOR
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/variate_generator.hpp>
+#endif
+
 namespace skybolt {
 namespace vis {
 
@@ -110,6 +119,11 @@ private:
 	aligned_complex_type_ptr mFftOutputHorizontal[2];
 
 	std::unique_ptr<struct FftGeneratorData> mFftGeneratorData;
+
+#ifdef USE_REFERENCE_FFT_NOISE_GENERATOR
+	typedef boost::variate_generator<boost::mt19937, boost::random::normal_distribution<float> > RandomGenerator;
+	RandomGenerator mRandomGenerator;
+#endif
 };
 
 } // namespace vis

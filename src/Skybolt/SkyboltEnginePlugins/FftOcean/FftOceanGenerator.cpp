@@ -45,6 +45,9 @@ FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mUseMultipleCores(config.useMultipleCores),
 	mWindVelocity(config.windVelocity),
 	mFftGeneratorData(new FftGeneratorData)
+#ifdef USE_REFERENCE_FFT_NOISE_GENERATOR
+	,mRandomGenerator(boost::mt19937(config.seed), boost::random::normal_distribution<float>())
+#endif
 {
 	size_t size = config.textureSizePixels * config.textureSizePixels;
 	mHt0.resize(size);
@@ -259,6 +262,17 @@ void FftOceanGenerator::calcHt0()
     std::vector<int> mIndices(mTextureSizePixels);
     std::iota(mIndices.begin(), mIndices.end(), 0); // Fill the vector with values 0 through size - 1
 
+#ifdef USE_REFERENCE_FFT_NOISE_GENERATOR
+	std::vector<complex_type> gaussians(mTextureSizePixels * mTextureSizePixels);
+	for (auto& gaussian : gaussians)
+	{
+		// produces gaussian random draws with mean 0 and std dev 1
+		float a = mRandomGenerator();
+		float b = mRandomGenerator();
+		gaussian = FftOceanGenerator::complex_type(a, b);
+	}
+#endif
+
 	runParallelOrSequential(mUseMultipleCores, mIndices, [&](int& m) {
 		int index = m * mTextureSizePixels;
 		for (int n = 0; n < mTextureSizePixels; ++n)
@@ -270,7 +284,11 @@ void FftOceanGenerator::calcHt0()
 			// Calculate complex random number from standard normal distribution as a deterministic function of wave number.
 			int kxInt = int(k.x / kQuantizationCellSize); // Quantize k to ensure determinism.
 			int kyInt = int(k.y / kQuantizationCellSize);
+#ifdef USE_REFERENCE_FFT_NOISE_GENERATOR
+			complex_type r = gaussians[index] / std::sqrt(2.f);
+#else
 			complex_type r = complex_type(deterministicNormalFast(kxInt, kyInt, 0), deterministicNormalFast(kxInt, kyInt, 1)) / std::sqrt(2.f);
+#endif
 
 			mHt0[index] = r * std::sqrt(calcBruenton(n, m) / 2.0f) * dk;
 			mHt0Conj[index] = std::conj(r * std::sqrt(calcBruenton(-n, -m) / 2.0f) * dk);

@@ -17,16 +17,27 @@ namespace vis {
 
 inline uint32_t hashCoords(int n, int m, uint32_t seed = 0)
 {
+    // Use large prime constants for better distribution
     uint32_t x = static_cast<uint32_t>(n);
     uint32_t y = static_cast<uint32_t>(m);
-    uint32_t h = x * 374761393u + y * 668265263u + seed * 0x27d4eb2d;
-    h = (h ^ (h >> 13)) * 1274126177u;
+    
+    // PCG-based state mixing
+    uint32_t h = (x * 0x192fc9df) ^ (y * 0x3739cc8d) ^ (seed * 0x517cc1b7);
+    
+    // Avalanche (Mixing) layers
+    h ^= h >> 16;
+    h *= 0x85ebca6b;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35;
+    h ^= h >> 16;
+    
     return h;
 }
 
 inline float hashToUniform(uint32_t h)
 {
-    return (h & 0x00FFFFFF) / float(0x01000000); // 24-bit mantissa
+    // Return a float in range [0, 1) with better entropy
+    return (h >> 8) * (1.0f / 16777216.0f);
 }
 
 //! @returns a value sampled from the standard normal distrubtion (a gaussian with mean=0 and standard deviation=1)
