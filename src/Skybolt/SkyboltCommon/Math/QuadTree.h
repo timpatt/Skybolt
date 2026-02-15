@@ -110,6 +110,12 @@ QuadTreeTileKey getKeyAtLevelIntersectingLonLatPoint(int level, const VecType& p
 	return key;
 }
 
+template <typename VecType>
+QuadTreeTileKey getKeyAtLevelIntersectingLatLonPoint(int level, const VecType& position)
+{
+	return getKeyAtLevelIntersectingLonLatPoint(level, VecType(position[1], position[0]));
+}
+
 template <class TileT>
 struct QuadTree
 {

@@ -13,6 +13,8 @@ namespace sim {
 
 struct LatLon
 {
+	using value_type = double;
+
 	LatLon() {}
 	LatLon(double lat, double lon) : lat(lat), lon(lon) {}
 
@@ -33,9 +35,42 @@ struct LatLon
 		return i ? lon : lat;
 	}
 
+	LatLon operator+ (const LatLon& other) const
+	{
+		return LatLon(
+			this->lat + other.lat,
+			this->lon + other.lon);
+	}
+
+	LatLon operator- (const LatLon& other) const
+	{
+		return LatLon(
+			this->lat - other.lat,
+			this->lon - other.lon);
+	}
+
+	LatLon operator* (double s) const
+	{
+		return LatLon(
+			this->lat * s,
+			this->lon * s);
+	}
+
+	LatLon operator/ (double s) const
+	{
+		return LatLon(
+			this->lat / s,
+			this->lon / s);
+	}
+
 	double lat; //!< radians
 	double lon; //!< radians
 };
 
-} // namespace skybolt
 } // namespace sim
+
+namespace math {
+	constexpr size_t componentCount(const sim::LatLon& v) {return 2; }
+} // namespace math
+
+} // namespace skybolt

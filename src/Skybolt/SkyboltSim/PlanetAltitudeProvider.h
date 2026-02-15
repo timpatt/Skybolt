@@ -46,6 +46,8 @@ public:
 		};
 	};
 
+	virtual ~PlanetAltitudeProvider() = default;
+
 	virtual AltitudeResult getAltitude(const sim::LatLon& position) const = 0;
 };
 
