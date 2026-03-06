@@ -20,9 +20,9 @@ void CelestialObjectVisBinding::syncVis(const GeocentricToNedConverter& converte
 	double julianDate = mDateProvider();
 	sim::LatLon equatorial = sim::convertEclipticToEquatorial(julianDate, mEclipticDirectionProvider(julianDate));
 
-	sim::AzEl azEl = convertEquatorialToHorizontal(julianDate, equatorial, sim::LatLon(skybolt::math::halfPiF(), 0));
+	sim::AzimuthElevation azEl = convertEquatorialToHorizontal(julianDate, equatorial, sim::LatLon(skybolt::math::halfPiF(), 0));
 
-	sim::Quaternion orientation = latLonToGeocentricLtpOrientation(sim::LatLon(-azEl.elevation + skybolt::math::halfPiF(), -azEl.azimuth));
+	sim::Quaternion orientation = latLonToGeocentricLtpOrientation(sim::LatLon(-azEl.y + skybolt::math::halfPiF(), -azEl.x));
 	mVisObject->setOrientation(converter.convert(orientation));
 }
 

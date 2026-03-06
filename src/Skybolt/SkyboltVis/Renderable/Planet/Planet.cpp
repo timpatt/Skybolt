@@ -421,9 +421,9 @@ osg::Node* Planet::_getNode() const
 	return mPlanetGroup.get();
 }
 
-static osg::Quat getOrientationFromAzEl(const AzEl& azEl)
+static osg::Quat getOrientationFromAzEl(const AzimuthElevation& azEl)
 {
-	return osg::Quat(azEl.elevation, osg::Vec3f(0, 1, 0)) * osg::Quat(azEl.azimuth, osg::Vec3f(0, 0, 1));
+	return osg::Quat(azEl.y, osg::Vec3f(0, 1, 0)) * osg::Quat(azEl.x, osg::Vec3f(0, 0, 1));
 }
 
 void Planet::updatePreRender(const CameraRenderContext& context)

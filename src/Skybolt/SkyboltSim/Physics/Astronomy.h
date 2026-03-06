@@ -7,6 +7,7 @@
 #pragma once
 
 #include "SkyboltSim/SimMath.h"
+#include "SkyboltSim/Spatial/AzimuthElevation.h"
 #include "SkyboltSim/Spatial/LatLon.h"
 
 namespace skybolt {
@@ -15,12 +16,6 @@ namespace sim {
 double calcJulianDate(int year, int month, int day, double hourUtc);
 void julianDateToYmd(double julianDate, int& year, int& month, int& day);
 void julianDateToHms(double julianDate, int& hour, int& minute, double& second);
-
-struct AzEl
-{
-	double azimuth;
-	double elevation;
-};
 
 double calcEarthAxialTilt(double julianDate);
 
@@ -31,7 +26,7 @@ double calcHourAngleOfVernalEquinox(double julianDate);
 
 double calcHourAngle(double julianDate, const LatLon& equatorial, const LatLon& observer);
 
-AzEl convertEquatorialToHorizontal(double julianDate, const LatLon& equatorial, const LatLon& observer);
+AzimuthElevation convertEquatorialToHorizontal(double julianDate, const LatLon& equatorial, const LatLon& observer);
 
 LatLon calcSunEclipticPosition(double julianDate);
 

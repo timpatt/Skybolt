@@ -74,10 +74,10 @@ TEST_CASE("convertEquatorialToHorizontal")
 	observer.lon = 0.785398;
 	observer.lat = 0.20944;
 
-	AzEl result = convertEquatorialToHorizontal(calcJulianDate(2018, 3, 3, 0), equatorial, observer);
+	AzimuthElevation result = convertEquatorialToHorizontal(calcJulianDate(2018, 3, 3, 0), equatorial, observer);
 
-	CHECK(almostEqual(1.51748109091, result.azimuth, 1e-4));
-	CHECK(almostEqual(-0.843151108, result.elevation, 1e-4));
+	CHECK(almostEqual(1.51748109091, result.x, 1e-4));
+	CHECK(almostEqual(-0.843151108, result.y, 1e-4));
 }
 
 TEST_CASE("calcSunEclipticPosition")

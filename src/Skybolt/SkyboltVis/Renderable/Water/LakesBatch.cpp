@@ -32,7 +32,7 @@ void createLake(const Lake& lake, osg::Vec3Array* posBuffer, osg::Vec3Array* nor
 	assert(lake.points.size() >= 3);
 	size_t indexoffset = posBuffer->size();
 
-	std::vector<osg::Vec3> points = lake.points;
+	const std::vector<osg::Vec3>& points = lake.points;
 	std::vector<std::vector<osg::Vec3f>> polygon = { points };
 
 	std::vector<int> indices = mapbox::earcut<int>(polygon);

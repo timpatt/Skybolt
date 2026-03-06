@@ -60,10 +60,10 @@ static osg::Vec2i pixelXYToTileXY(const osg::Vec2i& pixelXy)
 	return pixelXy / 256;
 }
 
-static Box2i convertPlateCarreeToSphericalMercator(const QuadTreeTileKey& key, const Box2d& keyBounds)
+static Box2i getSphericalMercatorKeysCoveringBoundsAtLevel(int level, const Box2d& keyBounds)
 {
-	osg::Vec2f minBound = latLongToPixelXY(keyBounds.maximum.x(), keyBounds.minimum.y(), key.level) + osg::Vec2f(0.5f, 0.5f);
-	osg::Vec2f maxBound = latLongToPixelXY(keyBounds.minimum.x(), keyBounds.maximum.y(), key.level) - osg::Vec2f(0.5f, 0.5f);
+	osg::Vec2f minBound = latLongToPixelXY(keyBounds.maximum.x(), keyBounds.minimum.y(), level) + osg::Vec2f(0.5f, 0.5f);
+	osg::Vec2f maxBound = latLongToPixelXY(keyBounds.minimum.x(), keyBounds.maximum.y(), level) - osg::Vec2f(0.5f, 0.5f);
 	return Box2i(
 		pixelXYToTileXY(toVec2i(minBound)),
 		pixelXYToTileXY(toVec2i(maxBound))
@@ -81,9 +81,8 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 {
 	// Find the bounds of the PlateCarree tile in SpericalMercator space
 	Box2d keyBounds = getKeyLatLonBounds<osg::Vec2d>(key);
-	QuadTreeTileKey quadTreeTileKey = key;
-	quadTreeTileKey.level += 1;
-	Box2i tilesBounds = convertPlateCarreeToSphericalMercator(quadTreeTileKey, keyBounds);
+	int sphericalMercatorLevel = key.level + 1; // Spherical mercator tiles half half the resolution, so we need to look at one level higher.
+	Box2i tilesBounds = getSphericalMercatorKeysCoveringBoundsAtLevel(sphericalMercatorLevel, keyBounds);
 
 	// The tile bounds give us all the Sperical Mercator tiles that the Plate Carree tile intersects.
 	// Download each tile.
@@ -99,7 +98,7 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 			// FIXME: Consider storing tiles in an LRU so that we don't need to re-download the same tile.
 			// It might not help very much because in practice only about 10% of tiles are re-downloaded.
 			// The cache must be thread-safe because a TileSource can be queried from multiple threads.
-			osg::ref_ptr<osg::Image> image = mTileSource->createImage(QuadTreeTileKey(quadTreeTileKey.level, x, y), cancelSupplier);
+			osg::ref_ptr<osg::Image> image = mTileSource->createImage(QuadTreeTileKey(sphericalMercatorLevel, x, y), cancelSupplier);
 			if (image)
 			{
 				tiles[osg::Vec2i(x, y)] = image;
@@ -168,7 +167,7 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 		for (int x = 0; x < 256; ++x)
 		{
 			osg::Vec2d latLon = keyBounds.minimum + osg::Vec2d(size.x() * (double(y) + 0.5) / 256.0, size.y() * (double(x) + 0.5) / 256.0);
-			osg::Vec2f srcXy = latLongToPixelXY(latLon.x(), latLon.y(), quadTreeTileKey.level);
+			osg::Vec2f srcXy = latLongToPixelXY(latLon.x(), latLon.y(), sphericalMercatorLevel);
 
 			auto it = tiles.find(pixelXYToTileXY(toVec2i(srcXy)));
 			if (it != tiles.end())

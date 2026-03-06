@@ -89,7 +89,7 @@ double calcHourAngle(double julianDate, const LatLon& equatorial, const LatLon& 
 	return calcHourAngleOfVernalEquinox(julianDate) + observer.lon - equatorial.lon;
 }
 
-AzEl convertEquatorialToHorizontal(double julianDate, const LatLon& equatorial, const LatLon& observer)
+AzimuthElevation convertEquatorialToHorizontal(double julianDate, const LatLon& equatorial, const LatLon& observer)
 {
 	double hourAngle = calcHourAngle(julianDate, equatorial, observer);
 
@@ -101,10 +101,10 @@ AzEl convertEquatorialToHorizontal(double julianDate, const LatLon& equatorial, 
 	double yp = y;
 	double zp = x * std::cos(observer.lat) + z * std::sin(observer.lat);
 
-	AzEl horizontal;
-	horizontal.azimuth = std::atan2(yp, xp) + skybolt::math::piD();
-	horizontal.elevation = std::atan2(zp, sqrt(xp * xp + yp * yp));
-	return horizontal;
+	return AzimuthElevation{
+		std::atan2(yp, xp) + skybolt::math::piD(),
+		std::atan2(zp, sqrt(xp * xp + yp * yp))
+	};
 }
 
 LatLon calcSunEclipticPosition(double julianDate)

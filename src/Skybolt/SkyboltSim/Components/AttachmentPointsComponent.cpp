@@ -6,6 +6,7 @@
 
 #include "AttachmentPointsComponent.h"
 #include "SkyboltSim/Entity.h"
+#include "SkyboltSim/Spatial/Positionable.h"
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
@@ -37,6 +38,16 @@ AttachmentPointPtr findAttachmentPoint(const Entity& entity, const std::string& 
 	return nullptr;
 }
 
+AttachmentPointPtr findAttachmentPointRequired(const Entity& entity, const std::string& name)
+{
+	auto result = findAttachmentPoint(entity, name);
+	if (result)
+	{
+		return result;
+	}
+	throw std::runtime_error("Unable to find attachment point: '" + name + "'");
+}
+
 Vector3 calcAttachmentPointPosition(const Entity& entity, const AttachmentPoint& point)
 {
 	auto position = getPosition(entity);
@@ -62,6 +73,16 @@ Quaternion calcAttachmentPointOrientation(const Entity& entity, const Attachment
 	{
 		return math::dquatIdentity();
 	}
+}
+
+Vector3 calcAttachmentPointPosition(const Positionable& positionable, const AttachmentPoint& point)
+{
+	return positionable.getPosition() + positionable.getOrientation() * point.positionRelBody;
+}
+
+Quaternion calcAttachmentPointOrientation(const Positionable& positionable, const AttachmentPoint& point)
+{
+	return positionable.getOrientation() * point.orientationRelBody;
 }
 
 } // namespace sim
