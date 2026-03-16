@@ -15,29 +15,23 @@ const SecondsD maxWallDt = 0.2;
 
 SimUpdater::SimUpdater(skybolt::NonNullPtr<skybolt::EngineRoot> engineRoot) :
 	mEngineRoot(engineRoot),
-	mSimStepper(std::make_unique<SimStepper>(engineRoot->systemRegistry)),
 	mAverageWallDt(std::make_unique<UniformAveragedBuffer>(16))
 {
-	mSimStepper->setMaxDynamicsSubsteps(std::nullopt);
+	// TODO: unhack modifying the sim stepper here. It's a bit messy.
+	if (auto simStepper = dynamic_cast<sim::SimStepper*>(mEngineRoot->scenario->timeSource.get()); simStepper)
+	{
+		simStepper->setMaxDynamicsSubsteps(std::nullopt);
+	}
 }
 
 SimUpdater::~SimUpdater() = default;
 
 void SimUpdater::update(SecondsD wallDt)
 {
-	bool isLive = mEngineRoot->scenario->timelineMode.get() == TimelineMode::Live;
-	mSimStepper->setDynamicsEnabled(isLive);
-
-	const auto& timeSource = mEngineRoot->scenario->timeSource;
-
-	// Update simulation to sim time from time source.
-	// This is necessary because the current time may have changed since the last update,
-	// for example if we jumped to a different point on the timeline.
-	SecondsD simTime = timeSource.getTime();
-	if (mSimStepper->getTime() != simTime)
+	if (auto simStepper = dynamic_cast<sim::SimStepper*>(mEngineRoot->scenario->timeSource.get()); simStepper)
 	{
-		// Update SimStepper to the current time.
-		mSimStepper->setTime(simTime);
+		bool isLive = mEngineRoot->scenario->timelineMode.get() == TimelineMode::Live;
+		simStepper->setDynamicsEnabled(isLive);
 	}
 
 	// Advance forward time
@@ -45,16 +39,13 @@ void SimUpdater::update(SecondsD wallDt)
 	{
 		advanceWallTime(wallDt);
 	}
-
-	// TimeSource time should equal SimStepper time after update
-	assert (timeSource.getTime() == mSimStepper->getTime());
 }
 
 void SimUpdater::advanceWallTime(SecondsD wallDt)
 {
 	// Calculate simulation delta time
 	double simDt;
-	TimeSource& timeSource = mEngineRoot->scenario->timeSource;
+	TimeSource& timeSource = *mEngineRoot->scenario->timeSource;
 	if (timeSource.getState() == TimeSource::StatePlaying)
 	{
 		mAverageWallDt->addValue(wallDt);
@@ -71,7 +62,7 @@ void SimUpdater::advanceWallTime(SecondsD wallDt)
 	// Simulate by dt.
 	// Note: we still need to simulate even if dt is 0, because some systems/components
 	// need to still be updated even when the simulation is paused, e.g. in an editor application.
-	simulate(timeSource, simDt);
+	timeSource.advanceTime(simDt);
 
 	// Advance wallclock time
 	for (const SystemPtr& system : *mEngineRoot->systemRegistry)
@@ -80,11 +71,4 @@ void SimUpdater::advanceWallTime(SecondsD wallDt)
 	}
 
 	mWallTime += wallDt;
-}
-
-void SimUpdater::simulate(TimeSource& timeSource, SecondsD dt)
-{
-	assert(dt >= 0);
-	mSimStepper->update(dt);
-	timeSource.setTime(mSimStepper->getTime());
 }

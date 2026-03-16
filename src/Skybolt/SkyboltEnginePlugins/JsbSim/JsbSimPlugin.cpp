@@ -239,7 +239,7 @@ static std::string readDefaultJsbSimRootDir(const nlohmann::json& j)
 	if (rootDir.empty())
 	{
 		rootDir = ".";
-		BOOST_LOG_TRIVIAL(warning) << "'jsb.rootDir' setting not found in engine settings file. Setting to default of '" << rootDir << "'";
+		SKYBOLT_LOG(warning) << "'jsb.rootDir' setting not found in engine settings file. Setting to default of '" << rootDir << "'";
 	}
 
 	return rootDir;

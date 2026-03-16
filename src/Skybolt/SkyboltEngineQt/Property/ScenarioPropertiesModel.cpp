@@ -33,9 +33,9 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mDuration);
 
 		connect(mDuration.get(), &QtProperty::valueChanged, [this]() {
-			TimeRange range = mScenario->timeSource.getRange();
+			sim::TimeRange range = mScenario->timeSource->getRange();
 			range.end = mDuration->value().toDouble();
-			mScenario->timeSource.setRange(range);
+			mScenario->timeSource->setRange(range);
 		});
 	}
 	{
@@ -54,6 +54,6 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 void ScenarioPropertiesModel::update()
 {
 	mStartDateTime->setValue(julianDateToQDateTime(mScenario->startJulianDate));
-	mDuration->setValue(mScenario->timeSource.getRange().end);
+	mDuration->setValue(mScenario->timeSource->getRange().end);
 	mTimelineMode->setValue(int(mScenario->timelineMode.get()));
 }

@@ -18,7 +18,6 @@ using EntityFactoryFn = std::function<sim::EntityPtr(const std::string& template
 
 struct EntityPersistenceFlags
 {
-	bool persistNonSerializable = false;
 	bool persistUserManaged = false;
 };
 

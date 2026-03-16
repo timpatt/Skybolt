@@ -41,6 +41,7 @@ class Positionable;
 class PropellerComponent;
 class SimStepper;
 class System;
+class TimeSource;
 class World;
 
 typedef std::shared_ptr<AttacherComponent> AttacherComponentPtr;
@@ -62,7 +63,9 @@ typedef std::shared_ptr<PlanetComponent> PlanetComponentPtr;
 typedef std::shared_ptr<Position> PositionPtr;
 typedef std::shared_ptr<Positionable> PositionablePtr;
 typedef std::shared_ptr<PropellerComponent> PropellerComponentPtr;
+typedef std::shared_ptr<SimStepper> SimStepperPtr;
 typedef std::shared_ptr<System> SystemPtr;
+typedef std::shared_ptr<TimeSource> TimeSourcePtr;
 
 } // namespace sim
 } // namespace skybolt

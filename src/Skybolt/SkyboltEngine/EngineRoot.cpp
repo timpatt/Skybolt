@@ -8,6 +8,7 @@
 #include "ComponentFactory.h"
 #include "SimVisBinding/SimVisSystem.h"
 #include <SkyboltSim/System/EntitySystem.h>
+#include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltVis/OsgStateSetHelpers.h>
 #include <SkyboltVis/Scene.h>
@@ -126,11 +127,14 @@ static file::Path getCacheDir()
 EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	scheduler(new px_sched::Scheduler),
 	fileLocator(locateFile),
-	scenario(std::make_unique<Scenario>()),
+	systemRegistry(std::make_shared<sim::SystemRegistry>()),
 	typeRegistry(std::make_unique<refl::TypeRegistry>()),
 	factoryRegistries(std::make_unique<FactoryRegistries>()),
 	engineSettings(config.engineSettings)
 {
+	auto simStepper = std::make_unique<sim::SimStepper>(systemRegistry, sim::TimeRange(0, 100));
+	scenario = std::make_unique<Scenario>(std::move(simStepper));
+
 	int threadCount = determineThreadCountFromHardwareAndUserLimits();
 
 	px_sched::SchedulerParams schedulerParams;
@@ -228,10 +232,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	entityFactory.reset(new EntityFactory(context, paths));
 
 	// Create default systems
-	systemRegistry = std::make_shared<sim::SystemRegistry>(sim::SystemRegistry({
-		std::make_shared<sim::EntitySystem>(&scenario->world),
-		std::make_shared<SimVisSystem>(&scenario->world, scene)
-	}));
+	systemRegistry->push_back(std::make_shared<sim::EntitySystem>(&scenario->world));
+	systemRegistry->push_back(std::make_shared<SimVisSystem>(&scenario->world, scene));
 }
 
 EngineRoot::~EngineRoot()

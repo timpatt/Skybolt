@@ -7,7 +7,7 @@
 #include "TimeSource.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 
-using namespace skybolt;
+namespace skybolt::sim {
 
 TimeSource::TimeSource(const TimeRange& range) :
 	mRange(range),
@@ -16,9 +16,9 @@ TimeSource::TimeSource(const TimeRange& range) :
 	mTime = mRange.start;
 }
 
-void TimeSource::setTime(double time)
+void TimeSource::setTime(sim::SecondsD time)
 {
-	double newTime = math::clamp(time, mRange.start, mRange.end);
+	SecondsD newTime = math::clamp(time, mRange.start, mRange.end);
 	if (mTime != newTime)
 	{
 		mTime = newTime;
@@ -55,11 +55,19 @@ void TimeSource::setState(const State& state)
 	}
 }
 
-void TimeSource::advanceTime(double dt)
+void TimeSource::advanceTime(SecondsD dt)
 {
-	if (mState == StatePlaying)
+	SecondsD time = mTime + dt;
+	setTime(time);
+}
+
+void TimeSource::advanceToTime(sim::SecondsD time)
+{
+	SecondsD dt = time - mTime;
+	if (dt > 0)
 	{
-		double time = mTime + dt;
-		setTime(time);
+		advanceTime(dt);
 	}
 }
+
+} // namespace skybolt::sim

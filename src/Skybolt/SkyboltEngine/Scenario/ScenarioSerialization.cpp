@@ -48,8 +48,8 @@ void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const En
 	SecondsD startTime = readOptionalOrDefault(json, "startTime", SecondsD(0));
 
 	scenario.startJulianDate = json.at("julianDate");
-	scenario.timeSource.setRange(TimeRange(startTime, startTime + json.at("duration").get<double>()));
-	scenario.timeSource.setTime(readOptionalOrDefault(json, "currentTime", SecondsD(0)));
+	scenario.timeSource->setRange(TimeRange(startTime, startTime + json.at("duration").get<double>()));
+	scenario.timeSource->setTime(readOptionalOrDefault(json, "currentTime", SecondsD(0)));
 	scenario.timelineMode = readTimelineMode(readOptionalOrDefault<std::string>(json, "timelineMode", "live"));
 
 	ifChildExists(json, "entities", [&] (const nlohmann::json& child) {
@@ -59,12 +59,12 @@ void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const En
 
 nlohmann::json writeScenario(refl::TypeRegistry& typeRegistry, const Scenario& scenario)
 {
-	const auto& timeRange = scenario.timeSource.getRange();
+	const auto& timeRange = scenario.timeSource->getRange();
 	nlohmann::json json;
 	json["julianDate"] = scenario.startJulianDate;
 	json["startTime"] = timeRange.start;
 	json["duration"] = timeRange.end - timeRange.start;
-	json["currentTime"] = scenario.timeSource.getTime();
+	json["currentTime"] = scenario.timeSource->getTime();
 	json["timelineMode"] = toString(scenario.timelineMode.get());
 	json["entities"] = writeEntities(typeRegistry, scenario.world);
 	return json;
@@ -148,7 +148,6 @@ static bool shouldPersistAcrossLoad(const Entity& entity, EntityPersistenceFlags
 {
 	if (auto metadata = entity.getFirstComponent<ScenarioMetadataComponent>(); metadata)
 	{
-		if (entityPersistanceFlags.persistNonSerializable && !metadata->serializable) { return true; }
 		if (entityPersistanceFlags.persistUserManaged && metadata->lifetimePolicy == ScenarioMetadataComponent::LifetimePolicy::User)  { return true; }
 	}
 	return false; // Entities should not persist by default.

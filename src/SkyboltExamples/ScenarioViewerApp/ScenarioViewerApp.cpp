@@ -128,21 +128,21 @@ static QWidget* createTimeControlWidgetPanel(NonNullPtr<EngineRoot> engineRoot, 
 	}
 
 	QObject::connect(timeControl, &TimeControlWidget::requestedPlayStateChanged, widget, [engineRoot](bool playing) {
-		return engineRoot->scenario->timeSource.setState(playing ? TimeSource::StatePlaying : TimeSource::StateStopped);
+		return engineRoot->scenario->timeSource->setState(playing ? TimeSource::StatePlaying : TimeSource::StateStopped);
 		});
 
 	QObject::connect(timeControl, &TimeControlWidget::requestedTimeForward, widget, [engineRoot, timeline]() {
 		auto& timeSource = engineRoot->scenario->timeSource;
-		timeSource.setTime(timeSource.getRange().end);
+		timeSource->setTime(timeSource->getRange().end);
 		});
 
 	QObject::connect(timeControl, &TimeControlWidget::requestedTimeBackward, widget, [engineRoot, timeline]() {
 		auto& timeSource = engineRoot->scenario->timeSource;
-		timeSource.setTime(timeSource.getRange().start);
+		timeSource->setTime(timeSource->getRange().start);
 		});
 
 	QObject::connect(timeline, &TimelineWidget::timeChanged, widget, [engineRoot](double t) {
-		engineRoot->scenario->timeSource.setTime(t);
+		engineRoot->scenario->timeSource->setTime(t);
 	});
 
 	auto timeRateDialog = new TimeRateDialog(simUpdater->getRequestedTimeRate(), widget);
@@ -154,13 +154,13 @@ static QWidget* createTimeControlWidgetPanel(NonNullPtr<EngineRoot> engineRoot, 
 
 	createAndStartIntervalTimer(10, parent, [engineRoot, timeControl, timeline, currentTimeLabel, durationLabel] () {
 		auto& timeSource = engineRoot->scenario->timeSource;
-		timeControl->setPlaying(timeSource.getState() == TimeSource::StatePlaying);
-		timeline->setTime(timeSource.getTime());
-		timeline->setRange({timeSource.getRange().start, timeSource.getRange().end});
+		timeControl->setPlaying(timeSource->getState() == TimeSource::StatePlaying);
+		timeline->setTime(timeSource->getTime());
+		timeline->setRange({timeSource->getRange().start, timeSource->getRange().end});
 		timeline->setUserTimeChangeAllowed(engineRoot->scenario->timelineMode.get() == TimelineMode::Free);
 		timeControl->setForwardEnabled(engineRoot->scenario->timelineMode.get() == TimelineMode::Free);
-		currentTimeLabel->setText(toTimeText(timeSource.getTime()));
-		durationLabel->setText(toTimeText(timeSource.getRange().end - timeSource.getRange().start));
+		currentTimeLabel->setText(toTimeText(timeSource->getTime()));
+		durationLabel->setText(toTimeText(timeSource->getRange().end - timeSource->getRange().start));
 	});
 
 	return widget;

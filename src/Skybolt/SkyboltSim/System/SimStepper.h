@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "TimeSource.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
 #include "SkyboltSim/System/SystemRegistry.h"
 #include "System.h"
@@ -16,16 +17,15 @@
 namespace skybolt {
 namespace sim {
 
-class SimStepper
+class SimStepper : public TimeSource
 {
 public:
-	SimStepper(const SystemRegistryPtr& systems);
+	SimStepper(const SystemRegistryPtr& systems, const TimeRange& range);
 	~SimStepper();
 
-	void setTime(SecondsD t);
-	SecondsD getTime() const { return mCurrentTime; }
+	void setTime(SecondsD t) override;
 
-	void update(SecondsD dt);
+	void advanceTime(SecondsD dt) override;
 
 	void setDynamicsEnabled(bool enabled) { mDynamicsEnabled = enabled; }
 
@@ -40,7 +40,6 @@ private:
 
 private:
 	SystemRegistryPtr mSystems;
-	SecondsD mCurrentTime = 0;
 	SecondsD mStepTimer = 0;
 	bool mDynamicsEnabled = true;
 

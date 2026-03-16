@@ -11,7 +11,7 @@ namespace skybolt {
 
 double getCurrentJulianDate(const Scenario& scenario)
 {
-	return scenario.startJulianDate + scenario.timeSource.getTime() / (60.0 * 60.0 * 24.0);
+	return scenario.startJulianDate + scenario.timeSource->getTime() / (60.0 * 60.0 * 24.0);
 }
 
 } // namespace skybolt

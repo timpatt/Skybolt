@@ -29,10 +29,8 @@ public:
 
 protected:
 	void advanceWallTime(skybolt::sim::SecondsD wallDt);
-	void simulate(skybolt::TimeSource& timeSource, skybolt::sim::SecondsD dt);
 
 	const skybolt::NonNullPtr<skybolt::EngineRoot> mEngineRoot;
-	const std::unique_ptr<skybolt::sim::SimStepper> mSimStepper;
 
 	std::unique_ptr<skybolt::UniformAveragedBuffer> mAverageWallDt;
 	double mMaxSimDt = 10;

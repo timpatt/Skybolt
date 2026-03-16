@@ -31,7 +31,6 @@ class SimSnapshotRegistry;
 class SimVisBinding;
 class StateSequenceController;
 class StatsDisplaySystem;
-class TimeSource;
 class TriggerZone;
 class Updatable;
 class VisHud;

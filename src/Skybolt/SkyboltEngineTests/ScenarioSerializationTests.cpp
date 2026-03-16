@@ -42,20 +42,19 @@ TEST_CASE("Scenario is identical after serialization and deserialization")
 	sim::EntityPtr entity = createEntity("myTemplateName", "myInstanceName");
 
 	refl::TypeRegistry typeRegistry;
-	Scenario scenario1;
+	Scenario scenario1(std::make_shared<sim::TimeSource>(sim::TimeRange(2, 4)));
 	scenario1.startJulianDate = 5;
-	scenario1.timeSource.setTime(3);
-	scenario1.timeSource.setRange({ 2, 4 });
+	scenario1.timeSource->setTime(3);
 	scenario1.world.addEntity(entity);
 
 	nlohmann::json scenarioJson = writeScenario(typeRegistry, scenario1);
 
-	Scenario scenario2;
+	Scenario scenario2(std::make_shared<sim::TimeSource>(sim::TimeRange(0, 1)));;
 	readScenario(typeRegistry, scenario2, &createEntity, scenarioJson);
 
 	CHECK(scenario1.startJulianDate == scenario2.startJulianDate);
-	CHECK(scenario1.timeSource.getTime() == scenario2.timeSource.getTime());
-	CHECK(scenario1.timeSource.getRange() == scenario2.timeSource.getRange());
+	CHECK(scenario1.timeSource->getTime() == scenario2.timeSource->getTime());
+	CHECK(scenario1.timeSource->getRange() == scenario2.timeSource->getRange());
 	REQUIRE(scenario1.world.getEntities().size() == scenario2.world.getEntities().size());
 	sim::EntityPtr scenario2Entity = scenario2.world.findObjectByName("myInstanceName");
 	REQUIRE(scenario2Entity);
@@ -68,7 +67,7 @@ TEST_CASE("On deserialization, new entities created, existing entities updated, 
 	sim::EntityPtr entityForModification = createEntity("myTemplate", "entityForModification");
 
 	refl::TypeRegistry typeRegistry;
-	Scenario scenario;
+	Scenario scenario(std::make_shared<sim::TimeSource>(sim::TimeRange(0, 1)));;
 	scenario.world.addEntity(entityForAddition);
 	scenario.world.addEntity(entityForModification);
 

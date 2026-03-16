@@ -6,14 +6,15 @@
 
 #pragma once
 
+#include "SkyboltSim/Chrono.h"
 #include <boost/signals2.hpp>
 #include <tuple>
 
-namespace skybolt {
+namespace skybolt::sim {
 
 struct TimeRange
 {
-	TimeRange(double start, double end) : start(start), end(end) {}
+	TimeRange(SecondsD start, SecondsD end) : start(start), end(end) {}
 	bool operator==(const TimeRange& rhs) const
 	{
 		return std::make_tuple(start, end) == std::make_tuple(rhs.start, rhs.end);
@@ -24,8 +25,8 @@ struct TimeRange
 		return std::make_tuple(start, end) != std::make_tuple(rhs.start, rhs.end);
 	}
 
-	double start;
-	double end;
+	SecondsD start;
+	SecondsD end;
 };
 
 class TimeSource
@@ -39,8 +40,12 @@ public:
 		StateStopped
 	};
 
-	double getTime() const { return mTime; }
-	void setTime(double time);
+	SecondsD getTime() const { return mTime; }
+	virtual void setTime(sim::SecondsD time);
+
+	virtual void advanceTime(sim::SecondsD dt);
+
+	virtual void advanceToTime(sim::SecondsD time);
 
 	const TimeRange& getRange() const { return mRange; }
 	void setRange(const TimeRange& range);
@@ -48,16 +53,14 @@ public:
 	State getState() const { return mState; }
 	void setState(const State& state);
 
-	void advanceTime(double dt);
-
 	boost::signals2::signal<void(const State&)> stateChanged;
-	boost::signals2::signal<void(double)> timeChanged;
+	boost::signals2::signal<void(SecondsD)> timeChanged;
 	boost::signals2::signal<void(const TimeRange&)> rangeChanged;
 
-private:
-	double mTime;
+protected:
+	sim::SecondsD mTime;
 	TimeRange mRange;
 	State mState;
 };
 
-} // namespace skybolt
+} // namespace skybolt::sim

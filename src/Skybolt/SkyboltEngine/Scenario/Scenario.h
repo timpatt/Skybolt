@@ -7,7 +7,8 @@
 #pragma once
 
 #include <SkyboltCommon/ObservableValue.h>
-#include <SkyboltEngine/TimeSource.h>
+#include <SkyboltSim/SkyboltSimFwd.h>
+#include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/World.h>
 
 namespace skybolt {
@@ -20,8 +21,12 @@ enum class TimelineMode
 
 struct Scenario
 {
+	Scenario(sim::TimeSourcePtr timeSource) : timeSource(std::move(timeSource))
+	{
+	}
+
 	double startJulianDate = 2457982.9;
-	TimeSource timeSource = TimeRange(0, 6000);
+	sim::TimeSourcePtr timeSource;
 	ObservableValue<TimelineMode> timelineMode = TimelineMode::Live;
 
 	sim::World world;

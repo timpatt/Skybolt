@@ -35,11 +35,11 @@ static SimSnapshotRegistry createSimSnapshotRegistry(refl::TypeRegistry* typeReg
 TEST_CASE("Snapshot found at time")
 {
 	refl::TypeRegistry typeRegistry;
-	Scenario scenario;
+	Scenario scenario(std::make_shared<sim::TimeSource>(sim::TimeRange(0, 100)));
 	SimSnapshotRegistry registry = createSimSnapshotRegistry(&typeRegistry, &scenario);
 
 	// Create snapshot at time
-	scenario.timeSource.setTime(1);
+	scenario.timeSource->setTime(1);
 	registry.saveSnapshotAtCurrentTime();
 
 	// Check that no snapshot is found just before the stored snapshot time
@@ -55,16 +55,15 @@ TEST_CASE("Snapshot found at time")
 TEST_CASE("Loaded snapshot state identical to saved state")
 {
 	refl::TypeRegistry typeRegistry;
-	Scenario scenario;
+	Scenario scenario(std::make_shared<sim::TimeSource>(sim::TimeRange(0, 2)));;
 	SimSnapshotRegistry registry = createSimSnapshotRegistry(&typeRegistry, &scenario);
 
 	// Create snapshot at time
-	scenario.timeSource.setTime(1);
-	scenario.timeSource.setRange({0, 2});
+	scenario.timeSource->setTime(1);
 	registry.saveSnapshotAtCurrentTime();
 
 	// Modify the scenario
-	scenario.timeSource.setRange({ 2, 4 });
+	scenario.timeSource->setRange({ 2, 4 });
 
 	// Load snapshot
 	auto snapshot = registry.findSnapshotAtTime(1);
@@ -73,5 +72,5 @@ TEST_CASE("Loaded snapshot state identical to saved state")
 	registry.loadSnapshot(*snapshot);
 
 	// Check that the scenario was updated to the saved scenario state
-	CHECK(scenario.timeSource.getRange() == TimeRange(0, 2));
+	CHECK(scenario.timeSource->getRange() == sim::TimeRange(0, 2));
 }

@@ -4,6 +4,8 @@
 
 namespace skybolt {
 
+using namespace sim;
+
 SimSnapshotRegistry::SimSnapshotRegistry(const SimSnapshotRegistryConfig& config) :
 	mEntityFactory(config.entityFactory),
 	mTypeRegistry(config.typeRegistry),
@@ -17,8 +19,6 @@ SimSnapshotRegistry::SimSnapshotRegistry(const SimSnapshotRegistryConfig& config
 void SimSnapshotRegistry::loadSnapshot(const Snapshot& snapshot)
 {
 	EntityPersistenceFlags entityPersistenceFlags = {
-		// Non-serializable entities should persist because they won't exist in the serialized state anyhow.
-		.persistNonSerializable = true,
 		// User-managed entities should persist because their lifetime is managed by the user (usually from the UI) rather than by serialization state loads.
 		.persistUserManaged = true
 	};
@@ -28,7 +28,7 @@ void SimSnapshotRegistry::loadSnapshot(const Snapshot& snapshot)
 
 void SimSnapshotRegistry::saveSnapshotAtCurrentTime()
 {
-	sim::SecondsD simTime = mScenario->timeSource.getTime();
+	sim::SecondsD simTime = mScenario->timeSource->getTime();
 	
 	// Remove existing snapshots at given time
 	while (true)
@@ -87,11 +87,11 @@ inline bool deltaEquals(sim::SecondsD a, sim::SecondsD b, sim::SecondsD epsilon)
 void useSnapshotsToResetSimulationStateAtTimelineStart(const std::shared_ptr<SimSnapshotRegistry>& snapshotRegistry, Scenario* scenario)
 {
 	// Connect action to handle saving snapshot when simulation playback is started from the beginning
-	scenario->timeSource.stateChanged.connect([snapshotRegistry, scenario] (const TimeSource::State& state) {
+	scenario->timeSource->stateChanged.connect([snapshotRegistry, scenario] (const TimeSource::State& state) {
 		if (scenario->timelineMode.get() != TimelineMode::Live) { return; }
 		
-		sim::SecondsD startTime = scenario->timeSource.getRange().start;
-		bool isAtStart = deltaEquals(scenario->timeSource.getTime(), startTime, 0.001);
+		sim::SecondsD startTime = scenario->timeSource->getRange().start;
+		bool isAtStart = deltaEquals(scenario->timeSource->getTime(), startTime, 0.001);
 		if (isAtStart && state == TimeSource::StatePlaying) // If playback just started from the beginning
 		{
 			snapshotRegistry->saveSnapshotAtCurrentTime();
@@ -99,10 +99,10 @@ void useSnapshotsToResetSimulationStateAtTimelineStart(const std::shared_ptr<Sim
 	});
 
 	// Connect action to handle loading snapshot when the simulation time is returned to the start
-	scenario->timeSource.timeChanged.connect([snapshotRegistry, scenario] (sim::SecondsD simTime) {
+	scenario->timeSource->timeChanged.connect([snapshotRegistry, scenario] (sim::SecondsD simTime) {
 		if (scenario->timelineMode.get() != TimelineMode::Live) { return; }
 		
-		sim::SecondsD startTime = scenario->timeSource.getRange().start;
+		sim::SecondsD startTime = scenario->timeSource->getRange().start;
 		bool isAtStart = deltaEquals(simTime, startTime, 0.001);
 		if (isAtStart)
 		{

@@ -11,7 +11,8 @@
 namespace skybolt {
 namespace sim {
 
-SimStepper::SimStepper(const SystemRegistryPtr& systems) :
+SimStepper::SimStepper(const SystemRegistryPtr& systems, const TimeRange& range) :
+	TimeSource(range),
 	mSystems(systems)
 {
 	assert(mSystems);
@@ -21,17 +22,17 @@ SimStepper::~SimStepper() = default;
 
 void SimStepper::setTime(SecondsD t)
 {
-	if (mCurrentTime != t)
+	if (mTime != t)
 	{
-		mCurrentTime = t;
+		TimeSource::setTime(t);
 		for (const SystemPtr& system : *mSystems)
 		{
-			system->setSimTime(mCurrentTime);
+			system->setSimTime(t);
 		}
 	}
 }
 
-void SimStepper::update(SecondsD dt)
+void SimStepper::advanceTime(SecondsD dt)
 {
 	auto systems = *mSystems; // Take copy in case a system adds/removes another system during step
 
@@ -75,13 +76,13 @@ void SimStepper::advanceTimeByDynamicsSubSteps(const std::vector<SystemPtr>& sys
 	// Perform substeps
 	for (int i = 0; i < requiredSteps; i++)
 	{
-		mCurrentTime += mDynamicsStepSize;
+		TimeSource::advanceTime(mDynamicsStepSize);
 
 		updateSystem(systems, UpdateStage::PreDynamicsSubStep);
 
 		for (const SystemPtr& system : *mSystems)
 		{
-			system->advanceSimTime(mCurrentTime, mDynamicsStepSize);
+			system->advanceSimTime(mTime, mDynamicsStepSize);
 		}
 		updateSystem(systems, UpdateStage::DynamicsSubStep);
 		updateSystem(systems, UpdateStage::PostDynamicsSubStep);
@@ -93,11 +94,11 @@ void SimStepper::advaniceTimeByNonDynamicsStep(const std::vector<SystemPtr>& sys
 	assert(!mDynamicsEnabled);
 
 	// Dynamics is disabled, so just advance time by dt without taking substeps
-	mCurrentTime += dt;
+	TimeSource::advanceTime(dt);
 
 	for (const SystemPtr& system : *mSystems)
 	{
-		system->advanceSimTime(mCurrentTime, mDynamicsStepSize);
+		system->advanceSimTime(mTime, mDynamicsStepSize);
 	}
 }
 

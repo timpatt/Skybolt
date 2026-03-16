@@ -17,7 +17,7 @@ void runMainLoop(vis::VisRoot& visRoot, EngineRoot& engineRoot, UpdateLoop::Shou
 {
 	// Run main loop
 	auto systemRegistry = engineRoot.systemRegistry;
-	auto simStepper = std::make_shared<SimStepper>(systemRegistry);
+	sim::TimeSource& timeSource = *engineRoot.scenario->timeSource;
 
 	SecondsD minFrameDuration = 0.01;
 	SecondsD currentWallTime = 0;
@@ -25,7 +25,7 @@ void runMainLoop(vis::VisRoot& visRoot, EngineRoot& engineRoot, UpdateLoop::Shou
 	UpdateLoop loop(minFrameDuration);
 	loop.exec([&](float dtWallClock) {
 		SecondsD dtSim = paused() ? 0.0 : dtWallClock;
-		simStepper->update(dtSim);
+		timeSource.advanceTime(dtSim);
 
 		for (const auto& system : *systemRegistry)
 		{

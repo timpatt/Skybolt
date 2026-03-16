@@ -170,9 +170,7 @@ static bool attachCameraToWindowWithEngine(sim::Entity& camera, vis::Window& win
 
 static void advanceSimTime(EngineRoot& engineRoot, double dt)
 {
-	// FIXME TODO: we should be starting from current sim time, not starting from zero
-	SimStepper stepper(engineRoot.systemRegistry);
-	stepper.update(dt);
+	engineRoot.scenario->timeSource->advanceTime(dt);
 }
 
 static void advanceWallTime(EngineRoot& engineRoot, double dt)
@@ -503,7 +501,7 @@ PYBIND11_MODULE(skybolt, m) {
 
 	py::class_<Scenario>(m, "Scenario")
 		.def_readwrite("startJulianDate", &Scenario::startJulianDate)
-		.def_property("time", [](Scenario* scenario) { return scenario->timeSource.getTime(); }, [](Scenario* scenario, double time) { return scenario->timeSource.setTime(time); })
+		.def_property("time", [](Scenario* scenario) { return scenario->timeSource->getTime(); }, [](Scenario* scenario, double time) { return scenario->timeSource->setTime(time); })
 		.def_property_readonly("currentJulianDate", [](Scenario* scenario) {return getCurrentJulianDate(*scenario); });
 
 	py::class_<PyComponentProperty, PyComponentPropertyPtr>(m, "Property")
