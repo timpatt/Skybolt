@@ -20,7 +20,11 @@ EntitySystem::EntitySystem(World* world) :
 
 void EntitySystem::setSimTime(SecondsD newTime)
 {
-	for (const EntityPtr& entity : mWorld->getEntities())
+	// Take a copy of the entities container so that the list doesn't change during timestep
+	// due to entities being added or removed from the world.
+	std::vector<EntityPtr> entities = mWorld->getEntities();
+
+	for (const EntityPtr& entity : entities)
 	{
 		entity->setSimTime(newTime);
 	}
@@ -28,7 +32,11 @@ void EntitySystem::setSimTime(SecondsD newTime)
 
 void EntitySystem::advanceWallTime(SecondsD newTime, SecondsD dt)
 {
-	for (const EntityPtr& entity : mWorld->getEntities())
+	// Take a copy of the entities container so that the list doesn't change during timestep
+	// due to entities being added or removed from the world.
+	std::vector<EntityPtr> entities = mWorld->getEntities();
+
+	for (const EntityPtr& entity : entities)
 	{
 		entity->advanceWallTime(newTime, dt);
 	}
@@ -36,7 +44,11 @@ void EntitySystem::advanceWallTime(SecondsD newTime, SecondsD dt)
 
 void EntitySystem::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
-	for (const EntityPtr& entity : mWorld->getEntities())
+	// Take a copy of the entities container so that the list doesn't change during timestep
+	// due to entities being added or removed from the world.
+	std::vector<EntityPtr> entities = mWorld->getEntities();
+
+	for (const EntityPtr& entity : entities)
 	{
 		entity->advanceSimTime(newTime, dt);
 	}
