@@ -28,7 +28,9 @@ SKYBOLT_REFLECT(AttachedCameraController) {
 		.superType<Pitchable>()
 		.superType<EntityTargeter>()
 		.superType<Yawable>()
-		.superType<Zoomable>();
+		.superType<Zoomable>()
+		.property("minFovY", &AttachedCameraController::minFovY, { {PropertyMetadataNames::units, Units::Radians} })
+		.property("maxFovY", &AttachedCameraController::maxFovY, { {PropertyMetadataNames::units, Units::Radians} });
 }
 
 AttachedCameraController::AttachedCameraController(Entity* camera, World* world, const Params& params) :
@@ -36,21 +38,23 @@ AttachedCameraController::AttachedCameraController(Entity* camera, World* world,
 	EntityTargeter(world),
 	mParams(params)
 {
-	setZoom(0.5f);
 }
 
 void AttachedCameraController::update(SecondsD dt)
 {
 	mYaw += msYawRate * mInput.yawRate * dt;
 	mPitch += msPitchRate * mInput.tiltRate * dt;
-	mZoom += msZoomRate * mInput.zoomRate * dt;
-	mZoom = math::clamp(mZoom, 0.0, 1.0);
+
+	if (mInput.zoomRate != 0)
+	{
+		setZoom(getZoom() + mInput.zoomRate * dt);
+	}
+	mCameraComponent->getState().fovY = std::clamp(mCameraComponent->getState().fovY, float(minFovY), float(maxFovY));
     
     double maxPitch = math::halfPiD();
     mPitch = math::clamp(mPitch, -maxPitch, maxPitch);
 
 	CameraState& state = mCameraComponent->getState();
-	state.fovY = math::lerp(mParams.maxFovY, mParams.minFovY, float(mZoom));
 	state.nearClipDistance = 0.5;
 
 	if (Entity* target = getTarget(); target)
@@ -75,6 +79,18 @@ AttachmentPointPtr AttachedCameraController::findAttachmentPoint(const Entity& e
 		}
 	}
 	return nullptr;
+}
+
+double AttachedCameraController::getZoom() const
+{
+	// Minimum FOV when zoom is 1, maximum FOV when zoom is 0
+	return (mCameraComponent->getState().fovY - maxFovY) / (minFovY - maxFovY);
+}
+
+void AttachedCameraController::setZoom(double zoom)
+{
+	zoom = skybolt::math::clamp(zoom, 0.0, 1.0);
+	mCameraComponent->getState().fovY = skybolt::math::lerp(maxFovY, minFovY, zoom);
 }
 
 } // namespace skybolt::sim

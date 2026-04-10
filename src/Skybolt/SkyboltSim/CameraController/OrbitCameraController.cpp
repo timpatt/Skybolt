@@ -82,8 +82,6 @@ void OrbitCameraController::update(SecondsD dt)
 		mPrevTargetId = targetId;
 	}
 
-	mCameraComponent->getState().fovY = mParams.fovY;
-
 	mYaw += msYawRate * mInput.yawRate * dt;
 	mPitch += msPitchRate * mInput.tiltRate * dt;
 	mZoom += msZoomRate * mInput.zoomRate * dt;

@@ -21,16 +21,22 @@ class AttachedCameraController : public CameraController, public Pitchable, publ
 public:
 	struct Params
 	{
-		float minFovY;
-		float maxFovY;
 		std::string attachmentPointName;
 	};
 
 	AttachedCameraController(Entity* camera, World* world, const Params& params);
 
+	double minFovY = math::degToRadD() * 10.0;
+	double maxFovY = math::degToRadD() * 120.0;
+
 public: // CameraController interface
 	void update(SecondsD dt) override;
 	void setInput(const Input& input) override { mInput = input; }
+
+public: // Zoomable interface
+	double getZoom() const override;
+	void setZoom(double zoom) override;
+
 
 private:
 	AttachmentPointPtr findAttachmentPoint(const Entity& entity) const; //!< Can return null

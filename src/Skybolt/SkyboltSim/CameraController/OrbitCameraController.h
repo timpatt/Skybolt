@@ -18,17 +18,16 @@
 namespace skybolt {
 namespace sim {
 
-class OrbitCameraController : public CameraController, public Pitchable, public EntityTargeter, public Yawable, public Zoomable
+class OrbitCameraController : public CameraController, public Pitchable, public EntityTargeter, public Yawable, public DefaultZoomable
 {
 public:
 	struct Params
 	{
-		Params(double _minDist, double _maxDist, double _fovY, double _zoomRate = 0.5f) :
-			minDist(_minDist), maxDist(_maxDist), fovY(_fovY), zoomRate(_zoomRate) {}
+		Params(double _minDist, double _maxDist, double _zoomRate = 0.5f) :
+			minDist(_minDist), maxDist(_maxDist), zoomRate(_zoomRate) {}
 
 		double minDist;
 		double maxDist;
-		double fovY;
 		double zoomRate;
 		Vector3 orientationLagTimeConstant = Vector3(0);
 	};

@@ -16,13 +16,12 @@
 namespace skybolt {
 namespace sim {
 
-class PlanetCameraController : public CameraController, public LatLonSettable, public Pitchable, public EntityTargeter, public Zoomable
+class PlanetCameraController : public CameraController, public LatLonSettable, public Pitchable, public EntityTargeter, public DefaultZoomable
 {
 public:
 	struct Params
 	{
 		double maxDistOnRadius; //!< Maximum alowed camera distance from the planet, divided by planet radius
-		float fovY;
 		float zoomRate;
 	};
 

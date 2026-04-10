@@ -15,8 +15,16 @@ class Zoomable
 {
 public:
 	virtual ~Zoomable() = default;
-	virtual double getZoom() const { return mZoom; }
-	virtual void setZoom(double zoom) { mZoom = zoom; }
+	virtual double getZoom() const = 0;
+	virtual void setZoom(double zoom) = 0;
+};
+
+class DefaultZoomable : public Zoomable
+{
+public:
+	~DefaultZoomable() override = default;
+	double getZoom() const override { return mZoom; }
+	void setZoom(double zoom) override { mZoom = zoom; }
 
 protected:
 	double mZoom = 0;

@@ -250,17 +250,13 @@ static sim::ComponentPtr loadCameraController(Entity* entity, const ComponentFac
 	std::map<std::string, CameraControllerPtr> controllers;	
 	{
 		AttachedCameraController::Params params;
-		params.minFovY = 0.3;
-		params.maxFovY = 1.3;
 		params.attachmentPointName = "cockpit";
 		CameraControllerPtr controller(new AttachedCameraController(entity, context.simWorld, params));
 		controllers["Cockpit"] = controller;
 	}
 
 	{
-		FreeCameraController::Params params;
-		params.baseFovY = 0.5;
-		CameraControllerPtr controller(new FreeCameraController(entity, params));
+		CameraControllerPtr controller(new FreeCameraController(entity));
 		controllers["Free"] = controller;
 	}
 
@@ -274,7 +270,6 @@ static sim::ComponentPtr loadCameraController(Entity* entity, const ComponentFac
 		PlanetCameraController::Params params;
 		params.zoomRate = 0.5;
 		params.maxDistOnRadius = 7.0;
-		params.fovY = 0.5f;
 		CameraControllerPtr controller(new PlanetCameraController(entity, context.simWorld, params));
 		controllers["Globe"] = controller;
 	}

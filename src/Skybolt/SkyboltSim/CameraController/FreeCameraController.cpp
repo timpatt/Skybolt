@@ -19,25 +19,26 @@ SKYBOLT_REFLECT(FreeCameraController) {
 		.superType<Pitchable>()
 		.superType<Yawable>()
 		.superType<Zoomable>()
-		.property("baseFovY", &FreeCameraController::getBaseFov, &FreeCameraController::setBaseFov, {{PropertyMetadataNames::units, Units::Radians}});
+		.property("minFovY", &FreeCameraController::minFovY, {{PropertyMetadataNames::units, Units::Radians}})
+		.property("maxFovY", &FreeCameraController::maxFovY, { {PropertyMetadataNames::units, Units::Radians}});
 }
 
 
-FreeCameraController::FreeCameraController(Entity* camera, const Params& params) :
-	CameraController(camera),
-	mBaseFov(params.baseFovY)
+FreeCameraController::FreeCameraController(Entity* camera) :
+	CameraController(camera)
 {
-	mCameraComponent->getState().fovY = mBaseFov;
 }
 
 void FreeCameraController::update(SecondsD dt)
 {
 	mYaw += mInput.yawRate * dt;
 	mPitch += mInput.tiltRate * dt;
-	mZoom += mInput.zoomRate * dt;
-	mZoom = skybolt::math::clamp(mZoom, 0.0, 1.0);
 
-	mCameraComponent->getState().fovY = skybolt::math::lerp(mBaseFov, mBaseFov * 0.1f, float(mZoom));
+	if (mInput.zoomRate != 0)
+	{
+		setZoom(getZoom() + mInput.zoomRate * dt);
+	}
+	mCameraComponent->getState().fovY = std::clamp(mCameraComponent->getState().fovY, float(minFovY), float(maxFovY));
 	
 	double speed = mInput.modifier1Pressed ? 10000.0 : (mInput.modifier2Pressed ? 100.0 : 1000.0);
 	Vector3 vel = Vector3(mInput.forwardSpeed, mInput.rightSpeed, 0.0f) * speed;
@@ -49,6 +50,19 @@ void FreeCameraController::update(SecondsD dt)
 	mNodeComponent->setOrientation(orientation);
 	Vector3 position = mNodeComponent->getPosition() + orientation * vel * (double)dt;
 	mNodeComponent->setPosition(position);
+}
+
+double FreeCameraController::getZoom() const
+{
+	// Minimum FOV when zoom is 1, maximum FOV when zoom is 0
+	double zoom = (mCameraComponent->getState().fovY - maxFovY) / (minFovY - maxFovY);
+	return std::clamp(zoom, 0.0, 1.0);
+}
+
+void FreeCameraController::setZoom(double zoom)
+{
+	zoom = skybolt::math::clamp(zoom, 0.0, 1.0);
+	mCameraComponent->getState().fovY = skybolt::math::lerp(maxFovY, minFovY, zoom);
 }
 
 } // namespace skybolt::sim

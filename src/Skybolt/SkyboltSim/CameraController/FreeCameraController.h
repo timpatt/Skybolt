@@ -15,21 +15,19 @@ namespace sim {
 class FreeCameraController : public CameraController, public Pitchable, public Yawable, public Zoomable
 {
 public:
-	struct Params
-	{
-		float baseFovY;
-	};
-
-	FreeCameraController(Entity* camera, const Params& params);
+	FreeCameraController(Entity* camera);
 
 	void update(SecondsD dt) override;
 	void setInput(const Input& input) override { mInput = input; }
 
-	float getBaseFov() const { return mBaseFov; }
-	void setBaseFov(float fov) { mBaseFov = fov; }
+	double minFovY = math::degToRadD() * 10.0;
+	double maxFovY = math::degToRadD() * 120.0;
+
+public: // Zoomable interface
+	double getZoom() const override;
+	void setZoom(double zoom) override;
 
 private:
-	float mBaseFov;
 	Input mInput = Input::zero();
 };
 

@@ -39,7 +39,6 @@ PlanetCameraController::PlanetCameraController(sim::Entity* camera, World* world
 	mParams(params)
 {
 	setPitch(skybolt::math::halfPiF());
-	mCameraComponent->getState().fovY = mParams.fovY;
 }
 
 void PlanetCameraController::update(SecondsD dt)
@@ -72,7 +71,8 @@ void PlanetCameraController::update(SecondsD dt)
 		}
 		else
 		{
-			float fovHeightAtPlanetSurfaceInMeters = 2.0f * std::tan(mParams.fovY * 0.5f) * distFromSurface;
+			const float fovY = mCameraComponent->getState().fovY;
+			float fovHeightAtPlanetSurfaceInMeters = 2.0f * std::tan(fovY * 0.5f) * distFromSurface;
 			float planetSurfaceVisibleVerticalArcInRadians = fovHeightAtPlanetSurfaceInMeters / planet->radius;
 
 			mLatLon.lon -= planetSurfaceVisibleVerticalArcInRadians * yawDelta;
