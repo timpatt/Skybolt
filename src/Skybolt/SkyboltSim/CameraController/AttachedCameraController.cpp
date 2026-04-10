@@ -28,7 +28,6 @@ SKYBOLT_REFLECT(AttachedCameraController) {
 		.superType<Pitchable>()
 		.superType<EntityTargeter>()
 		.superType<Yawable>()
-		.superType<Zoomable>()
 		.property("minFovY", &AttachedCameraController::minFovY, { {PropertyMetadataNames::units, Units::Radians} })
 		.property("maxFovY", &AttachedCameraController::maxFovY, { {PropertyMetadataNames::units, Units::Radians} });
 }

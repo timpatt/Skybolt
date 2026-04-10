@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 		auto orbitController = cameraControllerComponent->getControllerOfType<OrbitCameraController>();
 		orbitController->setLagTimeConstant(0.3);
 		orbitController->setTargetOffset(sim::Vector3(0, 0, -3));
-		orbitController->setZoom(0.8);
+		orbitController->setDollyFactor(0.8);
 
 		auto visRoot = createExampleVisRoot();
 

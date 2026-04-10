@@ -11,12 +11,11 @@
 #include "Pitchable.h"
 #include "EntityTargeter.h"
 #include "Yawable.h"
-#include "Zoomable.h"
 
 namespace skybolt {
 namespace sim {
 
-class AttachedCameraController : public CameraController, public Pitchable, public EntityTargeter, public Yawable, public Zoomable
+class AttachedCameraController : public CameraController, public Pitchable, public EntityTargeter, public Yawable
 {
 public:
 	struct Params
@@ -33,10 +32,8 @@ public: // CameraController interface
 	void update(SecondsD dt) override;
 	void setInput(const Input& input) override { mInput = input; }
 
-public: // Zoomable interface
-	double getZoom() const override;
-	void setZoom(double zoom) override;
-
+	double getZoom() const;
+	void setZoom(double zoom);
 
 private:
 	AttachmentPointPtr findAttachmentPoint(const Entity& entity) const; //!< Can return null

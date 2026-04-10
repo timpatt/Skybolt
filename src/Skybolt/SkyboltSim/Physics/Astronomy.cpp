@@ -89,6 +89,21 @@ double calcHourAngle(double julianDate, const LatLon& equatorial, const LatLon& 
 	return calcHourAngleOfVernalEquinox(julianDate) + observer.lon - equatorial.lon;
 }
 
+double calcLocalHour(double julianDate, const LatLon& observer)
+{
+	// Get Sun's current position relative to the observer
+	LatLon sunEcliptic = calcSunEclipticPosition(julianDate);
+	LatLon sunEquatorial = convertEclipticToEquatorial(julianDate, sunEcliptic);
+
+	// Get the Hour Angle in radians
+	double hourAngle = calcHourAngle(julianDate, sunEquatorial, observer);
+
+	// Convert Radians to Decimal Hours
+	// We add 12 because hourAngle=0 is noon.
+	double decimalHour = 12.0 + (hourAngle * (12.0 / math::piD()));
+	return decimalHour;
+}
+
 AzimuthElevation convertEquatorialToHorizontal(double julianDate, const LatLon& equatorial, const LatLon& observer)
 {
 	double hourAngle = calcHourAngle(julianDate, equatorial, observer);

@@ -24,7 +24,11 @@ LatLon convertEclipticToEquatorial(double julianDate, const LatLon& ecliptic);
 //! @returns hour angle of the vernal equinox (a.k.a Greenwich mean sidereal time) in radians
 double calcHourAngleOfVernalEquinox(double julianDate);
 
+//! @returns angle in radians
 double calcHourAngle(double julianDate, const LatLon& equatorial, const LatLon& observer);
+
+//! @returns local hour in range [0, 24)
+double calcLocalHour(double julianDate, const LatLon& observer);
 
 AzimuthElevation convertEquatorialToHorizontal(double julianDate, const LatLon& equatorial, const LatLon& observer);
 

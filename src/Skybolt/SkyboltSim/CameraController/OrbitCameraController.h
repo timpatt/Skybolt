@@ -8,9 +8,9 @@
 #pragma once
 
 #include "CameraController.h"
+#include "Dollyable.h"
 #include "Pitchable.h"
 #include "Yawable.h"
-#include "Zoomable.h"
 #include "EntityTargeter.h"
 
 #include <optional>
@@ -18,7 +18,7 @@
 namespace skybolt {
 namespace sim {
 
-class OrbitCameraController : public CameraController, public Pitchable, public EntityTargeter, public Yawable, public DefaultZoomable
+class OrbitCameraController : public CameraController, public Pitchable, public EntityTargeter, public Yawable, public Dollyable
 {
 public:
 	struct Params

@@ -28,7 +28,7 @@ SKYBOLT_REFLECT(OrbitCameraController) {
 		.superType<Pitchable>()
 		.superType<EntityTargeter>()
 		.superType<Yawable>()
-		.superType<Zoomable>();
+		.superType<Dollyable>();
 }
 
 OrbitCameraController::OrbitCameraController(sim::Entity* camera, sim::World* world, const Params& params) :
@@ -39,7 +39,7 @@ OrbitCameraController::OrbitCameraController(sim::Entity* camera, sim::World* wo
     mFilteredPlanetUp(0,0,0),
 	mTargetPosition(0,0,0)
 {
-	setZoom(0.5f);
+	setDollyFactor(0.5f);
 }
 
 void OrbitCameraController::resetFiltering()
@@ -84,8 +84,8 @@ void OrbitCameraController::update(SecondsD dt)
 
 	mYaw += msYawRate * mInput.yawRate * dt;
 	mPitch += msPitchRate * mInput.tiltRate * dt;
-	mZoom += msZoomRate * mInput.zoomRate * dt;
-	mZoom = math::clamp(mZoom, 0.0, 1.0);
+	mDollyFactor += msZoomRate * mInput.zoomRate * dt;
+	mDollyFactor = math::clamp(mDollyFactor, 0.0, 1.0);
     
     double maxPitch = math::halfPiD();
     mPitch = math::clamp(mPitch, -maxPitch, maxPitch);
@@ -158,7 +158,7 @@ void OrbitCameraController::update(SecondsD dt)
 	}
 
 	// Zoom control
-	double dist = mParams.maxDist + mZoom * (mParams.minDist - mParams.maxDist);
+	double dist = mParams.maxDist + mDollyFactor * (mParams.minDist - mParams.maxDist);
 
 	// Derive camera position
 	mNodeComponent->setPosition(mTargetPosition + mNodeComponent->getOrientation() * (Vector3(-dist, 0, 0) + mTargetOffset));
