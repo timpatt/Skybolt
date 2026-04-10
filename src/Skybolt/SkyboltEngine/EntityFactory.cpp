@@ -25,7 +25,6 @@
 #include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/WorldUtil.h>
-#include <SkyboltSim/Components/CloudComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/Node.h>
@@ -438,8 +437,6 @@ static void loadVisualPlanet(Entity* entity, const EntityFactory::Context& conte
 			const nlohmann::json& clouds = it.value();
 			config.cloudsTexture = visContext.textureCache->getOrCreateTexture(clouds.at("map"), &createCloudTexture);
 			config.cloudRenderingParams = getCloudRenderingParams(context.engineSettings);
-
-			entity->addComponent(std::make_shared<CloudComponent>());
 		}
 	}
 

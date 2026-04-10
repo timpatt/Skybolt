@@ -21,6 +21,7 @@
 #include <SkyboltSim/Components/AssetDescriptionComponent.h>
 #include <SkyboltSim/Components/AttacherComponent.h>
 #include <SkyboltSim/Components/AttachmentPointsComponent.h>
+#include <SkyboltSim/Components/CloudComponent.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/ControlInputsComponent.h>
@@ -350,6 +351,11 @@ static sim::ComponentPtr loadPlanetElevationTileSource(Entity* entity, const Com
 	return elevationComponent;
 }
 
+static sim::ComponentPtr loadClouds(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	return std::make_shared<CloudComponent>();
+}
+
 void addDefaultFactories(ComponentFactoryRegistry& registry)
 {
 	registry["shipWake"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadShipWake);
@@ -358,6 +364,7 @@ void addDefaultFactories(ComponentFactoryRegistry& registry)
 	registry["assetDescription"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAssetDescription);
 	registry["camera"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadCamera);
 	registry["cameraController"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadCameraController);
+	registry["clouds"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadClouds);
 	registry["controlInputs"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadControlInputs);
 	registry["dynamicBody"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadDynamicBody);
 	registry["fuselage"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadFuselage);
