@@ -9,11 +9,13 @@ using namespace sim;
 SimSnapshotRegistry::SimSnapshotRegistry(const SimSnapshotRegistryConfig& config) :
 	mEntityFactory(config.entityFactory),
 	mTypeRegistry(config.typeRegistry),
-	mScenario(config.scenario)
+	mScenario(config.scenario),
+	mSystemRegistry(config.systemRegistry)
 {
 	assert(mEntityFactory);
 	assert(mTypeRegistry);
 	assert(mScenario);
+	assert(mSystemRegistry);
 }
 
 void SimSnapshotRegistry::loadSnapshot(const Snapshot& snapshot)
@@ -24,6 +26,7 @@ void SimSnapshotRegistry::loadSnapshot(const Snapshot& snapshot)
 	};
 
 	readScenario(*mTypeRegistry, *mScenario, mEntityFactory, snapshot.state, entityPersistenceFlags);
+	resetSystemsToInitialState(*mSystemRegistry);
 }
 
 void SimSnapshotRegistry::saveSnapshotAtCurrentTime()
@@ -76,6 +79,7 @@ std::unique_ptr<SimSnapshotRegistry> createSnapshotRegistry(const skybolt::Engin
 	};
 	config.typeRegistry = engineRoot.typeRegistry.get();
 	config.scenario = engineRoot.scenario.get();
+	config.systemRegistry = engineRoot.systemRegistry;
 	return std::make_unique<SimSnapshotRegistry>(config);
 }
 

@@ -3,6 +3,7 @@
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include "SkyboltEngine/Scenario/ScenarioSerialization.h"
 #include <SkyboltReflect/SkyboltReflectFwd.h>
+#include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltSim/Chrono.h>
 
 #include <vector>
@@ -15,6 +16,7 @@ struct SimSnapshotRegistryConfig
 	EntityFactoryFn entityFactory;
 	refl::TypeRegistry* typeRegistry;
 	Scenario* scenario;
+	sim::SystemRegistryPtr systemRegistry;
 };
 
 class SimSnapshotRegistry
@@ -41,6 +43,7 @@ private:
 	const EntityFactoryFn mEntityFactory;
 	refl::TypeRegistry* mTypeRegistry;
 	Scenario* mScenario;
+	sim::SystemRegistryPtr mSystemRegistry;
 
 	//! Time-ordered vector of snapshots
 	SnapshotVector mSnapshots;

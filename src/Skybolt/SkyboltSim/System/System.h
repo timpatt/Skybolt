@@ -16,6 +16,11 @@ class System : public SimUpdatable
 public:
 	System() = default;
 	~System() override = default;
+
+	//! Sets the system to its initial state.
+	//! This method is used to reset the system when restarting the simulation.
+	//! This method is required because systems are persisted across simulation restarts, so their state is not automatically reset when the simulation is restarted.
+	virtual void reset() {};
 };
 
 } // namespace sim

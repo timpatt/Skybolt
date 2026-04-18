@@ -226,6 +226,8 @@ static void registerComponent(EngineRoot& engineRoot, const py::handle& pyClass)
 
 static void loadScenarioFromJsonString(EngineRoot& engineRoot, const std::string& jsonString)
 {
+	resetSystemsToInitialState(*engineRoot.systemRegistry);
+
 	EntityFactoryFn entityFactoryFn = [entityFactory = engineRoot.entityFactory.get()](const std::string& templateName, const std::string& instanceName) {
 		return entityFactory->createEntity(templateName, instanceName);
 	};

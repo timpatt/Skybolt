@@ -28,6 +28,7 @@ static SimSnapshotRegistry createSimSnapshotRegistry(refl::TypeRegistry* typeReg
 	config.entityFactory = entityFactory;
 	config.typeRegistry = typeRegistry;
 	config.scenario = scenario;
+	config.systemRegistry = std::make_shared<sim::SystemRegistry>();
 
 	return SimSnapshotRegistry(config);
 }

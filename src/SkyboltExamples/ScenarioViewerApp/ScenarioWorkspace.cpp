@@ -129,6 +129,8 @@ void ScenarioWorkspace::unloadScenario()
 
 void ScenarioWorkspace::loadScenario(const nlohmann::json& json)
 {
+	resetSystemsToInitialState(*mEngineRoot->systemRegistry);
+
 	EntityFactoryFn entityFactoryFn = [entityFactory = mEngineRoot->entityFactory.get()](const std::string& templateName, const std::string& instanceName) {
 		return entityFactory->createEntity(templateName, instanceName);
 	};

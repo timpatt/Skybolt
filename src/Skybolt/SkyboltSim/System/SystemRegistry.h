@@ -42,6 +42,8 @@ std::shared_ptr<T> findRequiredSystem(const SystemRegistry& registry)
 	return system;
 }
 
+void resetSystemsToInitialState(const SystemRegistry& registry);
+
 
 } // namespace sim
 } // namespace skybolt

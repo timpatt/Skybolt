@@ -23,6 +23,8 @@ World::~World()
 	// TODO: Investigate cleaner solutions.
 	mDestructing = true;
 	mEntities.clear();
+	mIdToEntityMap.clear();
+	mNameToEntityMap.clear();
 }
 
 void World::addEntity(const EntityPtr& entity)
