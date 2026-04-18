@@ -167,8 +167,8 @@ int main(int argc, char *argv[])
 		// Configure external view camera controller
 		auto cameraControllerComponent = simCamera->getFirstComponentRequired<CameraControllerComponent>();
 		auto orbitController = cameraControllerComponent->getControllerOfType<OrbitCameraController>();
-		orbitController->setLagTimeConstant(0.3);
-		orbitController->setTargetOffset(sim::Vector3(0, 0, -3));
+		orbitController->lagTimeConstant = 0.3;
+		orbitController->targetPositionOffset = sim::Vector3(0, 0, -3);
 		orbitController->setDollyFactor(0.8);
 
 		auto visRoot = createExampleVisRoot();

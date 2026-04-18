@@ -29,7 +29,9 @@ CameraControllerComponent::CameraControllerComponent(const ControllersMap& contr
 
 void CameraControllerComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
-	mSimDt += dt;
+	mSimTimeSinceLastDynamicsStep += dt;
+	mSimTimeSinceLastAttachmentsUpdate += dt;
+	mSimTime = newTime;
 }
 
 void CameraControllerComponent::advanceWallTime(SecondsD newTime, SecondsD dt)
@@ -41,17 +43,22 @@ void CameraControllerComponent::postDynamicsSubStep()
 {
 	if (getSelectedController())
 	{
-		getSelectedController()->updatePostDynamicsSubstep(mSimDt);
+		getSelectedController()->updatePostDynamicsSubstep(mSimTime, mSimTimeSinceLastDynamicsStep);
 	}
-	mSimDt = 0;
+	mSimTimeSinceLastDynamicsStep = 0;
 }
 
 void CameraControllerComponent::updateAttachments()
 {
 	if (getSelectedController())
 	{
-		getSelectedController()->update(mWallDt);
+		getSelectedController()->updateTimeStep(CameraController::UpdateTimeStepArgs{
+			.newSimTime = mSimTime,
+			.simTimeStep = mSimTimeSinceLastAttachmentsUpdate,
+			.wallTimeStep = mWallDt
+		});
 	}
+	mSimTimeSinceLastAttachmentsUpdate = 0;
 	mWallDt = 0;
 }
 

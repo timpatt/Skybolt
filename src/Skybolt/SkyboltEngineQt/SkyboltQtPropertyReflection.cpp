@@ -13,6 +13,7 @@
 #include <SkyboltWidgets/Util/QtTypeConversions.h>
 #include <SkyboltWidgets/Property/QtPropertyReflectionConversion.h>
 #include <SkyboltReflect/Reflection.h>
+#include <SkyboltSim/CameraController/CameraModifier.h>
 #include <SkyboltSim/PropertyMetadata.h>
 #include <SkyboltSim/Spatial/LatLon.h>
 
@@ -132,5 +133,9 @@ skybolt::ReflTypePropertyFactoryMap createSkyboltReflTypePropertyFactories(skybo
 	factories[typeRegistry.getOrCreateType<sim::Vector3>()] = createPropertyFactory<sim::Vector3>(QVector3D(0,0,0));
 	factories[typeRegistry.getOrCreateType<sim::Quaternion>()] = createPropertyFactory<sim::Quaternion>(QVector3D(0,0,0));
 	factories[typeRegistry.getOrCreateType<sim::LatLon>()] = createPropertyFactory<sim::LatLon>(QVariant::fromValue(sim::LatLon(0,0)));
+	factories[typeRegistry.getOrCreateType<skybolt::sim::CameraControllerSelector::ControllersMap>()] = createPropertyFactory<skybolt::sim::CameraControllerSelector::ControllersMap>(QVariant::fromValue(skybolt::sim::CameraControllerSelector::ControllersMap{}));
+	factories[typeRegistry.getOrCreateType<skybolt::sim::CameraModifierPtr>()] = createPropertyFactory<skybolt::sim::CameraModifierPtr>(QVariant::fromValue(skybolt::sim::CameraModifierPtr{}), [] (const refl::Instance& reflValue, const QVariant& qtValue) {
+		return QString::fromStdString(reflValue.cast<skybolt::sim::CameraModifierPtr>()->getTypeName());
+	});
 	return factories;
 }

@@ -248,6 +248,12 @@ static sim::ComponentPtr loadAttachmentPoint(Entity* entity, const ComponentFact
 
 static sim::ComponentPtr loadCameraController(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
+	auto modifierFactories = context.factoryRegistries->getFirstItemOfType<CameraModifierFactoryRegistry>();
+	if (!modifierFactories)
+	{
+		throw Exception("CameraControllerComponent requires CameraModifierFactoryRegistry to be registered in the factory registries");
+	}
+
 	std::map<std::string, CameraControllerPtr> controllers;	
 	{
 		AttachedCameraController::Params params;
@@ -257,13 +263,13 @@ static sim::ComponentPtr loadCameraController(Entity* entity, const ComponentFac
 	}
 
 	{
-		CameraControllerPtr controller(new FreeCameraController(entity));
+		CameraControllerPtr controller(new FreeCameraController(entity, modifierFactories));
 		controllers["Free"] = controller;
 	}
 
 	{
 		OrbitCameraController::Params params(10, 200, 0.5);
-		CameraControllerPtr controller(new OrbitCameraController(entity, context.simWorld, params));
+		CameraControllerPtr controller(new OrbitCameraController(entity, context.simWorld, params, modifierFactories));
 		controllers["Follow"] = controller;
 	}
 

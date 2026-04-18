@@ -8,17 +8,19 @@
 #pragma once
 
 #include "CameraController.h"
+#include "CameraModifierStack.h"
 #include "Dollyable.h"
 #include "Pitchable.h"
 #include "Yawable.h"
 #include "EntityTargeter.h"
+#include "SkyboltSim/Serialization/Serialization.h"
 
 #include <optional>
 
 namespace skybolt {
 namespace sim {
 
-class OrbitCameraController : public CameraController, public Pitchable, public EntityTargeter, public Yawable, public Dollyable
+class OrbitCameraController : public CameraController, public CameraModifierStack, public ExplicitSerialization, public Pitchable, public EntityTargeter, public Yawable, public Dollyable
 {
 public:
 	struct Params
@@ -32,34 +34,34 @@ public:
 		Vector3 orientationLagTimeConstant = Vector3(0);
 	};
 
-	OrbitCameraController(Entity* camera, World* world, const Params& params);
+	OrbitCameraController(Entity* camera, World* world, const Params& params, const CameraModifierFactoryRegistryPtr& cameraModifierFactories);
 
-	void setTargetOffset(const Vector3& offset) { mTargetOffset = offset; }
-	void setLagTimeConstant(float constant) { mLagTimeConstant = constant; }
+	double lagTimeConstant = 0;
+	bool lockOrientationToTarget = true;
+	Vector3 targetPositionOffset = {};
 
 public:
 	// CameraController interface
 	void setActive(bool active) override;
-	void updatePostDynamicsSubstep(SecondsD dtSubstep) override;
-	void update(SecondsD dt) override;
+	void updatePostDynamicsSubstep(SecondsD simTime, SecondsD dtSubstep) override;
+	void updateTimeStep(const UpdateTimeStepArgs& args) override;
 	void setInput(const Input& input) override { mInput = input; }
+
+public: // ExplicitSerialization interface
+	nlohmann::json toJson(refl::TypeRegistry& typeRegistry) const;
+	void fromJson(refl::TypeRegistry& typeRegistry, const nlohmann::json& j);
 
 private:
 	void resetFiltering();
 
 	Params mParams;
-	Vector3 mTargetOffset;
-	Vector3 mTargetPosition;
 	std::optional<Quaternion> mSmoothedTargetOrientation;
-	Vector3 mFilteredPlanetUp;
 	EntityId mPrevTargetId = nullEntityId();
 	Input mInput = Input::zero();
-	float mLagTimeConstant = 0;
 
 	static const float msYawRate;
 	static const float msPitchRate;
 	static const float msZoomRate;
-	static const float msPlanetAlignTransitionRate;
 };
 
 SKYBOLT_REFLECT_EXTERN(OrbitCameraController)

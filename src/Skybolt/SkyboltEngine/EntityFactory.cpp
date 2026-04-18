@@ -621,14 +621,16 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 }
 
 	// Create additional components from json
-	ComponentFactoryContext componentFactoryContext;
-	componentFactoryContext.julianDateProvider = mContext.julianDateProvider;
-	componentFactoryContext.scheduler = mContext.scheduler;
-	componentFactoryContext.simWorld = mContext.simWorld;
-	componentFactoryContext.entityFactory = this;
-	componentFactoryContext.stats = mContext.stats;
-	componentFactoryContext.tileSourceFactoryRegistry = mContext.tileSourceFactoryRegistry;
-	componentFactoryContext.fileLocator = mContext.fileLocator;
+	ComponentFactoryContext componentFactoryContext{
+	.scheduler = mContext.scheduler,
+	.simWorld = mContext.simWorld,
+	.entityFactory = this,
+	.julianDateProvider = mContext.julianDateProvider,
+	.stats = mContext.stats,
+	.tileSourceFactoryRegistry = mContext.tileSourceFactoryRegistry,
+	.fileLocator = mContext.fileLocator,
+	.factoryRegistries = mContext.factoryRegistries
+	};
 
 	const nlohmann::json& components = json.at("components");
 	for (const auto& component : components)

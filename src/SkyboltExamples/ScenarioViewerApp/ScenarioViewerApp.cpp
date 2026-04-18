@@ -10,6 +10,7 @@
 #include "ScenarioTreeWidget.h"
 #include "ScenarioWorkspace.h"
 
+#include <SkyboltCommon/MapUtility.h>
 #include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltEngine/EntityFactory.h>
@@ -61,7 +62,6 @@
 #include <SkyboltWidgets/Property/QtProperty.h>
 #include <SkyboltWidgets/Property/QtPropertyMetadata.h>
 #include <SkyboltWidgets/Property/QtPropertyReflection.h>
-#include <SkyboltWidgets/Property/QtPropertyReflectionConversion.h>
 #include <SkyboltWidgets/Property/QtMetaTypes.h>
 #include <SkyboltWidgets/Timeline/TimeControlWidget.h>
 #include <SkyboltWidgets/Timeline/TimelineWidget.h>
@@ -79,6 +79,7 @@
 #include <QAction>
 #include <QDockWidget>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QMenuBar>
 #include <QScrollArea>
 #include <QStatusBar>
@@ -182,13 +183,21 @@ static QTimer* createAndStartIntervalDtTimer(int intervalMilliseconds, QObject* 
 #include <windows.h>
 #endif
 
-static void displayApplicationError(const std::string &error)
+static void displayApplicationError(QWidget* parent, const QString &error)
 {
-	printf("Error: %s\n", error.c_str());
+	SKYBOLT_LOG(error) << error.toStdString();
+	QMessageBox::critical(parent, "", error);
+}
+
+static void displayNativeApplicationError(const std::string &error)
+{
+	SKYBOLT_LOG(error) << error;
+
 	#ifdef WIN32
 	MessageBox(NULL, std::wstring(error.begin(), error.end()).c_str(), L"Exception", 0);
 	#endif
 }
+
 
 static std::unique_ptr<QSplashScreen> createSplashScreen()
 {
@@ -227,7 +236,7 @@ public:
 		}
 		catch (const std::exception& e)
 		{
-            displayApplicationError(e.what());
+            displayNativeApplicationError(e.what());
 		}        
 		return false;
      }
@@ -387,9 +396,13 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Create property editor
 	auto entityPropertiesModel = std::make_shared<EntityPropertiesModel>(engineRoot->typeRegistry.get(), std::make_shared<ReflTypePropertyFactoryMap>(createSkyboltReflTypePropertyFactories(*engineRoot->typeRegistry)));
 	
+	auto skyboltTypePropertyFactories = std::make_shared<ReflTypePropertyFactoryMap>(createSkyboltReflTypePropertyFactories(*engineRoot->typeRegistry));
 	PropertyEditorWidgetFactoryMapPtr factoryMap = createSkyboltEditorWidgetFactoryMap(DefaultEditorWidgetFactoryMapConfig{
 		.listEditorIcons = createDefaultListEditorIcons()
-		});
+		},
+		engineRoot->typeRegistry.get(),
+		skyboltTypePropertyFactories,
+		engineRoot->factoryRegistries.get());
 	auto* propertyEditor = new PropertyEditor(factoryMap, &mainWindow);
 	{
 		auto propertiesWidget = wrapWithVerticalScrollBar(propertyEditor);
@@ -503,15 +516,21 @@ static int createAndExecuteApplication(int argc, char** argv)
 			auto openRecentMenu = fileMenu->addMenu("Open &Recent");
 
 			recentFileMenuPopulator = std::make_shared<RecentFilesMenuPopulator>(*openRecentMenu, &settings,
-				[&scenarioWorkspace](const QString& filename) {
-					scenarioWorkspace.loadScenario(filename);
+				[&scenarioWorkspace, &mainWindow](const QString& filename) {
+					if (auto error = scenarioWorkspace.loadScenario(filename); error)
+					{
+						displayApplicationError(&mainWindow, *error);
+					}
 				});
 
 			QObject::connect(openAction, &QAction::triggered, &mainWindow, [&mainWindow, recentFileMenuPopulator, &scenarioWorkspace]() {
 				QString filename = QFileDialog::getOpenFileName(&mainWindow, "Open Scenario", QString(), "Scenario Files (*.scn);All Files (*)");
 				if (!filename.isEmpty())
 				{
-					scenarioWorkspace.loadScenario(filename);
+					if (auto error = scenarioWorkspace.loadScenario(filename); error)
+					{
+						displayApplicationError(&mainWindow, *error);
+					}
 					recentFileMenuPopulator->addRecentFilename(filename);
 				}
 			});
@@ -525,7 +544,10 @@ static int createAndExecuteApplication(int argc, char** argv)
 				QString filename = QFileDialog::getSaveFileName(&mainWindow, "Save Scenario", QString(), "Scenario Files (*.scn)");
 				if (!filename.isEmpty())
 				{
-					scenarioWorkspace.saveScenario(filename);
+					if (auto error = scenarioWorkspace.saveScenario(filename); error)
+					{
+						displayApplicationError(&mainWindow, *error);
+					}
 					recentFileMenuPopulator->addRecentFilename(filename);
 				}
 			};
@@ -533,14 +555,17 @@ static int createAndExecuteApplication(int argc, char** argv)
 			auto saveAction = new QAction("&Save...", &mainWindow);
 			fileMenu->addAction(saveAction);
 
-			QObject::connect(saveAction, &QAction::triggered, &mainWindow, [saveAsFn, &scenarioWorkspace]() {
+			QObject::connect(saveAction, &QAction::triggered, &mainWindow, [saveAsFn, &scenarioWorkspace, &mainWindow]() {
 				if (scenarioWorkspace.getScenarioFilename().isEmpty())
 				{
 					saveAsFn();
 				}
 				else
 				{
-					scenarioWorkspace.saveScenario(scenarioWorkspace.getScenarioFilename());
+					if (auto error = scenarioWorkspace.saveScenario(scenarioWorkspace.getScenarioFilename()); error)
+					{
+						displayApplicationError(&mainWindow, *error);
+					}
 				}
 			});
 
@@ -687,11 +712,11 @@ int main(int argc, char** argv)
 	}
 	catch (const std::exception &e)
 	{
-		displayApplicationError(e.what());
+		displayNativeApplicationError(e.what());
 	}
 	catch (...)
 	{
-		displayApplicationError("Exception caught in main");
+		displayNativeApplicationError("Exception caught in main");
 	}
 	return EXIT_FAILURE;
 }

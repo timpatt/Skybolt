@@ -26,15 +26,14 @@ public:
 		return mSelectedName;
 	}
 
-	CameraController* getSelectedController() const
-	{
-		return mSelectedController.get();
-	}
+	CameraController* getSelectedController() const;
 
 	const ControllersMap& getControllers() const
 	{
 		return mControllers;
 	}
+
+	void setControllers(const ControllersMap& controllers);
 
 	void addController(const std::string& name, const CameraControllerPtr& controller);
 
@@ -60,7 +59,6 @@ public:
 private:
 	ControllersMap mControllers;
 	std::string mSelectedName;
-	CameraControllerPtr mSelectedController;
 };
 
 SKYBOLT_REFLECT_EXTERN(CameraControllerSelector)

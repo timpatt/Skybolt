@@ -68,13 +68,10 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 
 		for (const sim::ComponentPtr& component : mEntity->getComponents())
 		{
-			if (refl::TypePtr type = mTypeRegistry->getMostDerivedType(*component); type)
-			{
-				ReflInstanceGetter getter = [this, component] { return refl::makeRefInstance(*mTypeRegistry, component.get()); };
+			ReflInstanceGetter getter = [this, component] { return refl::makeRefInstance(*mTypeRegistry, component.get()); };
 
-				refl::Instance instance = refl::makeRefInstance(*mTypeRegistry, component.get());
-				addReflPropertiesToModel(*mTypeRegistry, *this, toValuesVector(refl::getProperties(instance)), getter, *mReflTypePropertyFactoryMap);
-			}
+			refl::Instance instance = refl::makeRefInstance(*mTypeRegistry, component.get());
+			addReflPropertiesToModel(*mTypeRegistry, *this, toValuesVector(refl::getProperties(instance)), getter, *mReflTypePropertyFactoryMap);
 		}
 
 		addProperty(createQtProperty("dynamicsEnabled", false),

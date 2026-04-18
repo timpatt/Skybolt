@@ -49,6 +49,7 @@ public:
 		std::vector<std::string> assetPackagePaths;
 		nlohmann::json engineSettings;
 		std::optional<VisContext> visContext; // !< If empty, visual objects will not be created
+		NonNullPtr<FactoryRegistries> factoryRegistries;
 	};
 
 	EntityFactory(const Context& context, const std::vector<std::filesystem::path>& entityFilenames);

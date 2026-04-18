@@ -6,7 +6,16 @@
 
 #pragma once
 
+#include <SkyboltCommon/NonNullPtr.h>
+#include <SkyboltEngine/FactoryRegistries.h>
 #include <SkyboltWidgets/Property/DefaultEditorWidgets.h>
 #include <SkyboltWidgets/Property/PropertyEditorWidgetFactory.h>
+#include <SkyboltWidgets/Property/QtPropertyReflection.h>
 
-std::unique_ptr<skybolt::PropertyEditorWidgetFactoryMap> createSkyboltEditorWidgetFactoryMap(const skybolt::DefaultEditorWidgetFactoryMapConfig& config);
+namespace skybolt::refl { class TypeRegistry; }
+
+skybolt::PropertyEditorWidgetFactoryMapPtr createSkyboltEditorWidgetFactoryMap(
+	const skybolt::DefaultEditorWidgetFactoryMapConfig& config,
+	skybolt::NonNullPtr<skybolt::refl::TypeRegistry> typeRegistry,
+	const skybolt::ReflTypePropertyFactoryMapPtr& typePropertyFactories,
+	skybolt::NonNullPtr<skybolt::FactoryRegistries> factoryRegistries);

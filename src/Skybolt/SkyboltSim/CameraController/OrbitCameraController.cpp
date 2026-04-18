@@ -10,6 +10,8 @@
 #include "SkyboltSim/World.h"
 #include "SkyboltSim/Components/CameraComponent.h"
 #include "SkyboltSim/Components/Node.h"
+#include "SkyboltSim/Spatial/Geocentric.h"
+#include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/Math/FirstOrderLag.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
@@ -20,32 +22,34 @@ namespace skybolt::sim {
 const float OrbitCameraController::msYawRate = 1.0f;
 const float OrbitCameraController::msPitchRate = 1.0f;
 const float OrbitCameraController::msZoomRate = 1.0f;
-const float OrbitCameraController::msPlanetAlignTransitionRate = 2.0f;
 
 SKYBOLT_REFLECT(OrbitCameraController) {
 	registry.type<OrbitCameraController>("OrbitCameraController")
 		.superType<CameraController>()
+		.superType<CameraModifierStack>()
+		.superType<ExplicitSerialization>()
 		.superType<Pitchable>()
 		.superType<EntityTargeter>()
 		.superType<Yawable>()
-		.superType<Dollyable>();
+		.superType<Dollyable>()
+		.property("lagTimeConstant", &OrbitCameraController::lagTimeConstant)
+		.property("lockOrientationToTarget", &OrbitCameraController::lockOrientationToTarget)
+		.property("targetPositionOffset", &OrbitCameraController::targetPositionOffset);
 }
 
-OrbitCameraController::OrbitCameraController(sim::Entity* camera, sim::World* world, const Params& params) :
+OrbitCameraController::OrbitCameraController(sim::Entity* camera, sim::World* world, const Params& params, const CameraModifierFactoryRegistryPtr& cameraModifierFactories) :
 	CameraController(camera),
+	CameraModifierStack(cameraModifierFactories),
 	EntityTargeter(world),
-	mParams(params),
-	mTargetOffset(0,0,0),
-    mFilteredPlanetUp(0,0,0),
-	mTargetPosition(0,0,0)
+	mParams(params)
 {
 	setDollyFactor(0.5f);
 }
 
 void OrbitCameraController::resetFiltering()
 {
-	mFilteredPlanetUp = Vector3(0,0,0);
 	mSmoothedTargetOrientation.reset();
+	resetState(*this);
 }
 
 void OrbitCameraController::setActive(bool active)
@@ -60,21 +64,22 @@ static Quaternion safeSlerp(const Quaternion& a, const Quaternion& b, double t)
 	return glm::slerp(sSafe, b, t);
 }
 
-void OrbitCameraController::updatePostDynamicsSubstep(SecondsD dtSubstep)
+void OrbitCameraController::updatePostDynamicsSubstep(SecondsD simTime, SecondsD dtSubstep)
 {
 	if (Entity* entity = getTarget(); entity)
 	{
 		Quaternion orientation = *getOrientation(*entity);
 		if (mSmoothedTargetOrientation)
 		{
-			orientation = safeSlerp(*mSmoothedTargetOrientation, orientation, calcFirstOrderLagInterpolationFactor(dtSubstep, double(mLagTimeConstant)));
+			orientation = safeSlerp(*mSmoothedTargetOrientation, orientation, calcFirstOrderLagInterpolationFactor(dtSubstep, lagTimeConstant));
 		}
 		mSmoothedTargetOrientation = orientation;
 	}
 }
 
-void OrbitCameraController::update(SecondsD dt)
+void OrbitCameraController::updateTimeStep(const UpdateTimeStepArgs& args)
 {
+	// Reset filtering when target changes, to avoid a sudden jump in camera orientation
 	EntityId targetId = getTargetId();
 	if (targetId != mPrevTargetId)
 	{
@@ -82,86 +87,82 @@ void OrbitCameraController::update(SecondsD dt)
 		mPrevTargetId = targetId;
 	}
 
-	mYaw += msYawRate * mInput.yawRate * dt;
-	mPitch += msPitchRate * mInput.tiltRate * dt;
-	mDollyFactor += msZoomRate * mInput.zoomRate * dt;
+	// Update rotation and zoom based on input
+	mYaw += msYawRate * mInput.yawRate * args.wallTimeStep;
+	mPitch += msPitchRate * mInput.tiltRate * args.wallTimeStep;
+	mDollyFactor += msZoomRate * mInput.zoomRate * args.wallTimeStep;
 	mDollyFactor = math::clamp(mDollyFactor, 0.0, 1.0);
     
     double maxPitch = math::halfPiD();
     mPitch = math::clamp(mPitch, -maxPitch, maxPitch);
 
-//#define ALIGN_CAM_TO_PLANET
-#ifdef ALIGN_CAM_TO_PLANET
-	SimPlanet* planet;
-#endif
-
-	CameraState& state = mCameraComponent->getState();
-
-	if (sim::Entity* target = getTarget(); target)
+	// Get current target state
+	sim::Entity* target = getTarget();
+	if (!target)
 	{
-		state.nearClipDistance = 0.5;
-		auto optionalPosition = getPosition(*target);
-		if (optionalPosition)
-		{
-			mTargetPosition = *optionalPosition;
-
-			// Calculate camera orientation
-#ifdef ALIGN_CAM_TO_PLANET
-			SpaceBody* body = obj->upcastToSpaceBody();
-			if (body)
-			{
-				planet = body->getUniverse()->getNearestPlanet(body->getPosition());
-				if (planet)
-				{
-					// Calculate filtered planet up direction
-					{
-						Vector3 planetPos = planet->getPosition();
-						Vector3 planetUp = body->getPosition() - planetPos;
-						planetUp.normalize();
-
-						if (mFilteredPlanetUp.isZero())
-						{
-							mFilteredPlanetUp = planetUp;
-						}
-						else
-						{
-							float delta = std::min(1.0f, dt * msPlanetAlignTransitionRate);
-							mFilteredPlanetUp += delta * (planetUp - mFilteredPlanetUp);
-							mFilteredPlanetUp.normalize();
-						}
-					}
-
-					Vector3 camForward = quatRotate(mState.orientation, Vector3(0, 0, -1));
-					camForward.normalize();
-
-					Vector3 side = mFilteredPlanetUp.cross(camForward);
-					side.normalize();
-					camForward = side.cross(mFilteredPlanetUp);
-
-
-					sim::Matrix3 m(-side, -camForward, mFilteredPlanetUp);
-					m.getRotation(mState.orientation);
-					mState.orientation = mState.orientation * glm::angleAxis(mYawDelta, Vector3(0, 1, 0))
-						* glm::angleAxis(mPitch, Vector3(1, 0, 0));
-				}
-			}
-			else
-#endif
-			{
-				if (!mSmoothedTargetOrientation)
-				{
-					mSmoothedTargetOrientation = *getOrientation(*target);
-				}
-				mNodeComponent->setOrientation(*mSmoothedTargetOrientation * glm::angleAxis(mYaw, Vector3(0, 0, 1)) * glm::angleAxis(mPitch, Vector3(0, 1, 0)));
-			}
-		}
+		return;
+	}
+	auto targetPosition = getPosition(*target);
+	if (!targetPosition)
+	{
+		return;
 	}
 
-	// Zoom control
-	double dist = mParams.maxDist + mDollyFactor * (mParams.minDist - mParams.maxDist);
+	// Calculate orientation
+	Quaternion targetOrientation;
+	if (lockOrientationToTarget)
+	{
+		targetOrientation = mSmoothedTargetOrientation.value_or(getOrientation(*target).value_or(math::dquatIdentity()));
+	}
+	else
+	{
+		targetOrientation = sim::latLonToGeocentricLtpOrientation(sim::geocentricToLatLon(*targetPosition));
+	}
 
-	// Derive camera position
-	mNodeComponent->setPosition(mTargetPosition + mNodeComponent->getOrientation() * (Vector3(-dist, 0, 0) + mTargetOffset));
+	CameraState& cameraState = mCameraComponent->getState();
+	cameraState.nearClipDistance = 0.5;
+
+	Quaternion orbitOrientation = targetOrientation * glm::angleAxis(mYaw, Vector3(0, 0, 1)) * glm::angleAxis(mPitch, Vector3(0, 1, 0));
+	double dist = mParams.maxDist + mDollyFactor * (mParams.minDist - mParams.maxDist);
+	Vector3 orbitOffset = orbitOrientation * (Vector3(-dist, 0, 0) + targetPositionOffset);
+
+	// Apply camera modifiers.
+	// Note that modifers are applied after calculating orbitOffset, so that modifiers can add effects like shake without affecting the underlying orbiting behavior.
+	{
+		CameraModifier::State state = {
+			.position = *targetPosition,
+			.orientation = orbitOrientation,
+			.cameraState = mCameraComponent->getState()
+		};
+		applyUpdate(*this, state, args.newSimTime, args.simTimeStep);
+		targetPosition = state.position;
+		orbitOrientation = state.orientation;
+		cameraState = state.cameraState;
+	}
+
+	// Apply state to camera
+	mNodeComponent->setOrientation(orbitOrientation);
+	mNodeComponent->setPosition(*targetPosition + orbitOffset);
+}
+
+nlohmann::json OrbitCameraController::toJson(refl::TypeRegistry& typeRegistry) const
+{
+	// TODO: unduplicate toJson and fromJson methods with FreeCameraController
+	nlohmann::json json = writeReflectedObjectProperties(typeRegistry, refl::makeRefInstance(typeRegistry, const_cast<OrbitCameraController*>(this)));
+	if (nlohmann::json modifierJson = CameraModifierStack::toJson(typeRegistry); !modifierJson.is_null())
+	{
+		json["cameraModifiers"] = modifierJson;
+	}
+	return json;
+}
+
+void OrbitCameraController::fromJson(refl::TypeRegistry& typeRegistry, const nlohmann::json& j)
+{
+	refl::Instance instance = refl::makeRefInstance(typeRegistry, this);
+	readReflectedObjectProperties(typeRegistry, instance, j);
+	ifChildExists(j, "cameraModifiers", [&] (const nlohmann::json& modifiersJson) {
+		CameraModifierStack::fromJson(typeRegistry, modifiersJson);
+	});
 }
 
 } // namespace skybolt::sim

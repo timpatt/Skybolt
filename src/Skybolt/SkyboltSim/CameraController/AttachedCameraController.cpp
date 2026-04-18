@@ -39,14 +39,14 @@ AttachedCameraController::AttachedCameraController(Entity* camera, World* world,
 {
 }
 
-void AttachedCameraController::update(SecondsD dt)
+void AttachedCameraController::updateTimeStep(const UpdateTimeStepArgs& args)
 {
-	mYaw += msYawRate * mInput.yawRate * dt;
-	mPitch += msPitchRate * mInput.tiltRate * dt;
+	mYaw += msYawRate * mInput.yawRate * args.wallTimeStep;
+	mPitch += msPitchRate * mInput.tiltRate * args.wallTimeStep;
 
 	if (mInput.zoomRate != 0)
 	{
-		setZoom(getZoom() + mInput.zoomRate * dt);
+		setZoom(getZoom() + mInput.zoomRate * args.wallTimeStep);
 	}
 	mCameraComponent->getState().fovY = std::clamp(mCameraComponent->getState().fovY, float(minFovY), float(maxFovY));
     

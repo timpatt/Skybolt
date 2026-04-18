@@ -29,7 +29,7 @@ public:
 	double maxFovY = math::degToRadD() * 120.0;
 
 public: // CameraController interface
-	void update(SecondsD dt) override;
+	void updateTimeStep(const UpdateTimeStepArgs& args) override;
 	void setInput(const Input& input) override { mInput = input; }
 
 	double getZoom() const;

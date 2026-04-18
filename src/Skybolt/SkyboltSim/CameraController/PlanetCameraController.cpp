@@ -41,7 +41,7 @@ PlanetCameraController::PlanetCameraController(sim::Entity* camera, World* world
 	setPitch(skybolt::math::halfPiF());
 }
 
-void PlanetCameraController::update(SecondsD dt)
+void PlanetCameraController::updateTimeStep(const UpdateTimeStepArgs& args)
 {
 	if (Entity* target = getTarget(); target)
 	{
@@ -53,9 +53,9 @@ void PlanetCameraController::update(SecondsD dt)
 			return;
 		}
 
-		float yawDelta = msYawRate * mInput.yawRate * dt;
-		float pitchDelta = msPitchRate * mInput.tiltRate * dt;
-		float zoomDelta = (mInput.zoomRate + mInput.forwardSpeed) * dt * msZoomRate;
+		float yawDelta = msYawRate * mInput.yawRate * args.wallTimeStep;
+		float pitchDelta = msPitchRate * mInput.tiltRate * args.wallTimeStep;
+		float zoomDelta = (mInput.zoomRate + mInput.forwardSpeed) * args.wallTimeStep * msZoomRate;
 		mDollyFactor = skybolt::math::clamp(mDollyFactor + zoomDelta, 0.0, 1.0);
 		float maxDistance = mParams.maxDistOnRadius * planet->radius;
 

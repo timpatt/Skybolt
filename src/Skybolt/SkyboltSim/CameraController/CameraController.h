@@ -35,8 +35,16 @@ public:
 	CameraController(Entity* camera);
 	virtual ~CameraController();
 
-	virtual void updatePostDynamicsSubstep(SecondsD dtSubstep) {}
-	virtual void update(SecondsD dt) {}
+	virtual void updatePostDynamicsSubstep(SecondsD simTime, SecondsD dtSubstep) {}
+
+	struct UpdateTimeStepArgs
+	{
+		SecondsD newSimTime;
+		SecondsD simTimeStep;
+		SecondsD wallTimeStep;
+	};
+	virtual void updateTimeStep(const UpdateTimeStepArgs& args) {}
+
 	virtual void setInput(const Input& input) {}
 
 	virtual void setActive(bool active) { mActive = active; }

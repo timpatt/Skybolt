@@ -7,6 +7,7 @@
 #include "EngineRoot.h"
 #include "ComponentFactory.h"
 #include "SimVisBinding/SimVisSystem.h"
+#include <SkyboltSim/CameraController/CameraModifierStack.h>
 #include <SkyboltSim/System/EntitySystem.h>
 #include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/World.h>
@@ -193,6 +194,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	vis::addDefaultFactories(*visFactoryRegistry);
 	factoryRegistries->addItem(visFactoryRegistry);
 
+	factoryRegistries->addItem(std::make_shared<sim::CameraModifierFactoryRegistry>());
+
 	tileSourceFactoryRegistry = std::make_shared<vis::JsonTileSourceFactoryRegistry>([&] {
 		file::Path cacheDir = getCacheDir();
 		SKYBOLT_LOG(info) << "Using cache directory '" << cacheDir.string() << "'.";
@@ -203,17 +206,19 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	}());
 	vis::addDefaultFactories(*tileSourceFactoryRegistry);
 
-	// Create object factory
-	EntityFactory::Context context;
-	context.scheduler = scheduler.get();
-	context.simWorld = &scenario->world;
-	context.componentFactoryRegistry = componentFactoryRegistry;
-	context.julianDateProvider = julianDateProvider;
-	context.stats = &stats;
-	context.tileSourceFactoryRegistry = tileSourceFactoryRegistry;
-	context.fileLocator = locateFile;
-	context.assetPackagePaths = mAssetPackagePaths;
-	context.engineSettings = engineSettings;
+	// Create entity factory
+	EntityFactory::Context context{
+	.scheduler = scheduler.get(),
+	.simWorld = &scenario->world,
+	.julianDateProvider = julianDateProvider,
+	.componentFactoryRegistry = componentFactoryRegistry,
+	.tileSourceFactoryRegistry = tileSourceFactoryRegistry,
+	.stats = &stats,
+	.fileLocator = locateFile,
+	.assetPackagePaths = mAssetPackagePaths,
+	.engineSettings = engineSettings,
+	.factoryRegistries = factoryRegistries.get()
+	};
 
 	if (config.enableVis)
 	{

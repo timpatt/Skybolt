@@ -7,6 +7,7 @@
 #pragma once
 
 #include <SkyboltCommon/Expected.h>
+#include <SkyboltCommon/Registry.h>
 #include <SkyboltCommon/TypedItemContainer.h>
 
 namespace skybolt {

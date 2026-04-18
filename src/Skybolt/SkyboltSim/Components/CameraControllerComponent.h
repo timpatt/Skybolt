@@ -26,17 +26,25 @@ public:
 		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::Attachments, updateAttachments)
 	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
 
+	void setSimTime(SecondsD simTime) override { mSimTime = simTime; }
 	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
 	void advanceWallTime(SecondsD newTime, SecondsD dt) override;
 	void postDynamicsSubStep();
 	void updateAttachments();
+
+	std::vector<std::type_index> getExposedTypes() const override
+	{
+		return {typeid(CameraControllerComponent), typeid(CameraControllerSelector)};
+	}
 
 public: // ExplicitSerialization interface
 	nlohmann::json toJson(refl::TypeRegistry& typeRegistry) const override;
 	void fromJson(refl::TypeRegistry& typeRegistry, const nlohmann::json& j) override;
 
 private:
-	SecondsD mSimDt = 0;
+	SecondsD mSimTime = 0;
+	SecondsD mSimTimeSinceLastDynamicsStep = 0;
+	SecondsD mSimTimeSinceLastAttachmentsUpdate = 0;
 	SecondsD mWallDt = 0;
 };
 

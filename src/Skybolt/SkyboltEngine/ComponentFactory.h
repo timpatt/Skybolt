@@ -7,7 +7,9 @@
 #pragma once
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
+#include "SkyboltEngine/FactoryRegistries.h"
 
+#include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltCommon/Registry.h>
 #include <SkyboltCommon/File/FileLocator.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
@@ -26,6 +28,7 @@ struct ComponentFactoryContext
 	EngineStats* stats;
 	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 	file::FileLocator fileLocator;
+	NonNullPtr<FactoryRegistries> factoryRegistries;
 };
 
 class ComponentFactory

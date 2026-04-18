@@ -8,7 +8,10 @@
 
 #include <SkyboltWidgets/Property/QtPropertyReflection.h>
 #include <SkyboltSim/Spatial/LatLon.h>
+#include <SkyboltSim/CameraController/CameraControllerSelector.h>
 
 Q_DECLARE_METATYPE(skybolt::sim::LatLon)
+Q_DECLARE_METATYPE(skybolt::sim::CameraControllerSelector::ControllersMap)
+Q_DECLARE_METATYPE(skybolt::sim::CameraModifierPtr)
 
 skybolt::ReflTypePropertyFactoryMap createSkyboltReflTypePropertyFactories(skybolt::refl::TypeRegistry& typeRegistry);

@@ -16,7 +16,7 @@ namespace sim {
 SKYBOLT_REFLECT(CameraControllerSelector) {
 	registry.type<CameraControllerSelector>("CameraControllerSelector")
 		.property("selectedController", &CameraControllerSelector::getSelectedControllerName, &CameraControllerSelector::selectController)
-		.propertyReadOnly("controllers", &CameraControllerSelector::getControllers);
+		.property("controllers", &CameraControllerSelector::getControllers, &CameraControllerSelector::setControllers);
 }
 
 CameraControllerSelector::CameraControllerSelector(const ControllersMap& controllers) :
@@ -30,25 +30,37 @@ void CameraControllerSelector::selectController(const std::string& name)
 {
 	if (name != mSelectedName)
 	{
-		if (mSelectedController)
+		CameraController* selectedController = getSelectedController();
+		if (selectedController)
 		{
-			mSelectedController->setActive(false);
+			selectedController->setActive(false);
 		}
 		mSelectedName = name;
 
-		auto i = mControllers.find(name);
-		if (i != mControllers.end())
+		selectedController = getSelectedController();
+		if (selectedController)
 		{
-			mSelectedController = i->second;
-			mSelectedController->setActive(true);
-		}
-		else
-		{
-			mSelectedController = nullptr;
+			selectedController->setActive(true);
 		}
 
 		controllerSelected(name);
 	}
+}
+
+CameraController* CameraControllerSelector::getSelectedController() const
+{
+	if (mSelectedName.empty())
+	{
+		return nullptr;
+	}
+
+	auto i = mControllers.find(mSelectedName);
+	return (i != mControllers.end()) ? i->second.get() : nullptr;
+}
+
+void CameraControllerSelector::setControllers(const ControllersMap& controllers)
+{
+	mControllers = controllers;
 }
 
 void CameraControllerSelector::addController(const std::string& name, const CameraControllerPtr& controller)
@@ -73,9 +85,9 @@ void CameraControllerSelector::setTargetId(const EntityId& targetId)
 
 EntityId CameraControllerSelector::getTargetId() const
 {
-	if (mSelectedController)
+	if (CameraController* selectedController = getSelectedController(); selectedController)
 	{
-		if (auto targeter = dynamic_cast<EntityTargeter*>(mSelectedController.get()); targeter)
+		if (auto targeter = dynamic_cast<EntityTargeter*>(selectedController); targeter)
 		{
 			return targeter->getTargetId();
 		}
