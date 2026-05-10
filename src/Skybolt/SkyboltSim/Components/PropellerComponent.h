@@ -9,6 +9,8 @@
 #include "SkyboltSim/Component.h"
 #include "SkyboltSim/Components/ControlInputsComponent.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
+#include <SkyboltCommon/NonNullPtr.h>
+#include <SkyboltCommon/NullablePtr.h>
 
 namespace skybolt {
 namespace sim {
@@ -25,8 +27,8 @@ struct PropellerParams
 struct PropellerComponentConfig
 {
 	PropellerParams params;
-	Node* node;
-	DynamicBodyComponent* body;
+	NonNullPtr<Node> node;
+	NullablePtr<DynamicBodyComponent> body;
 	Vector3 positionRelBody;
 	Quaternion orientationRelBody;
 	ControlInputFloatPtr input;
@@ -59,8 +61,8 @@ public: // SimUpdatable interface
 
 private:
 	const PropellerParams mParams;
-	Node* mNode;
-	DynamicBodyComponent* mBody;
+	NonNullPtr<Node> mNode;
+	NullablePtr<DynamicBodyComponent> mBody;
 	Vector3 mPositionRelBody;
 	Quaternion mOrientationRelBody;
 	ControlInputFloatPtr mInput;

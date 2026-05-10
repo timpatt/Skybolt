@@ -35,9 +35,6 @@ MainRotorComponent::MainRotorComponent(const MainRotorComponentConfig& config) :
 	mCyclicInput(config.cyclicInput),
 	mCollectiveInput(config.collectiveInput)
 {
-	assert(mNode);
-	assert(mMotion);
-	assert(mBody);
 	assert(mCyclicInput);
 	assert(mCollectiveInput);
 }
@@ -66,21 +63,25 @@ void MainRotorComponent::updatePreDynamicsSubstep()
 
 	mTppOriRelBody = mOrientationRelBody * glm::angleAxis((double)mTppPitch, Vector3(0, 1, 0)) * glm::angleAxis((double)mTppRoll, Vector3(1, 0, 0));
 
-	// Calc lift
-	Quaternion bodyOrientation = mNode->getOrientation();
-	const Vector3 velocityLocal = glm::inverse(bodyOrientation) * mMotion->linearVelocity;
-	float velSqLength = (float)glm::dot(velocityLocal, velocityLocal);
-
-	float inducedVel = calculateInducedVelocity(velSqLength); // induced velocity curve lookup
-	inducedVel *= mDriverRpm;
-
-	const Vector3 rotorLift = calculateLift(inducedVel);
-	//assert(glm::length(rotorLift) < 1e10); // make sure it hasn't blown up
-
-	mBody->applyForce(bodyOrientation * rotorLift, bodyOrientation * mPositionRelBody);
-
+	// Spin rotor
 	mRotationAngle += mRpm * skybolt::rpmToRadPerSec * dt;
 	mRotationAngle = fmod(mRotationAngle, skybolt::math::twoPiF());
+
+	// Calc lift
+	if (mBody)
+	{
+		Quaternion bodyOrientation = mNode->getOrientation();
+		const Vector3 velocityLocal = glm::inverse(bodyOrientation) * mMotion->linearVelocity;
+		float velSqLength = (float)glm::dot(velocityLocal, velocityLocal);
+
+		float inducedVel = calculateInducedVelocity(velSqLength); // induced velocity curve lookup
+		inducedVel *= mDriverRpm;
+
+		const Vector3 rotorLift = calculateLift(inducedVel);
+		//assert(glm::length(rotorLift) < 1e10); // make sure it hasn't blown up
+
+		mBody->applyForce(bodyOrientation * rotorLift, bodyOrientation * mPositionRelBody);
+	}
 }
 
 float MainRotorComponent::calculateInducedVelocity(float velSqLength) const

@@ -25,8 +25,6 @@ PropellerComponent::PropellerComponent(const PropellerComponentConfig& config) :
 	mRotationAngle(0.0f),
 	mRpm(0.0f)
 {
-	assert(mNode);
-	assert(mBody);
 }
 
 void PropellerComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
@@ -46,17 +44,22 @@ void PropellerComponent::updatePreDynamicsSubstep()
 	mPitch += desiredPitch - mPitch * std::min(1.0f, mParams.pitchResponseRate * float(dt));
 	mRpm = mDriverRpm * mParams.rpmMultiplier;
 
-	const float thrust = mRpm * mPitch * mParams.thrustPerRpmPerPitch;
-	Vector3 forceRelBody = mOrientationRelBody * Vector3(0, 0, -thrust);
-
-	Vector3 forcePos = mPositionRelBody;
-	forcePos.z = 0; // Set to zero to eliminate undesired yaw-roll coupling. TODO: improve physics and remove this hack.
-
-	Quaternion orientation = mNode->getOrientation();
-	mBody->applyForce(orientation * forceRelBody, orientation * forcePos);
-
+	// Spin propeller
 	mRotationAngle += mRpm * skybolt::rpmToRadPerSec * dt;
 	mRotationAngle = fmod(mRotationAngle, skybolt::math::twoPiF());
+
+	// Calc thrust
+	if (mBody)
+	{
+		const float thrust = mRpm * mPitch * mParams.thrustPerRpmPerPitch;
+		Vector3 forceRelBody = mOrientationRelBody * Vector3(0, 0, -thrust);
+
+		Vector3 forcePos = mPositionRelBody;
+		forcePos.z = 0; // Set to zero to eliminate undesired yaw-roll coupling. TODO: improve physics and remove this hack.
+
+		Quaternion orientation = mNode->getOrientation();
+		mBody->applyForce(orientation * forceRelBody, orientation * forcePos);
+	}
 }
 
 } // namespace sim

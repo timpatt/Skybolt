@@ -113,17 +113,16 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 
 	auto inputsComponent = entity->getFirstComponentRequired<ControlInputsComponent>();
 
-	MainRotorComponentConfig config;
-	config.params = params;
-	config.node = entity->getFirstComponentRequired<Node>().get();
-	config.motion = entity->getFirstComponentRequired<Motion>().get();
-	config.body = entity->getFirstComponentRequired<DynamicBodyComponent>().get();
-	config.positionRelBody = readVector3(json.at("positionRelBody"));
-	config.orientationRelBody = readOptionalQuaternion(json, "orientationRelBody");
-	config.cyclicInput = inputsComponent->createOrGet("stick", glm::vec2(0), posNegUnitRange<glm::vec2>());
-	config.collectiveInput = inputsComponent->createOrGet("collective", 0.0f, unitRange<float>());
-
-	auto component = std::make_shared<MainRotorComponent>(config);
+	auto component = std::make_shared<MainRotorComponent>(MainRotorComponentConfig{
+	.params = params,
+	.node = entity->getFirstComponentRequired<Node>().get(),
+	.motion = entity->getFirstComponentRequired<Motion>().get(),
+	.body = entity->getFirstComponent<DynamicBodyComponent>().get(),
+	.positionRelBody = readVector3(json.at("positionRelBody")),
+	.orientationRelBody = readOptionalQuaternion(json, "orientationRelBody"),
+	.cyclicInput = inputsComponent->createOrGet("stick", glm::vec2(0), posNegUnitRange<glm::vec2>()),
+	.collectiveInput = inputsComponent->createOrGet("collective", 0.0f, unitRange<float>())
+	});
 	component->setNormalizedRpm(1.0f);
 	return component;
 }
@@ -137,16 +136,15 @@ static sim::ComponentPtr loadTailRotor(Entity* entity, const ComponentFactoryCon
 	params.rpmMultiplier = json.at("rpmMultiplier").get<double>();
  	params.thrustPerRpmPerPitch = readOptionalOrDefault(json, "thrustPerRpmPerPitch", 10.0);
 
-	PropellerComponentConfig config;
-	config.params = params;
-	config.node = entity->getFirstComponentRequired<Node>().get();
-	config.body = entity->getFirstComponentRequired<DynamicBodyComponent>().get();
-	config.positionRelBody = readVector3(json.at("positionRelBody"));
-	config.orientationRelBody = readQuaternion(json.at("orientationRelBody"));
-	config.input = entity->getFirstComponentRequired<ControlInputsComponent>()->createOrGet("pedal", 0.0f, posNegUnitRange<float>());
-	config.pitch = 0.0f;
-
-	auto component = std::make_shared< PropellerComponent>(config);
+	auto component = std::make_shared< PropellerComponent>(PropellerComponentConfig{
+	.params = params,
+	.node = entity->getFirstComponentRequired<Node>().get(),
+	.body = entity->getFirstComponent<DynamicBodyComponent>().get(),
+	.positionRelBody = readVector3(json.at("positionRelBody")),
+	.orientationRelBody = readQuaternion(json.at("orientationRelBody")),
+	.input = entity->getFirstComponentRequired<ControlInputsComponent>()->createOrGet("pedal", 0.0f, posNegUnitRange<float>()),
+	.pitch = 0.0f
+	});
 	component->setDriverRpm(1.0f);
 	return component;
 }

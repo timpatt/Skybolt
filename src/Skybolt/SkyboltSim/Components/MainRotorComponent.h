@@ -10,6 +10,8 @@
 #include "SkyboltSim/Component.h"
 #include "SkyboltSim/Components/ControlInputsComponent.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
+#include <SkyboltCommon/NonNullPtr.h>
+#include <SkyboltCommon/NullablePtr.h>
 #include <vector>
 
 namespace skybolt {
@@ -39,9 +41,9 @@ typedef std::shared_ptr<MainRotorParams> MainRotorParamsPtr;
 struct MainRotorComponentConfig
 {
 	MainRotorParamsPtr params;
-	Node* node;
-	Motion* motion;
-	DynamicBodyComponent* body;
+	NonNullPtr<Node> node;
+	NonNullPtr<Motion> motion;
+	NullablePtr<DynamicBodyComponent> body;
 	Vector3 positionRelBody;
 	Quaternion orientationRelBody;
 
@@ -84,9 +86,9 @@ private:
 
 private:
 	MainRotorParamsPtr mParams;
-	Node* mNode;
-	Motion* mMotion;
-	DynamicBodyComponent* mBody;
+	NonNullPtr<Node> mNode;
+	NonNullPtr<Motion> mMotion;
+	NullablePtr<DynamicBodyComponent> mBody;
 	ControlInputVec2Ptr mCyclicInput; //!< range is [-1, 1]. Positive backward and right.
 	ControlInputFloatPtr mCollectiveInput; //!< range [0, 1]
 
