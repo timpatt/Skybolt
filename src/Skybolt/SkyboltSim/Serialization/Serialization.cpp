@@ -8,8 +8,9 @@
 #include "Serialization.h"
 #include "SkyboltSim/JsonHelpers.h"
 #include <SkyboltCommon/Json/JsonHelpers.h>
-
 #include <SkyboltCommon/Logging/Logging.h>
+
+#include <format>
 
 namespace skybolt::sim {
 
@@ -96,13 +97,20 @@ void readReflectedObjectProperties(refl::TypeRegistry& registry, refl::Instance&
 {
 	for (const auto& [name, property] : getProperties(object))
 	{
-		if (isSerializable(*property))
+		try
 		{
-			ifChildExists(json, property->getName(), [&](const nlohmann::json& propertyJson) {
-				refl::Instance value = property->getValue(object);
-				jsonToExistingReflVariant(registry, value, propertyJson);
-				property->setValue(object, value);
-				});
+			if (isSerializable(*property))
+			{
+				ifChildExists(json, property->getName(), [&](const nlohmann::json& propertyJson) {
+					refl::Instance value = property->getValue(object);
+					jsonToExistingReflVariant(registry, value, propertyJson);
+					property->setValue(object, value);
+					});
+			}
+		}
+		catch (const std::exception& e)
+		{
+			throw std::runtime_error(std::format("Failed to deserialize property \"{}\" of type \"{}\": {}", property->getName(), property->getType()->getName(), e.what()));
 		}
 	}
 }
@@ -180,6 +188,11 @@ nlohmann::json writeReflectedObject(refl::TypeRegistry& registry, const refl::In
 	return json;
 }
 
+bool isNan(const nlohmann::json& json)
+{
+	return json.is_number() && std::isnan(json.get<double>());
+}
+
 nlohmann::json writeReflectedObjectProperties(refl::TypeRegistry& registry, const refl::Instance& object)
 {
 	nlohmann::json json;
@@ -193,7 +206,16 @@ nlohmann::json writeReflectedObjectProperties(refl::TypeRegistry& registry, cons
 			nlohmann::json valueJson = toJson(registry, *property->getType(), var);
 			if (!valueJson.is_null())
 			{
-				json[property->getName()] = valueJson;
+				if (isNan(valueJson))
+				{
+					// NaN values can't be represented in JSON, so represent them as 0.0 and log an error.
+					json[property->getName()] = 0.0;
+					SKYBOLT_LOG(ERROR) << std::format("Property \"{}\" of type \"{}\" has NaN value which can't be serialized to JSON. Representing it as 0.0 in JSON.", property->getName(), property->getType()->getName());
+				}
+				else
+				{
+					json[property->getName()] = valueJson;
+				}
 			}
 		}
 	}

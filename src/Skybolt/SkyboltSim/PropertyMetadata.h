@@ -12,6 +12,8 @@ struct PropertyRepresentations
 {
 	static constexpr const char* worldPosition = "WorldPosition";
 	static constexpr const char* worldOrientation = "WorldOrientation";
+	static constexpr const char* worldVelocity = "WorldVelocity";
+	static constexpr const char* rollPitchYaw = "RollPitchYaw";
 	static constexpr const char* toggleButton = "ToggleButton"; //!< Representation for a boolean property indicating it should be represented as a toggle button.
 };
 

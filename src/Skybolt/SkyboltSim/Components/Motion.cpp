@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "Motion.h"
+#include "PropertyMetadata.h"
 #include "SkyboltSim/Entity.h"
 
 namespace skybolt::sim {
@@ -12,7 +13,7 @@ namespace skybolt::sim {
 SKYBOLT_REFLECT(Motion) {
 	registry.type<Motion>("Motion")
 		.superType<Component>()
-		.property("linearVelocity", &Motion::linearVelocity)
+		.property("linearVelocity", &Motion::linearVelocity, {{PropertyMetadataNames::attributeType, PropertyRepresentations::worldVelocity}})
 		.property("angularVelocity", &Motion::angularVelocity);
 }
 

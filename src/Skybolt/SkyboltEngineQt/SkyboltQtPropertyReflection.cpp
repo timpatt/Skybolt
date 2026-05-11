@@ -84,13 +84,13 @@ namespace skybolt {
 	template <>
 	QVariant reflValueToQt(const refl::Property& property, const sim::Vector3& value)
 	{
-		return toQVector3D(value);
+		return toQVector3D(simUnitToDisplay(property, value));
 	}
 
 	template <>
 	sim::Vector3 qtValueToRefl(const refl::Property& property, const QVariant& value)
 	{
-		return toVector3(value.value<QVector3D>());
+		return displayUnitToSim(property, toVector3(value.value<QVector3D>()));
 	}
 
 	template <>

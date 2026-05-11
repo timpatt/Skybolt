@@ -97,6 +97,10 @@ static QWidget* createSkyboltVector3DEditor(QtProperty* property, QWidget* paren
 		{
 			return createWorldPositionEditor(property, parent);
 		}
+		else if (value.toString() == sim::PropertyRepresentations::rollPitchYaw)
+		{
+			return new QVector3PropertyEditor(property, { "roll", "pitch", "yaw" }, parent);
+		}
 	}
 	return new QVector3PropertyEditor(property, { "x", "y", "z" }, parent);
 }
