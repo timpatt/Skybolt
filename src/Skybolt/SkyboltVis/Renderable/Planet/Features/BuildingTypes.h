@@ -30,7 +30,12 @@ struct BuildingTypes
 	int roofCount;
 };
 
-BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j);
+struct BuildingTypesFromJsonOptions
+{
+	bool loadTextures = true;
+};
+
+BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const BuildingTypesFromJsonOptions& options = BuildingTypesFromJsonOptions());
 
 } // namespace vis
 } // namespace skybolt

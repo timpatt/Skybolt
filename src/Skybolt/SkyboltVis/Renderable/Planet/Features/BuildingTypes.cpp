@@ -22,7 +22,7 @@ osg::ref_ptr<osg::Texture2DArray> createTextureArray()
 	return texture;
 }
 
-BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j)
+BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const BuildingTypesFromJsonOptions& options)
 {
 	auto types = std::make_shared<BuildingTypes>();
 	types->texture = createTextureArray();
@@ -35,9 +35,12 @@ BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j)
 	{
 		const auto& jsonFacade = item.value();
 
-		osg::Image* image = readImageWithCorrectOrientation(jsonFacade.at("albedoTexture"));
-		image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
-		types->texture->setImage(i, image);
+		if (options.loadTextures)
+		{
+			osg::Image* image = readImageWithCorrectOrientation(jsonFacade.at("albedoTexture"));
+			image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
+			types->texture->setImage(i, image);
+		}
 
 		BuildingTypes::Facade facade;
 		facade.buildingLevelsInTexture = jsonFacade.at("storiesInTexture");
@@ -53,9 +56,12 @@ BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j)
 	{
 		const auto& jsonRoof = item.value();
 
-		osg::Image* image = readImageWithCorrectOrientation(jsonRoof.at("albedoTexture"));
-		image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
-		types->texture->setImage(i, image);
+		if (options.loadTextures)
+		{
+			osg::Image* image = readImageWithCorrectOrientation(jsonRoof.at("albedoTexture"));
+			image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
+			types->texture->setImage(i, image);
+		}
 
 		++i;
 	}
