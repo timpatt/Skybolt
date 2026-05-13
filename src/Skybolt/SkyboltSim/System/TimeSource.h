@@ -54,6 +54,7 @@ public:
 	void setState(const State& state);
 
 	boost::signals2::signal<void(const State&)> stateChanged;
+	boost::signals2::signal<void(SecondsD oldTime, SecondsD newTime)> timeAboutToChange;
 	boost::signals2::signal<void(SecondsD)> timeChanged;
 	boost::signals2::signal<void(const TimeRange&)> rangeChanged;
 

@@ -97,7 +97,7 @@ TEST_CASE("On deserialization, new entities created, existing entities updated, 
 	scenario.world.addEntity(entityPersistant);
 
 	// Update scenario by deserializing the saved scenario into it
-	readScenario(typeRegistry, scenario, &createEntity, scenarioJson);
+	readScenario(typeRegistry, scenario, &createEntity, scenarioJson, EntityPersistenceFlags{.persistUserManaged = true});
 
 	// Check that entityA was added with expected state
 	entityForAddition = scenario.world.findObjectByName("entityForAddition");

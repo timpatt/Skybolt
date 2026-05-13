@@ -91,12 +91,12 @@ inline bool deltaEquals(sim::SecondsD a, sim::SecondsD b, sim::SecondsD epsilon)
 void useSnapshotsToResetSimulationStateAtTimelineStart(const std::shared_ptr<SimSnapshotRegistry>& snapshotRegistry, Scenario* scenario)
 {
 	// Connect action to handle saving snapshot when simulation playback is started from the beginning
-	scenario->timeSource->stateChanged.connect([snapshotRegistry, scenario] (const TimeSource::State& state) {
+	scenario->timeSource->timeAboutToChange.connect([snapshotRegistry, scenario] (sim::SecondsD oldSimTime, sim::SecondsD newSimTime) {
 		if (scenario->timelineMode.get() != TimelineMode::Live) { return; }
 		
 		sim::SecondsD startTime = scenario->timeSource->getRange().start;
-		bool isAtStart = deltaEquals(scenario->timeSource->getTime(), startTime, 0.001);
-		if (isAtStart && state == TimeSource::StatePlaying) // If playback just started from the beginning
+		bool wasAtStart = deltaEquals(oldSimTime, startTime, 0.00001);
+		if (wasAtStart && newSimTime > oldSimTime) // If playback just started from the beginning
 		{
 			snapshotRegistry->saveSnapshotAtCurrentTime();
 		}

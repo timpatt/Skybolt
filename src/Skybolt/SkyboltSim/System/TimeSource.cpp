@@ -21,6 +21,7 @@ void TimeSource::setTime(sim::SecondsD time)
 	SecondsD newTime = math::clamp(time, mRange.start, mRange.end);
 	if (mTime != newTime)
 	{
+		timeAboutToChange(mTime, newTime);
 		mTime = newTime;
 		timeChanged(mTime);
 

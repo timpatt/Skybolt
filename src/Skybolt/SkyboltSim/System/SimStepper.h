@@ -34,7 +34,7 @@ public:
 
 private:
 	void advanceTimeByDynamicsSubSteps(const std::vector<SystemPtr>& systems, SecondsD dt);
-	void advaniceTimeByNonDynamicsStep(const std::vector<SystemPtr>& systems, SecondsD dt);
+	void advanceTimeByNonDynamicsStep(const std::vector<SystemPtr>& systems, SecondsD dt);
 
 	void updateSystem(const std::vector<SystemPtr>& systems, UpdateStage stage);
 

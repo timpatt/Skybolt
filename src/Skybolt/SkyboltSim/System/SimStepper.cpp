@@ -47,7 +47,7 @@ void SimStepper::advanceTime(SecondsD dt)
 		}
 		else
 		{
-			advaniceTimeByNonDynamicsStep(systems, dt);
+			advanceTimeByNonDynamicsStep(systems, dt);
 		}
 	}
 
@@ -89,7 +89,7 @@ void SimStepper::advanceTimeByDynamicsSubSteps(const std::vector<SystemPtr>& sys
 	}
 }
 
-void SimStepper::advaniceTimeByNonDynamicsStep(const std::vector<SystemPtr>& systems, SecondsD dt)
+void SimStepper::advanceTimeByNonDynamicsStep(const std::vector<SystemPtr>& systems, SecondsD dt)
 {
 	assert(!mDynamicsEnabled);
 
