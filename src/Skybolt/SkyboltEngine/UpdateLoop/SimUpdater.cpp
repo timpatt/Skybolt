@@ -11,8 +11,6 @@
 using namespace skybolt;
 using namespace skybolt::sim;
 
-const SecondsD maxWallDt = 0.2;
-
 SimUpdater::SimUpdater(skybolt::NonNullPtr<skybolt::EngineRoot> engineRoot) :
 	mEngineRoot(engineRoot),
 	mAverageWallDt(std::make_unique<UniformAveragedBuffer>(16))

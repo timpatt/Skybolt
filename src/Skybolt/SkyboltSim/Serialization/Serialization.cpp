@@ -179,13 +179,11 @@ nlohmann::json writeReflectedObject(refl::TypeRegistry& registry, const refl::In
 	{
 		const ExplicitSerialization& serialization = object.cast<ExplicitSerialization>();
 		json = serialization.toJson(registry);
+		return json;
 	}
-	else // use reflection based serialization
-	{
-		json = writeReflectedObjectProperties(registry, object);
-	}
-
-	return json;
+	
+	// use reflection based serialization
+	return writeReflectedObjectProperties(registry, object);
 }
 
 bool isNan(const nlohmann::json& json)

@@ -23,7 +23,7 @@ namespace sim {
 
 struct Particle
 {
-	int guid; //!< ID of particle, semi-unique across all particle systems. May repeat after numeric limit is reached.
+	int guid; //!< ID of particle, unique across all particle systems. May repeat after numeric limit is reached.
 	Vector3 position;
 	Vector3 velocity;
 	float radius;
@@ -91,7 +91,7 @@ private:
 	float mEmissionRateMultiplier = 1.0;
 	float mEmissionAlphaMultiplier = 1.0;
 	std::optional<Vector3> mPrevPosition;
-	static int mNextParticleId;
+	static int mNextParticleId; //!< NOTE: This is not thread safe. Change to std::atomic_int if thread safety is needed in the future.
 };
 
 class ParticleKiller : public ParticleSystemOperation

@@ -166,7 +166,7 @@ public:
 		mLastOrientation = orientation;
 
 		// Update linear velocity
-		Matrix3 ltpOrientation = geocentricToLtpOrientation(*currentPosition);
+		Matrix3 ltpOrientation = geocentricToLtpOrientation(newPosition);
 		sim::Vector3 velocity = ltpOrientation * sim::Vector3(
 			mExec->GetPropertyValue("velocities/v-north-fps"),
 			mExec->GetPropertyValue("velocities/v-east-fps"),

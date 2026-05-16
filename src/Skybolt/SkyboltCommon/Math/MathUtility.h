@@ -233,14 +233,14 @@ T lerpShortestRotation(T a, T b, T weight)
 
 //! reranges value from range [originalMin, originalMax] to [0, 1]
 template<typename T>
-float rerangeNormalized(T originalValue, T originalMin, T originalMax)
+T rerangeNormalized(T originalValue, T originalMin, T originalMax)
 {
 	return (((originalValue - originalMin) / (originalMax - originalMin)));
 }
 
 //! reranges value from range [originalMin, originalMax] to [newMin, newMax]
 template<typename T>
-float rerange(T originalValue, T originalMin, T originalMax, T newMin, T newMax)
+T rerange(T originalValue, T originalMin, T originalMax, T newMin, T newMax)
 {
 	return newMin + (((originalValue - originalMin) / (originalMax - originalMin)) * (newMax - newMin));
 }

@@ -103,7 +103,7 @@ float MainRotorComponent::calculateInducedVelocity(float velSqLength) const
 	}
 	else if (numItems > 0)
 	{
-		return inducedVCurve[0].y;
+		return inducedVCurve[0].x;
 	}
 
 	return 0.0f;

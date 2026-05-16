@@ -25,13 +25,12 @@ class OrbitCameraController : public CameraController, public CameraModifierStac
 public:
 	struct Params
 	{
-		Params(double _minDist, double _maxDist, double _zoomRate = 0.5f) :
+		Params(double _minDist, double _maxDist, double _zoomRate = 0.5) :
 			minDist(_minDist), maxDist(_maxDist), zoomRate(_zoomRate) {}
 
 		double minDist;
 		double maxDist;
 		double zoomRate;
-		Vector3 orientationLagTimeConstant = Vector3(0);
 	};
 
 	OrbitCameraController(Entity* camera, World* world, const Params& params, const CameraModifierFactoryRegistryPtr& cameraModifierFactories);

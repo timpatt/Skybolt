@@ -437,6 +437,7 @@ void Planet::updatePreRender(const CameraRenderContext& context)
 	
 	if (mOcean)
 	{
+		// Position ocean directly under planet
 		mOcean->setPosition(osg::Vec3f(0, 0, position.z() - mInnerRadius));
 	}
 	

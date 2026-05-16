@@ -94,7 +94,7 @@ Ocean::~Ocean()
 	mTransform->removeChild(mGrid);
 }
 
-void Ocean::setPosition(const osg::Vec3f& position)
+void Ocean::setPosition(const osg::Vec3d& position)
 {
 	mUniforms.waterHeight->set(float(-position.z()));
 }

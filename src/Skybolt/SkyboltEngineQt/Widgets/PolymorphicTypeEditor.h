@@ -155,6 +155,7 @@ private:
 
 	std::string findTypeNameForValue(const T& value) const
 	{
+		// TODO: find a more optimal solution. This is inefficient since it creates a new instance of each type just to compare its typeid.
 		for (const auto& [name, factory] : *mValueFactoryRegistry)
 		{
 			std::shared_ptr<T> instance = factory();

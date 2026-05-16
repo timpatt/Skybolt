@@ -52,7 +52,7 @@ private:
 private:
 	osg::Matrix mViewMatrix;
 	osg::Matrix mProjectionMatrix;
-	osg::Vec3f mPosition;
+	osg::Vec3d mPosition;
 	osg::Quat mOrientation;
 	float mAspectRatio;
 	float mFovY;

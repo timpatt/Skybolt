@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "VisRoot.h"
+#include <SkyboltCommon/Logging/Logging.h>
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/OsgLogHandler.h"
 #include "SkyboltVis/RenderContext.h"
@@ -13,6 +14,7 @@
 #include <SkyboltCommon/VectorUtility.h>
 
 #include <osgViewer/CompositeViewer>
+#include <format>
 
 #ifdef OSG_LIBRARY_STATIC
 #include <osgDB/Registry>
@@ -45,7 +47,13 @@ VisRoot::VisRoot(const DisplaySettings& settings) :
 	forwardOsgLogToBoost();
 
 	osg::DisplaySettings::instance()->setNumMultiSamples(settings.multiSampleCount);
-	osg::DisplaySettings::instance()->setMaxTexturePoolSize(settings.texturePoolSizeBytes);
+
+	if (settings.texturePoolSizeBytes > std::numeric_limits<unsigned int>::max())
+	{
+		SKYBOLT_LOG(warn) << std::format("Texture pool size '{}' is too large for Open Scene Graph. Up to 4GB is supported.", settings.texturePoolSizeBytes);
+	}
+	unsigned int texturePoolSizeBytesUnsignedInt = unsigned int(std::min(settings.texturePoolSizeBytes, std::size_t(std::numeric_limits<unsigned int>::max())));
+	osg::DisplaySettings::instance()->setMaxTexturePoolSize(texturePoolSizeBytesUnsignedInt);
 
 	osg::setNotifyLevel(osg::WARN);
 	mViewer->setKeyEventSetsDone(0); // disable default 'escape' key binding to quit the application

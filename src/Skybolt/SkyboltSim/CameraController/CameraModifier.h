@@ -14,7 +14,7 @@ namespace skybolt::sim {
 class CameraModifier
 {
 public:
-	~CameraModifier() = default;
+	virtual ~CameraModifier() = default;
 	
 	virtual const char* getTypeName() const = 0;
 

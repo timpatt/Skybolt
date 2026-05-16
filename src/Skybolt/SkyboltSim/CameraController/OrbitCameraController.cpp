@@ -68,7 +68,7 @@ void OrbitCameraController::updatePostDynamicsSubstep(SecondsD simTime, SecondsD
 {
 	if (Entity* entity = getTarget(); entity)
 	{
-		Quaternion orientation = *getOrientation(*entity);
+		Quaternion orientation = getOrientation(*entity).value_or(math::dquatIdentity());
 		if (mSmoothedTargetOrientation)
 		{
 			orientation = safeSlerp(*mSmoothedTargetOrientation, orientation, calcFirstOrderLagInterpolationFactor(dtSubstep, lagTimeConstant));

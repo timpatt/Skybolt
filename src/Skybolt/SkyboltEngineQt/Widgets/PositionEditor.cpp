@@ -143,7 +143,7 @@ PositionEditor::PositionEditor(QWidget* parent) :
 	mStackedWidget = new QStackedWidget(this);
 	mStackedWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
-	addEditor(new LatLonAltPositionEditor());
+	addEditor(new LatLonAltPositionEditor(this));
 	addEditor(new GeocentricPositionEditor(this));
 	layout->addWidget(mStackedWidget);
 

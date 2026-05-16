@@ -35,8 +35,7 @@ public:
 		osg::Uniform* waterHeight;
 	};
 
-	void setPosition(const osg::Vec3f& position);
-	void setOrientation(const osg::Quat& orientation) {}; //!< Has no effect
+	void setPosition(const osg::Vec3d& position) override;
 
 private:
 	void updatePreRender(const CameraRenderContext& context);

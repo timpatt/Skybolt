@@ -16,7 +16,7 @@ namespace skybolt {
 namespace sim {
 
 SKYBOLT_REFLECT(BulletDynamicBodyComponent) {
-	registry.type<BulletDynamicBodyComponent>("SimpleDynamicBodyComponent")
+	registry.type<BulletDynamicBodyComponent>("BulletDynamicBodyComponent")
 		.superType<DynamicBodyComponent>();
 }
 
@@ -98,7 +98,7 @@ void BulletDynamicBodyComponent::updatePostDynamics()
 
 				// Zero the body's velocity component in direction of penetration
 				btVector3 velocity = mBody->getLinearVelocity();
-				velocity += velocity.normalized() * velocity.dot(toBtVector3(result->normal));
+				velocity -= toBtVector3(result->normal) * velocity.dot(toBtVector3(result->normal));
 				mBody->setLinearVelocity(velocity);
 			}
 		}

@@ -52,7 +52,11 @@ std::string AttacherComponent::getParentEntityName() const
 void AttacherComponent::setParentEntityByName(const std::string& name)
 {
 	EntityPtr entity = mWorld->findObjectByName(name);
-	if (!entity) { return; }
+	if (!entity)
+	{
+		parentEntityId = sim::nullEntityId();
+		return;
+	}
 
 	parentEntityId = entity->getId();
 }

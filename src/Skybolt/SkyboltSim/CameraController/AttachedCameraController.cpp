@@ -82,8 +82,14 @@ AttachmentPointPtr AttachedCameraController::findAttachmentPoint(const Entity& e
 
 double AttachedCameraController::getZoom() const
 {
+	double fovRange = maxFovY - minFovY;
+	if (maxFovY == 0)
+	{
+		return 0.0; // Avoid division by zero
+	}
+
 	// Minimum FOV when zoom is 1, maximum FOV when zoom is 0
-	return (mCameraComponent->getState().fovY - maxFovY) / (minFovY - maxFovY);
+	return (mCameraComponent->getState().fovY - maxFovY) / -fovRange;
 }
 
 void AttachedCameraController::setZoom(double zoom)

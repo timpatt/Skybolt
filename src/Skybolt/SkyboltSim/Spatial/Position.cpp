@@ -30,6 +30,7 @@ GeocentricPosition toGeocentric(const Position& position)
 		{
 			//TODO: implement
 			assert(!"Not implemented");
+			break;
 		}
 		default:
 			assert(!"Not implemented");
@@ -54,6 +55,7 @@ LatLonAltPosition toLatLonAlt(const Position& position)
 	{
 		// TODO: implement
 		assert(!"Not implemented");
+		break;
 	}
 	default:
 		assert(!"Not implemented");

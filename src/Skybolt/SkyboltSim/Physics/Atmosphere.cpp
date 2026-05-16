@@ -30,6 +30,10 @@ double Atmosphere::getDensity(double altitude) const
 	double safeAltitude = std::max(0.0, altitude);
 	double p = m_pressureSeaLevel * (pow(std::max(double(0.0), double(1.0) - m_lapseRateOnTemp * safeAltitude), m_exponent));
 	double T = m_tempSeaLevel - m_tempLapsRate * safeAltitude;
+    if (T <= 0.0)
+    {
+        return 0.0;
+	}
     return std::max(0.0, p * m_molarMass / (m_universalGasConst * T));
 }
 

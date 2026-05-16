@@ -26,8 +26,9 @@ BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const Buil
 {
 	auto types = std::make_shared<BuildingTypes>();
 	types->texture = createTextureArray();
+	types->roofCount = 0;
 
-	int i = 0;
+	int textureIndex = 0;
 
 	auto facades = j.at("facades");
 
@@ -39,7 +40,7 @@ BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const Buil
 		{
 			osg::Image* image = readImageWithCorrectOrientation(jsonFacade.at("albedoTexture"));
 			image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
-			types->texture->setImage(i, image);
+			types->texture->setImage(textureIndex, image);
 		}
 
 		BuildingTypes::Facade facade;
@@ -47,7 +48,7 @@ BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const Buil
 		facade.horizontalSectionsInTexture = jsonFacade.at("horizontalSectionsInTexture");
 
 		types->facades.push_back(facade);
-		++i;
+		++textureIndex;
 	}
 
 	auto roofs = j.at("roofs");
@@ -60,12 +61,12 @@ BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const Buil
 		{
 			osg::Image* image = readImageWithCorrectOrientation(jsonRoof.at("albedoTexture"));
 			image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
-			types->texture->setImage(i, image);
+			types->texture->setImage(textureIndex, image);
 		}
 
-		++i;
+		++types->roofCount;
+		++textureIndex;
 	}
-	types->roofCount = i - types->facades.size();
 
 	return types;
 }

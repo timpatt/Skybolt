@@ -29,6 +29,7 @@ CameraControllerComponent::CameraControllerComponent(const ControllersMap& contr
 
 void CameraControllerComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
+	// We use two different accumulators for time since dynamics step and attachments update may update at different frequencies.
 	mSimTimeSinceLastDynamicsStep += dt;
 	mSimTimeSinceLastAttachmentsUpdate += dt;
 	mSimTime = newTime;

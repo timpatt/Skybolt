@@ -60,8 +60,16 @@ void PlanetCameraController::updateTimeStep(const UpdateTimeStepArgs& args)
 		float maxDistance = mParams.maxDistOnRadius * planet->radius;
 
 		// Zoom control
-		float exponent = log(maxDistance - (float)planet->radius);
-		float distFromSurface = exp(exponent * (1 - mDollyFactor));
+		float distFromSurface;
+		if (maxDistance > (float)planet->radius)
+		{
+			float exponent = log(maxDistance - (float)planet->radius);
+			distFromSurface = exp(exponent * (1 - mDollyFactor));
+		}
+		else
+		{
+			distFromSurface = 0;
+		}
 
 		// Orientation control
 		if (mInput.modifier1Pressed)
@@ -75,7 +83,7 @@ void PlanetCameraController::updateTimeStep(const UpdateTimeStepArgs& args)
 			float fovHeightAtPlanetSurfaceInMeters = 2.0f * std::tan(fovY * 0.5f) * distFromSurface;
 			float planetSurfaceVisibleVerticalArcInRadians = fovHeightAtPlanetSurfaceInMeters / planet->radius;
 
-			mLatLon.lon -= planetSurfaceVisibleVerticalArcInRadians * yawDelta;
+			mLatLon.lon -= planetSurfaceVisibleVerticalArcInRadians * yawDelta * std::cos(mLatLon.lat);
 			mLatLon.lat -= planetSurfaceVisibleVerticalArcInRadians * pitchDelta;
 			mLatLon.lat = skybolt::math::clamp<double>(mLatLon.lat, -skybolt::math::halfPiD(), skybolt::math::halfPiD());
 		}

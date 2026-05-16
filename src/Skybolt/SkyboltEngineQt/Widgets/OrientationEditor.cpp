@@ -44,7 +44,8 @@ public:
 class GeocentricOrientationEditor : public QWidget, public Orientable
 {
 public:
-	GeocentricOrientationEditor()
+	GeocentricOrientationEditor(QWidget* parent = nullptr) :
+		QWidget(parent)
 	{
 		QGridLayout* layout = new QGridLayout;
 		setLayout(layout);
@@ -80,7 +81,8 @@ private:
 class LtpNedOrientationEditor : public QWidget, public Orientable
 {
 public:
-	LtpNedOrientationEditor()
+	LtpNedOrientationEditor(QWidget* parent = nullptr) :
+		QWidget(parent)
 	{
 		QGridLayout* layout = new QGridLayout;
 		setLayout(layout);
@@ -122,8 +124,8 @@ OrientationEditor::OrientationEditor(QWidget* parent) :
 	layout()->addWidget(positionTypeSelector);
 
 	mStackedWidget = new QStackedWidget;
-	mStackedWidget->addWidget(new LtpNedOrientationEditor);
-	mStackedWidget->addWidget(new GeocentricOrientationEditor);
+	mStackedWidget->addWidget(new LtpNedOrientationEditor(this));
+	mStackedWidget->addWidget(new GeocentricOrientationEditor(this));
 	layout()->addWidget(mStackedWidget);
 
 	connect(positionTypeSelector, QOverload<int>::of(&QComboBox::currentIndexChanged), mStackedWidget, [=](int index) {

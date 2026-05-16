@@ -57,7 +57,8 @@ void ReflectionCameraController::update(const Camera& referenceCamera)
 	mReflectionCamera->setFovY(referenceCamera.getFovY());
 	mReflectionCamera->setAspectRatio(referenceCamera.getAspectRatio());
 
-	// update clipping plane to clip above/below the water
+	// update clipping plane to clip above/below the water.
+	// NOTE: positive Z is down.
 	bool isUnderwater = referenceCamera.getPosition().z() > planeZ;
 
 	osg::Plane plane;

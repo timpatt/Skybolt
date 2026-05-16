@@ -91,9 +91,9 @@ void Scene::addObject(const VisObjectPtr& object, Bucket bucket)
 void Scene::removeObject(const VisObjectPtr& object)
 {
 	if (object.get() == mPrimaryLight)
-		mPrimaryLight = 0;
-	else if (object.get() == mPrimaryPlanet)
-		mPrimaryPlanet = 0;
+		mPrimaryLight = nullptr;
+	if (object.get() == mPrimaryPlanet)
+		mPrimaryPlanet = nullptr;
 
 	auto i = mObjects.find(object);
 	if (i != mObjects.end())

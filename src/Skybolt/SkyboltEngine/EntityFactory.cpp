@@ -194,7 +194,7 @@ static void registerAssetSearchDirectory(const std::string& filename)
 {
 	osgDB::FilePathList& list = osgDB::Registry::instance()->getDataFilePathList();
 	auto i = std::find(list.begin(), list.end(), filename);
-	if (i != list.end())
+	if (i == list.end())
 	{
 		list.push_back(filename);
 	}

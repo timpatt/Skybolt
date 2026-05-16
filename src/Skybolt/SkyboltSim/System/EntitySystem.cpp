@@ -68,10 +68,10 @@ void EntitySystem::update(UpdateStage stage)
 			continue;
 		}
 
-		if (entity->isDynamicsEnabled() && stage == UpdateStage::PreDynamicsSubStep)
+		auto position = getPosition(*entity);
+		if (position && entity->isDynamicsEnabled() && stage == UpdateStage::PreDynamicsSubStep)
 		{
 			// Apply gravity
-			auto position = getPosition(*entity);
 			auto body = entity->getFirstComponent<DynamicBodyComponent>();
 			if (body)
 			{

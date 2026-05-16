@@ -67,8 +67,8 @@ void SimStepper::advanceTimeByDynamicsSubSteps(const std::vector<SystemPtr>& sys
 	if (mMaxDynamicsSubsteps && requiredSteps > *mMaxDynamicsSubsteps)
 	{
 		requiredSteps = *mMaxDynamicsSubsteps;
-		double dt = (double)*mMaxDynamicsSubsteps * mDynamicsStepSize;
-		newStepTimer = mStepTimer + dt;
+		double limitedDt = (double)*mMaxDynamicsSubsteps * mDynamicsStepSize;
+		newStepTimer = mStepTimer + limitedDt;
 	}
 
 	mStepTimer = newStepTimer - requiredSteps * mDynamicsStepSize;
@@ -98,7 +98,7 @@ void SimStepper::advanceTimeByNonDynamicsStep(const std::vector<SystemPtr>& syst
 
 	for (const SystemPtr& system : *mSystems)
 	{
-		system->advanceSimTime(mTime, mDynamicsStepSize);
+		system->advanceSimTime(mTime, dt);
 	}
 }
 

@@ -83,7 +83,7 @@ std::unique_ptr<SimSnapshotRegistry> createSnapshotRegistry(const skybolt::Engin
 	return std::make_unique<SimSnapshotRegistry>(config);
 }
 
-inline bool deltaEquals(sim::SecondsD a, sim::SecondsD b, sim::SecondsD epsilon)
+inline bool deltaEquals(sim::SecondsD a, sim::SecondsD b, sim::SecondsD epsilon = 0.00001)
 {
 	return std::abs(a - b) <= epsilon;
 }
@@ -95,7 +95,7 @@ void useSnapshotsToResetSimulationStateAtTimelineStart(const std::shared_ptr<Sim
 		if (scenario->timelineMode.get() != TimelineMode::Live) { return; }
 		
 		sim::SecondsD startTime = scenario->timeSource->getRange().start;
-		bool wasAtStart = deltaEquals(oldSimTime, startTime, 0.00001);
+		bool wasAtStart = deltaEquals(oldSimTime, startTime);
 		if (wasAtStart && newSimTime > oldSimTime) // If playback just started from the beginning
 		{
 			snapshotRegistry->saveSnapshotAtCurrentTime();
@@ -107,7 +107,7 @@ void useSnapshotsToResetSimulationStateAtTimelineStart(const std::shared_ptr<Sim
 		if (scenario->timelineMode.get() != TimelineMode::Live) { return; }
 		
 		sim::SecondsD startTime = scenario->timeSource->getRange().start;
-		bool isAtStart = deltaEquals(simTime, startTime, 0.001);
+		bool isAtStart = deltaEquals(simTime, startTime);
 		if (isAtStart)
 		{
 			// Load snapshot for the current time if available.
@@ -119,4 +119,4 @@ void useSnapshotsToResetSimulationStateAtTimelineStart(const std::shared_ptr<Sim
 	});
 }
 
-} // amespace skybolt
+} // namespace skybolt

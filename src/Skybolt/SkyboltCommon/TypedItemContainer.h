@@ -58,6 +58,7 @@ public:
 		{
 			mComponents[i].reset();
 		}
+		mComponents.clear();
 	}
 
 	virtual void addItem(const BaseTPtr& c)
@@ -72,6 +73,7 @@ public:
 
 	virtual void removeItem(const BaseTPtr& c)
 	{
+		// Remove component from components vector
 		{
 			auto it = std::find(mComponents.begin(), mComponents.end(), c);
 			if (it != mComponents.end())
@@ -80,6 +82,7 @@ public:
 			}
 		}
 
+		// Remove all records of the component from the type to component map
 		for (auto it = mComponentMap.begin(); it != mComponentMap.end();)
 		{
 			if (it->second == c)
@@ -93,7 +96,6 @@ public:
 		}
 	}
 
-	//! @returns nullptr if not found
 	template <class DerivedT>
 	std::vector<std::shared_ptr<DerivedT>> getItemsOfType() const
 	{

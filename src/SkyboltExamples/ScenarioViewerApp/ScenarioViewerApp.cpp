@@ -252,7 +252,7 @@ static void placeEntityOnPlanetInFrontOfCamera(const Entity& camera, Entity& ent
 
 	// Get a position in front of the camera
 	Vector3 position = getPosition(camera).value_or(math::dvec3Zero());
-	Quaternion orientation = getOrientation(camera).value_or(Vector3(1,0,0));
+	Quaternion orientation = getOrientation(camera).value_or(math::dquatIdentity());
 	Vector3 direction = orientation * Vector3(1,0,0);
 	double distance = 100;
 	position += direction * distance;
@@ -524,7 +524,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 				});
 
 			QObject::connect(openAction, &QAction::triggered, &mainWindow, [&mainWindow, recentFileMenuPopulator, &scenarioWorkspace]() {
-				QString filename = QFileDialog::getOpenFileName(&mainWindow, "Open Scenario", QString(), "Scenario Files (*.scn);All Files (*)");
+				QString filename = QFileDialog::getOpenFileName(&mainWindow, "Open Scenario", QString(), "Scenario Files (*.scn);;All Files (*)"); // NOTE: separator in Qt filter list must be `;;`, not `;`
 				if (!filename.isEmpty())
 				{
 					if (auto error = scenarioWorkspace.loadScenario(filename); error)
