@@ -155,7 +155,7 @@ static int WAI_PREFIX(getModulePath_)(HMODULE module, char* out, int capacity, i
 }
 
 WAI_NOINLINE WAI_FUNCSPEC
-int WAI_PREFIX(getExecutablePath)(char* out, int capacity, int* dirname_length)
+int WAI_PREFIX(GetExecutableFilepath)(char* out, int capacity, int* dirname_length)
 {
   return WAI_PREFIX(getModulePath_)(NULL, out, capacity, dirname_length);
 }
@@ -205,7 +205,7 @@ int WAI_PREFIX(getModulePath)(char* out, int capacity, int* dirname_length)
 #endif
 
 WAI_FUNCSPEC
-int WAI_PREFIX(getExecutablePath)(char* out, int capacity, int* dirname_length)
+int WAI_PREFIX(GetExecutableFilepath)(char* out, int capacity, int* dirname_length)
 {
   char buffer[PATH_MAX];
   char* resolved = NULL;
@@ -391,7 +391,7 @@ int WAI_PREFIX(getModulePath)(char* out, int capacity, int* dirname_length)
 #include <dlfcn.h>
 
 WAI_FUNCSPEC
-int WAI_PREFIX(getExecutablePath)(char* out, int capacity, int* dirname_length)
+int WAI_PREFIX(GetExecutableFilepath)(char* out, int capacity, int* dirname_length)
 {
   char buffer1[PATH_MAX];
   char buffer2[PATH_MAX];
@@ -402,10 +402,10 @@ int WAI_PREFIX(getExecutablePath)(char* out, int capacity, int* dirname_length)
   for (;;)
   {
     uint32_t size = (uint32_t)sizeof(buffer1);
-    if (_NSGetExecutablePath(path, &size) == -1)
+    if (_NSGetExecutableFilepath(path, &size) == -1)
     {
       path = (char*)WAI_MALLOC(size);
-      if (!_NSGetExecutablePath(path, &size))
+      if (!_NSGetExecutableFilepath(path, &size))
         break;
     }
 
@@ -499,7 +499,7 @@ int WAI_PREFIX(getModulePath)(char* out, int capacity, int* dirname_length)
 #endif
 
 WAI_FUNCSPEC
-int WAI_PREFIX(getExecutablePath)(char* out, int capacity, int* dirname_length)
+int WAI_PREFIX(GetExecutableFilepath)(char* out, int capacity, int* dirname_length)
 {
   char buffer1[PATH_MAX];
   char buffer2[PATH_MAX];
@@ -603,7 +603,7 @@ int WAI_PREFIX(getModulePath)(char* out, int capacity, int* dirname_length)
 #include <dlfcn.h>
 
 WAI_FUNCSPEC
-int WAI_PREFIX(getExecutablePath)(char* out, int capacity, int* dirname_length)
+int WAI_PREFIX(GetExecutableFilepath)(char* out, int capacity, int* dirname_length)
 {
   char buffer1[PATH_MAX];
   char buffer2[PATH_MAX];

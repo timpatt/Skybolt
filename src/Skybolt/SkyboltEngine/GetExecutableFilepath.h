@@ -10,6 +10,6 @@
 
 namespace skybolt {
 
-file::Path getExecutablePath();
+file::Path getExecutableFilepath();
 
 } // namespace skybolt

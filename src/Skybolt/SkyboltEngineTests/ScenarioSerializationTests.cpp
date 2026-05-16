@@ -49,7 +49,7 @@ TEST_CASE("Scenario is identical after serialization and deserialization")
 
 	nlohmann::json scenarioJson = writeScenario(typeRegistry, scenario1);
 
-	Scenario scenario2(std::make_shared<sim::TimeSource>(sim::TimeRange(0, 1)));;
+	Scenario scenario2(std::make_shared<sim::TimeSource>(sim::TimeRange(0, 1)));
 	readScenario(typeRegistry, scenario2, &createEntity, scenarioJson);
 
 	CHECK(scenario1.startJulianDate == scenario2.startJulianDate);
@@ -67,7 +67,7 @@ TEST_CASE("On deserialization, new entities created, existing entities updated, 
 	sim::EntityPtr entityForModification = createEntity("myTemplate", "entityForModification");
 
 	refl::TypeRegistry typeRegistry;
-	Scenario scenario(std::make_shared<sim::TimeSource>(sim::TimeRange(0, 1)));;
+	Scenario scenario(std::make_shared<sim::TimeSource>(sim::TimeRange(0, 1)));
 	scenario.world.addEntity(entityForAddition);
 	scenario.world.addEntity(entityForModification);
 

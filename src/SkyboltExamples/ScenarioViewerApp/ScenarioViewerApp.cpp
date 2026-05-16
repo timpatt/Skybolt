@@ -16,7 +16,7 @@
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineRootFactory.h>
-#include <SkyboltEngine/GetExecutablePath.h>
+#include <SkyboltEngine/GetExecutableFilepath.h>
 #include <SkyboltEngine/FindPython.h>
 #include <SkyboltEngine/Input/InputSystem.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
@@ -702,7 +702,7 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		file::Path executableDir = getExecutablePath();
+		file::Path executableDir = getExecutableFilepath().parent_path();
 
 		QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 		QCoreApplication::setApplicationName("Skybolt Scenario Viewer");

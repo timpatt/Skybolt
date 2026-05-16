@@ -6,7 +6,7 @@
 
 #include "EngineRootFactory.h"
 #include "EngineSettings.h"
-#include "GetExecutablePath.h"
+#include "GetExecutableFilepath.h"
 #include "Plugin/PluginHelpers.h"
 
 #include <SkyboltCommon/Logging/Logging.h>
@@ -54,7 +54,7 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFa
 
 std::vector<std::string> EngineRootFactory::getDefaultPluginDirs()
 {
-	std::vector<std::string> pluginDirs = { getExecutablePath().append("plugins").string() };
+	std::vector<std::string> pluginDirs = { getExecutableFilepath().parent_path().append("plugins").string() };
 	if (const char* path = std::getenv("SKYBOLT_PLUGINS_PATH"); path)
 	{
 		auto paths = file::splitByPathListSeparator(std::string(path));
