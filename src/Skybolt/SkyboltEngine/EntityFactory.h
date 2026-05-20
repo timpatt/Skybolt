@@ -50,6 +50,7 @@ public:
 		nlohmann::json engineSettings;
 		std::optional<VisContext> visContext; // !< If empty, visual objects will not be created
 		NonNullPtr<FactoryRegistries> factoryRegistries;
+		NonNullPtr<refl::TypeRegistry> typeRegistry;
 	};
 
 	EntityFactory(const Context& context, const std::vector<std::filesystem::path>& entityFilenames);

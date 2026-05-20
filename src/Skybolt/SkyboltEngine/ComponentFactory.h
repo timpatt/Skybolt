@@ -12,6 +12,7 @@
 #include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltCommon/Registry.h>
 #include <SkyboltCommon/File/FileLocator.h>
+#include <SkyboltReflect/SkyboltReflectFwd.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
 #include <nlohmann/json.hpp>
@@ -29,6 +30,7 @@ struct ComponentFactoryContext
 	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 	file::FileLocator fileLocator;
 	NonNullPtr<FactoryRegistries> factoryRegistries;
+	NonNullPtr<refl::TypeRegistry> typeRegistry;
 };
 
 class ComponentFactory
@@ -47,10 +49,7 @@ public:
 	
 	ComponentFactoryFunctionAdapter(Function fn) : mFunction(fn) {}
 
-	sim::ComponentPtr create(sim::Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) override
-	{
-		return mFunction(entity, context, json);
-	}
+	sim::ComponentPtr create(sim::Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) override;
 
 private:
 	Function mFunction;

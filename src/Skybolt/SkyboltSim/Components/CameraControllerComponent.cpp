@@ -79,7 +79,10 @@ nlohmann::json CameraControllerComponent::toJson(refl::TypeRegistry& typeRegistr
 
 void CameraControllerComponent::fromJson(refl::TypeRegistry& typeRegistry, const nlohmann::json& j)
 {
-	selectController(j.at("selectedController"));
+	if (auto selectedControllerName = readOptional<std::string>(j, "selectedController"); selectedControllerName)
+	{
+		selectController(*selectedControllerName);
+	}
 
 	ifChildExists(j, "controllers", [&] (const nlohmann::json& controllersJson) {
 		for (const auto& i : getControllers())

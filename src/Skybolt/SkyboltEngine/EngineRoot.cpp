@@ -217,7 +217,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	.fileLocator = locateFile,
 	.assetPackagePaths = mAssetPackagePaths,
 	.engineSettings = engineSettings,
-	.factoryRegistries = factoryRegistries.get()
+	.factoryRegistries = factoryRegistries.get(),
+	.typeRegistry = typeRegistry.get()
 	};
 
 	if (config.enableVis)

@@ -37,12 +37,25 @@
 #include <SkyboltSim/Components/ReactionControlSystemComponent.h>
 #include <SkyboltSim/Components/RocketMotorComponent.h>
 #include <SkyboltSim/Components/ShipWakeComponent.h>
+#include <SkyboltSim/Serialization/Serialization.h>
 #include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 
 namespace skybolt {
 
 using namespace sim;
+
+sim::ComponentPtr ComponentFactoryFunctionAdapter::create(sim::Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	sim::ComponentPtr component = mFunction(entity, context, json);
+	if (component)
+	{
+		// If component was created, read reflected properties from json
+		refl::Instance instance = refl::makeRefInstance(*context.typeRegistry, component.get());
+		readReflectedObject(*context.typeRegistry, instance, json);
+	}
+	return component;
+}
 
 static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
