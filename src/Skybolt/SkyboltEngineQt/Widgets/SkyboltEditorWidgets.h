@@ -17,5 +17,5 @@ namespace skybolt::refl { class TypeRegistry; }
 skybolt::PropertyEditorWidgetFactoryMapPtr createSkyboltEditorWidgetFactoryMap(
 	const skybolt::DefaultEditorWidgetFactoryMapConfig& config,
 	skybolt::NonNullPtr<skybolt::refl::TypeRegistry> typeRegistry,
-	const skybolt::ReflTypePropertyFactoryMapPtr& typePropertyFactories,
+	const skybolt::ReflValueTranslatorMapPtr& valueTranslatorFactories,
 	skybolt::NonNullPtr<skybolt::FactoryRegistries> factoryRegistries);

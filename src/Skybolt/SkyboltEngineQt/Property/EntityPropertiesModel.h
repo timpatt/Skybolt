@@ -16,7 +16,7 @@
 class EntityPropertiesModel : public skybolt::PropertiesModel, public skybolt::sim::EntityListener
 {
 public:
-	EntityPropertiesModel(skybolt::refl::TypeRegistry* typeRegistry, const skybolt::ReflTypePropertyFactoryMapPtr& factoryMap, skybolt::sim::Entity* entity = nullptr);
+	EntityPropertiesModel(skybolt::refl::TypeRegistry* typeRegistry, const skybolt::ReflValueTranslatorMapPtr& factoryMap, skybolt::sim::Entity* entity = nullptr);
 	~EntityPropertiesModel() override;
 
 	void setEntity(skybolt::sim::Entity* entity);
@@ -26,7 +26,7 @@ private:
 
 private:
 	skybolt::refl::TypeRegistry* mTypeRegistry;
-	skybolt::ReflTypePropertyFactoryMapPtr mReflTypePropertyFactoryMap;
+	skybolt::ReflValueTranslatorMapPtr mReflValueTranslatorMap;
 	skybolt::sim::Entity* mEntity;
 	bool mCurrentlyUpdating = false;
 };

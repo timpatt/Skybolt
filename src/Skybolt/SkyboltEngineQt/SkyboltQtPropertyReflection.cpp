@@ -21,100 +21,43 @@
 
 using namespace skybolt;
 
-template <typename T>
-std::optional<T> simToDisplayUnitsMultiplier(const refl::Property& property, T v)
-{
-	if (auto value = refl::getOptionalValue<Units>(property.getMetadata(sim::PropertyMetadataNames::units)); value)
-	{
-		if (*value == Units::Radians)
-		{
-			return (T)skybolt::math::radToDegD();
-		}
-	}
-	return std::nullopt;
-}
-
-template <typename T>
-T simUnitToDisplay(const refl::Property& property, T v)
-{
-	if (auto m = simToDisplayUnitsMultiplier(property, v); m)
-	{
-		return v * m.value();
-	}
-	return v;
-}
-
-template <typename T>
-T displayUnitToSim(const refl::Property& property, T v)
-{
-	if (auto m = simToDisplayUnitsMultiplier(property, v); m)
-	{
-		return v / m.value();
-	}
-	return v;
-}
-
 namespace skybolt {
 	// Add conversion templates for custom types
 
 	template <>
-	QVariant reflValueToQt(const refl::Property& property, const float& value)
+	QVariant reflValueToQt(const sim::Vector3& value)
 	{
-		return simUnitToDisplay(property, value);
+		return toQVector3D(value);
 	}
 
 	template <>
-	float qtValueToRefl(const refl::Property& property, const QVariant& value)
+	sim::Vector3 qtValueToRefl(const QVariant& value)
 	{
-		return displayUnitToSim(property, value.toFloat());
+		return toVector3(value.value<QVector3D>());
 	}
 
 	template <>
-	QVariant reflValueToQt(const refl::Property& property, const double& value)
-	{
-		return simUnitToDisplay(property, value);
-	}
-
-	template <>
-	double qtValueToRefl(const refl::Property& property, const QVariant& value)
-	{
-		return displayUnitToSim(property, value.toDouble());
-	}
-
-	template <>
-	QVariant reflValueToQt(const refl::Property& property, const sim::Vector3& value)
-	{
-		return toQVector3D(simUnitToDisplay(property, value));
-	}
-
-	template <>
-	sim::Vector3 qtValueToRefl(const refl::Property& property, const QVariant& value)
-	{
-		return displayUnitToSim(property, toVector3(value.value<QVector3D>()));
-	}
-
-	template <>
-	QVariant reflValueToQt(const refl::Property& property, const sim::Quaternion& value)
+	QVariant reflValueToQt(const sim::Quaternion& value)
 	{
 		glm::dvec3 euler = skybolt::math::eulerFromQuat(value) * skybolt::math::radToDegD();
 		return QVector3D(euler.x, euler.y, euler.z);
 	}
 
 	template <>
-	sim::Quaternion qtValueToRefl(const refl::Property& property, const QVariant& value)
+	sim::Quaternion qtValueToRefl(const QVariant& value)
 	{
 		sim::Vector3 euler = toVector3(value.value<QVector3D>());
 		return skybolt::math::quatFromEuler(euler * skybolt::math::degToRadD());
 	}
 
 	template <>
-	QVariant reflValueToQt(const refl::Property& property, const sim::LatLon& value)
+	QVariant reflValueToQt(const sim::LatLon& value)
 	{
 		return QVariant::fromValue(sim::LatLon(value.lat * skybolt::math::radToDegD(), value.lon * skybolt::math::radToDegD()));
 	}
 
 	template <>
-	sim::LatLon qtValueToRefl(const refl::Property& property, const QVariant& value)
+	sim::LatLon qtValueToRefl(const QVariant& value)
 	{
 		sim::LatLon simValue = value.value<sim::LatLon>();
 		simValue.lat *= skybolt::math::degToRadD();
@@ -124,18 +67,17 @@ namespace skybolt {
 
 } // namespace skybolt
 
-skybolt::ReflTypePropertyFactoryMap createSkyboltReflTypePropertyFactories(skybolt::refl::TypeRegistry& typeRegistry)
+skybolt::ReflValueTranslatorMap createSkyboltReflValueTranslators(skybolt::refl::TypeRegistry& typeRegistry)
 {
-	skybolt::ReflTypePropertyFactoryMap factories = createDefaultReflTypePropertyFactories(typeRegistry);
+	skybolt::ReflValueTranslatorMap factories = createDefaultReflValueTranslators(typeRegistry);
 
-	factories[typeRegistry.getOrCreateType<float>()] = createPropertyFactory<float>(0.f); // Override the default float and double property factories to enable units conversion
-	factories[typeRegistry.getOrCreateType<double>()] = createPropertyFactory<double>(0.0);
-	factories[typeRegistry.getOrCreateType<sim::Vector3>()] = createPropertyFactory<sim::Vector3>(QVector3D(0,0,0));
-	factories[typeRegistry.getOrCreateType<sim::Quaternion>()] = createPropertyFactory<sim::Quaternion>(QVector3D(0,0,0));
-	factories[typeRegistry.getOrCreateType<sim::LatLon>()] = createPropertyFactory<sim::LatLon>(QVariant::fromValue(sim::LatLon(0,0)));
-	factories[typeRegistry.getOrCreateType<skybolt::sim::CameraControllerSelector::ControllersMap>()] = createPropertyFactory<skybolt::sim::CameraControllerSelector::ControllersMap>(QVariant::fromValue(skybolt::sim::CameraControllerSelector::ControllersMap{}));
-	factories[typeRegistry.getOrCreateType<skybolt::sim::CameraModifierPtr>()] = createPropertyFactory<skybolt::sim::CameraModifierPtr>(QVariant::fromValue(skybolt::sim::CameraModifierPtr{}), [] (const refl::Instance& reflValue, const QVariant& qtValue) {
-		return QString::fromStdString(reflValue.cast<skybolt::sim::CameraModifierPtr>()->getTypeName());
+	factories[typeRegistry.getOrCreateType<sim::Vector3>()] = createReflValueTranslator<sim::Vector3, QVector3D>();
+	factories[typeRegistry.getOrCreateType<sim::Quaternion>()] = createReflValueTranslator<sim::Quaternion, QVector3D>();
+	factories[typeRegistry.getOrCreateType<sim::LatLon>()] = createReflValueTranslator<sim::LatLon, QVariant>();
+	factories[typeRegistry.getOrCreateType<skybolt::sim::CameraControllerSelector::ControllersMap>()] = createReflValueTranslator<skybolt::sim::CameraControllerSelector::ControllersMap, QVariant>();
+	factories[typeRegistry.getOrCreateType<skybolt::sim::CameraModifierPtr>()] = createReflValueTranslatorWithDisplayName<skybolt::sim::CameraModifierPtr, QVariant>(/* displayNameRenderer */[] (const refl::Instance& reflValue, const QVariant& qtValue) {
+		auto cameraModifier = reflValue.cast<skybolt::sim::CameraModifierPtr>();
+		return cameraModifier ? QString::fromStdString(cameraModifier->getTypeName()) : "null";
 	});
 	return factories;
 }

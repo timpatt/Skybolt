@@ -393,15 +393,16 @@ static int createAndExecuteApplication(int argc, char** argv)
 		mainLayout->addWidget(timelinePanel);
 	}
 
+	auto valueTranslators = std::make_shared<ReflValueTranslatorMap>(createSkyboltReflValueTranslators(*engineRoot->typeRegistry));
+
 	// Create property editor
-	auto entityPropertiesModel = std::make_shared<EntityPropertiesModel>(engineRoot->typeRegistry.get(), std::make_shared<ReflTypePropertyFactoryMap>(createSkyboltReflTypePropertyFactories(*engineRoot->typeRegistry)));
-	
-	auto skyboltTypePropertyFactories = std::make_shared<ReflTypePropertyFactoryMap>(createSkyboltReflTypePropertyFactories(*engineRoot->typeRegistry));
+	auto entityPropertiesModel = std::make_shared<EntityPropertiesModel>(engineRoot->typeRegistry.get(), valueTranslators);
+
 	PropertyEditorWidgetFactoryMapPtr factoryMap = createSkyboltEditorWidgetFactoryMap(DefaultEditorWidgetFactoryMapConfig{
 		.listEditorIcons = createDefaultListEditorIcons()
 		},
 		engineRoot->typeRegistry.get(),
-		skyboltTypePropertyFactories,
+		valueTranslators,
 		engineRoot->factoryRegistries.get());
 	auto* propertyEditor = new PropertyEditor(factoryMap, &mainWindow);
 	{

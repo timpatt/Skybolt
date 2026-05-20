@@ -15,13 +15,13 @@
 
 using namespace skybolt;
 
-EntityPropertiesModel::EntityPropertiesModel(refl::TypeRegistry* typeRegistry, const ReflTypePropertyFactoryMapPtr& factoryMap, sim::Entity* entity) :
+EntityPropertiesModel::EntityPropertiesModel(refl::TypeRegistry* typeRegistry, const ReflValueTranslatorMapPtr& factoryMap, sim::Entity* entity) :
 	mTypeRegistry(typeRegistry),
-	mReflTypePropertyFactoryMap(factoryMap),
+	mReflValueTranslatorMap(factoryMap),
 	mEntity(nullptr)
 {
 	assert(mTypeRegistry);
-	assert(mReflTypePropertyFactoryMap);
+	assert(mReflValueTranslatorMap);
 
 	try
 	{
@@ -59,10 +59,10 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 
 		QtPropertyPtr nameProperty = createQtProperty(QLatin1String("name"), QString());
 		nameProperty->setEnabled(false);
-		addProperty(nameProperty, [this](QtProperty& property) {
+		addProperty(nameProperty, [this](QtValue& value, const PropertiesModel::QtValueUpdaterContext& context) {
 			if (mEntity)
 			{
-				property.setValue(QString::fromStdString(getName(*mEntity)));
+				value.setValue(QString::fromStdString(getName(*mEntity)));
 			}
 		});
 
@@ -71,22 +71,22 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 			ReflInstanceGetter getter = [this, component] { return refl::makeRefInstance(*mTypeRegistry, component.get()); };
 
 			refl::Instance instance = refl::makeRefInstance(*mTypeRegistry, component.get());
-			addReflPropertiesToModel(*mTypeRegistry, *this, toValuesVector(refl::getProperties(instance)), getter, *mReflTypePropertyFactoryMap);
+			addReflPropertiesToModel(*mTypeRegistry, *this, toValuesVector(refl::getProperties(instance)), getter, *mReflValueTranslatorMap);
 		}
 
 		addProperty(createQtProperty("dynamicsEnabled", false),
 			// Updater
-			[this](QtProperty& property) {
+			[this](QtValue& value, const PropertiesModel::QtValueUpdaterContext& context) {
 				if (mEntity)
 				{
-					property.setValue(mEntity->isDynamicsEnabled());
+					value.setValue(mEntity->isDynamicsEnabled());
 				}
 			},
 			// Applier
-			[this](const QtProperty& property) {
+			[this](const QtValue& value, const PropertiesModel::QtValueApplierContext& context) {
 				if (mEntity)
 				{
-					mEntity->setDynamicsEnabled(property.value().toBool());
+					mEntity->setDynamicsEnabled(value.value().toBool());
 				}
 			},
 			// Section name

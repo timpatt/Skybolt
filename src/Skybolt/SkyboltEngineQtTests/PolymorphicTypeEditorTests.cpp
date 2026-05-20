@@ -59,28 +59,27 @@ static auto createFactoryRegistry()
 }
 
 static auto createTestEditor(
-	QtProperty* property,
+	QtValue* value,
 	const std::shared_ptr<PolymorphicTypeEditor<TestBase>::FactoryRegistryT>& registry,
 	refl::TypeRegistry& typeRegistry)
 {
-	auto typePropertyFactories = std::make_shared<ReflTypePropertyFactoryMap>();
+	auto valueTranslatorFactories = std::make_shared<ReflValueTranslatorMap>();
 	auto editorWidgetFactoryMap = std::make_shared<PropertyEditorWidgetFactoryMap>();
 
 	return std::make_unique<PolymorphicTypeEditor<TestBase>>(
-		property,
+		value,
 		registry,
 		&typeRegistry,
-		typePropertyFactories,
+		valueTranslatorFactories,
 		editorWidgetFactoryMap);
 }
 
 TEST_CASE_METHOD(QAppFixture, "PolymorphicTypeEditor populates combo box with factory names")
 {
-	auto property = std::make_shared<QtProperty>();
-	property->setValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
+	auto value = createQtValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
 
 	refl::TypeRegistry typeRegistry;
-	auto editor = createTestEditor(property.get(), createFactoryRegistry(), typeRegistry);
+	auto editor = createTestEditor(value.get(), createFactoryRegistry(), typeRegistry);
 
 	auto comboBox = editor->findChild<QComboBox*>();
 	REQUIRE(comboBox != nullptr);
@@ -91,11 +90,10 @@ TEST_CASE_METHOD(QAppFixture, "PolymorphicTypeEditor populates combo box with fa
 
 TEST_CASE_METHOD(QAppFixture, "PolymorphicTypeEditor selecting type creates correct instance")
 {
-	auto property = std::make_shared<QtProperty>();
-	property->setValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
+	auto qtValue = createQtValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
 
 	refl::TypeRegistry typeRegistry;
-	auto editor = createTestEditor(property.get(), createFactoryRegistry(), typeRegistry);
+	auto editor = createTestEditor(qtValue.get(), createFactoryRegistry(), typeRegistry);
 
 	auto comboBox = editor->findChild<QComboBox*>();
 	REQUIRE(comboBox != nullptr);
@@ -103,48 +101,46 @@ TEST_CASE_METHOD(QAppFixture, "PolymorphicTypeEditor selecting type creates corr
 	// Simulate selecting "DerivedA"
 	comboBox->setCurrentText("DerivedA");
 
-	auto value = property->value().value<std::shared_ptr<TestBase>>();
+	auto value = qtValue->value().value<std::shared_ptr<TestBase>>();
 	REQUIRE(value != nullptr);
 	CHECK(dynamic_cast<TestDerivedA*>(value.get()) != nullptr);
 
 	// Simulate selecting "DerivedB"
 	comboBox->setCurrentText("DerivedB");
 
-	value = property->value().value<std::shared_ptr<TestBase>>();
+	value = qtValue->value().value<std::shared_ptr<TestBase>>();
 	REQUIRE(value != nullptr);
 	CHECK(dynamic_cast<TestDerivedB*>(value.get()) != nullptr);
 }
 
 TEST_CASE_METHOD(QAppFixture, "PolymorphicTypeEditor updates combo box when property value changes externally")
 {
-	auto property = std::make_shared<QtProperty>();
-	property->setValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
+	auto qtValue = createQtValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
 
 	refl::TypeRegistry typeRegistry;
-	auto editor = createTestEditor(property.get(), createFactoryRegistry(), typeRegistry);
+	auto editor = createTestEditor(qtValue.get(), createFactoryRegistry(), typeRegistry);
 
 	auto comboBox = editor->findChild<QComboBox*>();
 	REQUIRE(comboBox != nullptr);
 
-	// Set property to DerivedB externally
-	property->setValue(QVariant::fromValue(std::shared_ptr<TestBase>(std::make_shared<TestDerivedB>())));
+	// Set value to DerivedB externally
+	qtValue->setValue(QVariant::fromValue(std::shared_ptr<TestBase>(std::make_shared<TestDerivedB>())));
 
 	CHECK(comboBox->currentText().toStdString() == "DerivedB");
 }
 
 TEST_CASE_METHOD(QAppFixture, "PolymorphicTypeEditor automatically selects first available type if property is null")
 {
-	auto property = std::make_shared<QtProperty>();
-	property->setValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
+	auto value = createQtValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
 
 	refl::TypeRegistry typeRegistry;
-	auto editor = createTestEditor(property.get(), createFactoryRegistry(), typeRegistry);
+	auto editor = createTestEditor(value.get(), createFactoryRegistry(), typeRegistry);
 
 	// Set to a valid value first
-	property->setValue(QVariant::fromValue(std::shared_ptr<TestBase>(std::make_shared<TestDerivedA>())));
+	value->setValue(QVariant::fromValue(std::shared_ptr<TestBase>(std::make_shared<TestDerivedA>())));
 
 	// Then set to null
-	property->setValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
+	value->setValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
 
 	// Combo should select the first available type when value is null
 	auto comboBox = editor->findChild<QComboBox*>();
@@ -154,12 +150,11 @@ TEST_CASE_METHOD(QAppFixture, "PolymorphicTypeEditor automatically selects first
 
 TEST_CASE_METHOD(QAppFixture, "PolymorphicTypeEditor combobox is empty when factory registry is empty")
 {
-	auto property = std::make_shared<QtProperty>();
-	property->setValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
+	auto value = createQtValue(QVariant::fromValue(std::shared_ptr<TestBase>()));
 
 	refl::TypeRegistry typeRegistry;
 	auto emptyRegistry = std::make_shared<PolymorphicTypeEditor<TestBase>::FactoryRegistryT>();
-	auto editor = createTestEditor(property.get(), emptyRegistry, typeRegistry);
+	auto editor = createTestEditor(value.get(), emptyRegistry, typeRegistry);
 
 	auto comboBox = editor->findChild<QComboBox*>();
 	REQUIRE(comboBox != nullptr);

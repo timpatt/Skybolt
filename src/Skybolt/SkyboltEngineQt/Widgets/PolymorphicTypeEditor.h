@@ -39,17 +39,17 @@ public:
 	using FactoryRegistryTPtr = std::shared_ptr<FactoryRegistryT>;
 
 	PolymorphicTypeEditor(
-		QPointer<QtProperty> property,
+		QPointer<QtValue> value,
 		const FactoryRegistryTPtr& valueFactoryRegistry,
 		NonNullPtr<refl::TypeRegistry> typeRegistry,
-		const ReflTypePropertyFactoryMapPtr& typePropertyFactories,
+		const ReflValueTranslatorMapPtr& valueTranslatorFactories,
 		const PropertyEditorWidgetFactoryMapPtr& editorWidgetFactoryMap,
 		QWidget* parent = nullptr)
 		: QWidget(parent)
-		, mProperty(property)
+		, mValue(value)
 		, mValueFactoryRegistry(valueFactoryRegistry)
 		, mTypeRegistry(typeRegistry)
-		, mTypePropertyFactories(typePropertyFactories)
+		, mTypePropertyFactories(valueTranslatorFactories)
 		, mEditorWidgetFactoryMap(editorWidgetFactoryMap)
 	{
 		assert(mProperty);
@@ -73,7 +73,7 @@ public:
 
 		connect(mComboBox, &QComboBox::currentTextChanged, this, &PolymorphicTypeEditor<T>::onTypeSelected);
 
-		connect(mProperty, &QtProperty::valueChanged, this, [this]() {
+		connect(mValue, &QtValue::valueChanged, this, [this]() {
 			populateEditorFromPropertyValue();
 			});
 
@@ -83,7 +83,7 @@ public:
 private:
 	void onTypeSelected(const QString& typeName)
 	{
-		if (!mProperty)
+		if (!mValue)
 		{
 			return;
 		}
@@ -94,34 +94,33 @@ private:
 		{
 			// Failed to create new value, set property to null and clear editor
 			clearEditorWidget();
-			mProperty->setValue(QVariant::fromValue(std::shared_ptr<T>()));
+			mValue->setValue(QVariant::fromValue(std::shared_ptr<T>()));
 			return;
 		}
 
 		// Set the property to the new value
-		mProperty->setValue(QVariant::fromValue(it->second()));
+		mValue->setValue(QVariant::fromValue(it->second()));
 	}
 
 	void populateEditorFromPropertyValue()
 	{
 		// Clear previous editor
-		mInstanceProperty.reset();
+		mInstanceValue.reset();
 		clearEditorWidget();
 
 		// Get the current value
-		std::shared_ptr<T> value = mProperty->value().value<std::shared_ptr<T>>();
+		std::shared_ptr<T> value = mValue->value().value<std::shared_ptr<T>>();
 
 		// Populate the property editor for the current value
 		if (value)
 		{
-			// Create a QtProperty holding a ReflPropertyInstanceVariant for the value
-			mInstanceProperty = std::make_shared<QtProperty>();
-			ReflPropertyInstanceVariant instanceVariant;
+			// Create a QtProperty holding a ReflValueInstanceVariant for the value
+			ReflInstanceVariant instanceVariant;
 			instanceVariant.instance = refl::makeRefInstance(*mTypeRegistry, value.get());
-			mInstanceProperty->setValue(QVariant::fromValue(instanceVariant));
+			mInstanceValue = createQtValue(QVariant::fromValue(instanceVariant));
 
 			// Use the editor widget factory map to create an editor widget for the property
-			mEditorWidget = createReflPropertyInstanceEditor(mInstanceProperty.get(), this, mTypeRegistry.get(), *mTypePropertyFactories, mEditorWidgetFactoryMap);
+			mEditorWidget = createReflValueInstanceEditor(mInstanceValue.get(), this, mTypeRegistry.get(), *mTypePropertyFactories, mEditorWidgetFactoryMap);
 			if (mEditorWidget)
 			{
 				mLayout->addWidget(mEditorWidget);
@@ -168,15 +167,15 @@ private:
 	}
 
 private:
-	QPointer<QtProperty> mProperty;
+	QPointer<QtValue> mValue;
 	FactoryRegistryTPtr mValueFactoryRegistry;
 	NonNullPtr<refl::TypeRegistry> mTypeRegistry;
-	ReflTypePropertyFactoryMapPtr mTypePropertyFactories;
+	ReflValueTranslatorMapPtr mTypePropertyFactories;
 	PropertyEditorWidgetFactoryMapPtr mEditorWidgetFactoryMap;
 
 	QVBoxLayout* mLayout = nullptr;
 	QComboBox* mComboBox = nullptr;
-	QtPropertyPtr mInstanceProperty;
+	QtValuePtr mInstanceValue;
 	QWidget* mEditorWidget = nullptr;
 };
 

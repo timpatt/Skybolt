@@ -23,8 +23,8 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 		mStartDateTime = createQtProperty("startTime", QDateTime());
 		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mStartDateTime);
 
-		connect(mStartDateTime.get(), &QtProperty::valueChanged, [this]() {
-			QDateTime dateTime = mStartDateTime->value().toDateTime();
+		connect(mStartDateTime->value().get(), &QtValue::valueChanged, [this]() {
+			QDateTime dateTime = mStartDateTime->value()->value().toDateTime();
 			mScenario->startJulianDate = qdateTimeToJulianDate(dateTime);
 		});
 	}
@@ -32,9 +32,9 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 		mDuration = createQtProperty("duration", 0.0);
 		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mDuration);
 
-		connect(mDuration.get(), &QtProperty::valueChanged, [this]() {
+		connect(mDuration->value().get(), &QtValue::valueChanged, [this]() {
 			sim::TimeRange range = mScenario->timeSource->getRange();
-			range.end = mDuration->value().toDouble();
+			range.end = mDuration->value()->value().toDouble();
 			mScenario->timeSource->setRange(range);
 		});
 	}
@@ -43,8 +43,8 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 		mTimelineMode->setProperty(QtPropertyMetadataKeys::optionNames, QStringList({"Live", "Free"}));
 		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mTimelineMode);
 
-		connect(mTimelineMode.get(), &QtProperty::valueChanged, [this]() {
-			mScenario->timelineMode.set(skybolt::TimelineMode(mTimelineMode->value().toInt()));
+		connect(mTimelineMode->value().get(), &QtValue::valueChanged, [this]() {
+			mScenario->timelineMode.set(skybolt::TimelineMode(mTimelineMode->value()->value().toInt()));
 		});
 	}
 
@@ -53,7 +53,7 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 
 void ScenarioPropertiesModel::update()
 {
-	mStartDateTime->setValue(julianDateToQDateTime(mScenario->startJulianDate));
-	mDuration->setValue(mScenario->timeSource->getRange().end);
-	mTimelineMode->setValue(int(mScenario->timelineMode.get()));
+	mStartDateTime->value()->setValue(julianDateToQDateTime(mScenario->startJulianDate));
+	mDuration->value()->setValue(mScenario->timeSource->getRange().end);
+	mTimelineMode->value()->setValue(int(mScenario->timelineMode.get()));
 }
