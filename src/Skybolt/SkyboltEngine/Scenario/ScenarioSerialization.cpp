@@ -43,7 +43,7 @@ static std::string toString(TimelineMode mode)
 	return "live";
 }
 
-void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const EntityFactoryFn& entityFactory, const nlohmann::json& json, EntityPersistenceFlags entityPersistenceFlags)
+void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const EntityFactoryFn& entityFactory, const nlohmann::json& json)
 {
 	SecondsD startTime = readOptionalOrDefault(json, "startTime", SecondsD(0));
 
@@ -53,7 +53,7 @@ void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const En
 	scenario.timelineMode = readTimelineMode(readOptionalOrDefault<std::string>(json, "timelineMode", "live"));
 
 	ifChildExists(json, "entities", [&] (const nlohmann::json& child) {
-		readEntities(typeRegistry, scenario.world, entityFactory, child, entityPersistenceFlags);
+		readEntities(typeRegistry, scenario.world, entityFactory, child);
 	});
 }
 
@@ -144,22 +144,22 @@ static bool isSerializable(const Entity& entity)
 }
 
 //! @returns whether an entity should continue to exist even if it doesn't exist in in simulation state being load in.
-static bool shouldPersistAcrossLoad(const Entity& entity, EntityPersistenceFlags entityPersistanceFlags)
+static bool shouldPersistAcrossLoad(const Entity& entity)
 {
 	if (auto metadata = entity.getFirstComponent<ScenarioMetadataComponent>(); metadata)
 	{
-		if (entityPersistanceFlags.persistUserManaged && metadata->lifetimePolicy == ScenarioMetadataComponent::LifetimePolicy::User)  { return true; }
+		return metadata->persistAcrossLoad;
 	}
 	return false; // Entities should not persist by default.
 }
 
-void readEntities(refl::TypeRegistry& registry, World& world, const EntityFactoryFn& factory, const nlohmann::json& json, EntityPersistenceFlags entityPersistenceFlags)
+void readEntities(refl::TypeRegistry& registry, World& world, const EntityFactoryFn& factory, const nlohmann::json& json)
 {
 	// Make a set of names of entities in the world that should be removed if they don't exist in the serialized state being read.
 	std::set<std::string> oldEntityNames;
 	for (const auto& entity : world.getEntities())
 	{
-		if (shouldPersistAcrossLoad(*entity, entityPersistenceFlags)) { continue; }
+		if (shouldPersistAcrossLoad(*entity)) { continue; }
 
 		if (const std::string& name = getName(*entity); !name.empty())
 		{

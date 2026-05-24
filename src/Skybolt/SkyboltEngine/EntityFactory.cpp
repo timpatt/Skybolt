@@ -641,11 +641,15 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 			std::string key = componentIt.key();
 			const nlohmann::json& content = componentIt.value();
 			
+			bool componentKeyHandled = false;
+
 			// Sim components
 			{
 				auto it = mContext.componentFactoryRegistry->find(key);
 				if (it != mContext.componentFactoryRegistry->end())
 				{
+					componentKeyHandled = true;
+
 					ComponentFactoryPtr factory = it->second;
 					auto newComponent = factory->create(entity.get(), componentFactoryContext, content);
 					if (newComponent)
@@ -655,24 +659,34 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 				}
 			}
 			// Vis components
-			if (mContext.visContext)
+			static std::map<std::string, VisComponentLoader> visComponentLoaders =
 			{
-				static std::map<std::string, VisComponentLoader> visComponentLoaders =
-				{
-					{ "camera", loadVisualCamera },
-					{ "particleSystem", loadParticleSystem },
-					{ "visualModel", loadVisualModel },
-					{ "visualMainRotor", loadVisualMainRotor },
-					{ "visualTailRotor", loadVisualTailRotor },
-					{ "visualPlanet", loadVisualPlanet }
-				};
+				{ "camera", loadVisualCamera },
+				{ "particleSystem", loadParticleSystem },
+				{ "visualModel", loadVisualModel },
+				{ "visualMainRotor", loadVisualMainRotor },
+				{ "visualTailRotor", loadVisualTailRotor },
+				{ "visualPlanet", loadVisualPlanet }
+			};
 
-				auto it = visComponentLoaders.find(key);
-				if (it != visComponentLoaders.end())
+			auto it = visComponentLoaders.find(key);
+			if (it != visComponentLoaders.end())
+			{
+				componentKeyHandled = true;
+
+				if (mContext.visContext)
 				{
 					assert(visObjectsComponent);
 					assert(simVisBindingComponent);
 					it->second(entity.get(), mContext, *mContext.visContext, visObjectsComponent, simVisBindingComponent, content);
+				}
+			}
+
+			if (!componentKeyHandled)
+			{
+				if (!key.starts_with("_"))
+				{
+					SKYBOLT_LOG(warning) << "Unknown component key: " << key;
 				}
 			}
 		}

@@ -20,12 +20,7 @@ SimSnapshotRegistry::SimSnapshotRegistry(const SimSnapshotRegistryConfig& config
 
 void SimSnapshotRegistry::loadSnapshot(const Snapshot& snapshot)
 {
-	EntityPersistenceFlags entityPersistenceFlags = {
-		// User-managed entities should persist because their lifetime is managed by the user (usually from the UI) rather than by serialization state loads.
-		.persistUserManaged = true
-	};
-
-	readScenario(*mTypeRegistry, *mScenario, mEntityFactory, snapshot.state, entityPersistenceFlags);
+	readScenario(*mTypeRegistry, *mScenario, mEntityFactory, snapshot.state);
 	resetSystemsToInitialState(*mSystemRegistry);
 }
 

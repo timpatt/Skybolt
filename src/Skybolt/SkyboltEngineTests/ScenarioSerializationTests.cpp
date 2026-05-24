@@ -23,17 +23,17 @@ static sim::EntityPtr createEntity(const std::string& templateName, const std::s
 	entity->addComponent(std::make_shared<sim::NameComponent>(instanceName));
 
 	auto metadata = std::make_shared<ScenarioMetadataComponent>();
-	metadata->lifetimePolicy = ScenarioMetadataComponent::LifetimePolicy::Procedural;
+	metadata->userDeletable = false;
 	entity->addComponent(metadata);
 
 	return entity;
 };
 
-static void setLifetimePolicy(sim::Entity& entity, ScenarioMetadataComponent::LifetimePolicy policy)
+static void setPersistAcrossLoad(sim::Entity& entity, bool persistAcrossLoad)
 {
 	if (auto component = entity.getFirstComponent<ScenarioMetadataComponent>(); component)
 	{
-		component->lifetimePolicy = policy;
+		component->persistAcrossLoad = persistAcrossLoad;
 	}
 }
 
@@ -87,17 +87,17 @@ TEST_CASE("On deserialization, new entities created, existing entities updated, 
 	entityForModification->setDynamicsEnabled(false);
 
 	// Add procedural entity to scenario so we can test that it's deleted by load
-	sim::EntityPtr entityProcedural = createEntity("myTemplate", "entityProcedural");
-	setLifetimePolicy(*entityProcedural, ScenarioMetadataComponent::LifetimePolicy::Procedural);
+	sim::EntityPtr entityProcedural = createEntity("myTemplate", "entityTransient");
+	setPersistAcrossLoad(*entityProcedural, false);
 	scenario.world.addEntity(entityProcedural);
 
-	// Add user-managed entity to scenario so we can test that it persists after load
+	// Add persistant entity to scenario so we can test that it persists after load
 	sim::EntityPtr entityPersistant = createEntity("myTemplate", "entityPersistant");
-	setLifetimePolicy(*entityPersistant, ScenarioMetadataComponent::LifetimePolicy::User);
+	setPersistAcrossLoad(*entityPersistant, true);
 	scenario.world.addEntity(entityPersistant);
 
 	// Update scenario by deserializing the saved scenario into it
-	readScenario(typeRegistry, scenario, &createEntity, scenarioJson, EntityPersistenceFlags{.persistUserManaged = true});
+	readScenario(typeRegistry, scenario, &createEntity, scenarioJson);
 
 	// Check that entityA was added with expected state
 	entityForAddition = scenario.world.findObjectByName("entityForAddition");
@@ -107,8 +107,8 @@ TEST_CASE("On deserialization, new entities created, existing entities updated, 
 	// Check that entityForModification state was reverted to the saved state
 	CHECK(entityForModification->isDynamicsEnabled());
 
-	// Check that entityProcedural was removed
-	CHECK(!scenario.world.findObjectByName("entityProcedural"));
+	// Check that entityTransient was removed
+	CHECK(!scenario.world.findObjectByName("entityTransient"));
 
 	// Check that entityPersistant was not removed
 	CHECK(scenario.world.findObjectByName("entityPersistant"));

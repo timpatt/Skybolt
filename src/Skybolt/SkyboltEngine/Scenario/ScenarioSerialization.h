@@ -22,11 +22,11 @@ struct EntityPersistenceFlags
 };
 
 //! Reads scenario state from json. Any existing world state will be overwritten.
-void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const EntityFactoryFn& entityFactory, const nlohmann::json& value, EntityPersistenceFlags entityPersistenceFlags = {});
+void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const EntityFactoryFn& entityFactory, const nlohmann::json& value);
 
 nlohmann::json writeScenario(refl::TypeRegistry& typeRegistry, const Scenario& scenario);
 
-void readEntities(refl::TypeRegistry& registry, sim::World& world, const EntityFactoryFn& factory, const nlohmann::json& value, EntityPersistenceFlags entityPersistenceFlags = {});
+void readEntities(refl::TypeRegistry& registry, sim::World& world, const EntityFactoryFn& factory, const nlohmann::json& value);
 
 nlohmann::json writeEntities(refl::TypeRegistry& registry, const sim::World& world);
 
