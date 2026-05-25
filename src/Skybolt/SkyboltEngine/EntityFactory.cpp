@@ -32,6 +32,7 @@
 #include <SkyboltSim/Components/ParticleSystemComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/Components/PropellerComponent.h>
+#include <SkyboltSim/Components/SunComponent.h>
 #include <SkyboltSim/Particles/ParticleSystem.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
@@ -586,6 +587,93 @@ static void loadVisualPlanet(Entity* entity, const EntityFactory::Context& conte
 	entity->addComponent(statsUpdater);
 }
 
+const float sunDistance = 10000;
+const float moonDistance = sunDistance;
+const float sunDiameter = 2.0f * tan(skybolt::math::degToRadF() * 0.53f * 0.5f) * sunDistance;
+const float moonDiameter = 2.0f * tan(skybolt::math::degToRadF() * 0.52f * 0.5f) * moonDistance;
+
+static osg::ref_ptr<osg::StateSet> createCelestialBodyStateSet(const osg::ref_ptr<osg::Program>& program, const osg::ref_ptr<osg::Image>& image)
+{
+	osg::StateSet* ss = new osg::StateSet;
+	ss->setAttribute(program);
+	ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
+
+	osg::Depth* depth = new osg::Depth;
+	depth->setWriteMask(false);
+	ss->setAttributeAndModes(depth, osg::StateAttribute::ON);
+
+	osg::ref_ptr<osg::Texture2D> texture = image ? vis::createSrgbTexture(image) : nullptr;
+	ss->setTextureAttributeAndModes(0, texture);
+	ss->addUniform(vis::createUniformSampler2d("albedoSampler", 0));
+
+	vis::setRenderBin(*ss, vis::RenderBinId::CelestialBody);
+
+	return ss;
+}
+
+static void loadVisualSun(Entity* entity, const EntityFactory::Context& context, const EntityFactory::VisContext& visContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+{
+	auto sunComponent = entity->getFirstComponentRequired<SunComponent>();
+
+	osg::ref_ptr<osg::StateSet> ss = createCelestialBodyStateSet(
+		visContext.programs->getRequiredProgram("sun"),
+		osgDB::readImageFile("Environment/Space/SunDisc.png"));
+
+	osg::ref_ptr<osg::BlendFunc> blendFunc = new osg::BlendFunc;
+	ss->setAttributeAndModes(blendFunc);
+
+	float diameterScale = 1.15f; // account for disk in texture being slightly smaller than texture size
+	vis::RootNodePtr node(new vis::CameraRelativeBillboard(ss, sunDiameter * diameterScale, sunDiameter * diameterScale, sunDistance));
+
+	auto sunEclipticPositionCalculator = [sunComponent] (double julianDate) {
+		return sunComponent->calcEclipticDirection(julianDate);
+		};
+
+	SimVisBindingPtr simVis(new CelestialObjectVisBinding(context.julianDateProvider, sunEclipticPositionCalculator, node));
+	simVisBindingComponent->bindings.push_back(simVis);
+
+	visObjectsComponent->addObject(node);
+
+	vis::LightPtr light(new vis::Light(osg::Vec3f(-1,0,0)));
+	visObjectsComponent->addObject(light);
+
+	{
+		SimVisBindingPtr simVis(new CelestialObjectVisBinding(context.julianDateProvider, sunEclipticPositionCalculator, light));
+		simVisBindingComponent->bindings.push_back(simVis);
+	}
+}
+
+static void loadVisualMoon(Entity* entity, const EntityFactory::Context& context, const EntityFactory::VisContext& visContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+{
+	osg::ref_ptr<osg::StateSet> ss = createCelestialBodyStateSet(
+		visContext.programs->getRequiredProgram("moon"),
+		osgDB::readImageFile("Environment/Space/MoonDisc.jpg"));
+
+	osg::Uniform* moonPhaseUniform = new osg::Uniform("moonPhase", 0.5f);
+	ss->addUniform(moonPhaseUniform);
+
+	vis::RootNodePtr node(new vis::CameraRelativeBillboard(ss, moonDiameter, moonDiameter, moonDistance));
+
+	SimVisBindingPtr simVis(new MoonVisBinding(context.julianDateProvider, moonPhaseUniform, node));
+	simVisBindingComponent->bindings.push_back(simVis);
+
+	visObjectsComponent->addObject(node);
+}
+
+static void loadVisualStars(Entity* entity, const EntityFactory::Context& context, const EntityFactory::VisContext& visContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+{
+	vis::StarfieldConfig config;
+	config.program = visContext.programs->getRequiredProgram("starfield");
+	vis::RootNodePtr starfield(new vis::Starfield(config));
+
+	auto calcStarfieldEclipticPosition = [](double julianDate) { return LatLon(0, 0); };
+
+	SimVisBindingPtr simVis(new CelestialObjectVisBinding(context.julianDateProvider, calcStarfieldEclipticPosition, starfield));
+	simVisBindingComponent->bindings.push_back(simVis);
+
+	visObjectsComponent->addObject(starfield);
+}
+
 using VisComponentLoader = std::function<void(Entity*, const EntityFactory::Context&, const EntityFactory::VisContext&, VisObjectsComponentPtr&, const SimVisBindingsComponentPtr&, const nlohmann::json&)>;
 
 const ScenarioObjectPath& skybolt::getDefaultEntityScenarioObjectDirectory()
@@ -663,10 +751,13 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 			{
 				{ "camera", loadVisualCamera },
 				{ "particleSystem", loadParticleSystem },
-				{ "visualModel", loadVisualModel },
 				{ "visualMainRotor", loadVisualMainRotor },
+				{ "visualModel", loadVisualModel },
+				{ "visualMoon", loadVisualMoon },
 				{ "visualTailRotor", loadVisualTailRotor },
-				{ "visualPlanet", loadVisualPlanet }
+				{ "visualPlanet", loadVisualPlanet },
+				{ "visualStars", loadVisualStars },
+				{ "visualSun", loadVisualSun }
 			};
 
 			auto it = visComponentLoaders.find(key);
@@ -736,15 +827,6 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 	assert(context.tileSourceFactoryRegistry);
 	assert(context.scene);
 
-	if (context.visContext)
-	{
-		mBuiltinTemplates = {
-			{"SunBillboard", [this] {return createSun(*mContext.visContext); }},
-			{"MoonBillboard", [this] {return createMoon(*mContext.visContext); }},
-			{"Stars", [this] {return createStars(*mContext.visContext); }}
-		};
-	}
-
 	for (const std::filesystem::path& filename : entityFilenames)
 	{
 		std::string name = filename.stem().string();
@@ -773,125 +855,7 @@ EntityPtr EntityFactory::createEntity(const std::string& templateName, const std
 		}
 	}
 
-	// Try builtin types
-	{
-		auto i = mBuiltinTemplates.find(templateName);
-		if (i != mBuiltinTemplates.end())
-		{
-			return i->second();
-		}
-	}
-
 	throw std::runtime_error("Invalid templateName: " + templateName);
-}
-
-const float sunDistance = 10000;
-const float moonDistance = sunDistance;
-const float sunDiameter = 2.0f * tan(skybolt::math::degToRadF() * 0.53f * 0.5f) * sunDistance;
-const float moonDiameter = 2.0f * tan(skybolt::math::degToRadF() * 0.52f * 0.5f) * moonDistance;
-
-static osg::ref_ptr<osg::StateSet> createCelestialBodyStateSet(const osg::ref_ptr<osg::Program>& program, const osg::ref_ptr<osg::Image>& image)
-{
-	osg::StateSet* ss = new osg::StateSet;
-	ss->setAttribute(program);
-	ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-
-	osg::Depth* depth = new osg::Depth;
-	depth->setWriteMask(false);
-	ss->setAttributeAndModes(depth, osg::StateAttribute::ON);
-
-	osg::ref_ptr<osg::Texture2D> texture = image ? vis::createSrgbTexture(image) : nullptr;
-	ss->setTextureAttributeAndModes(0, texture);
-	ss->addUniform(vis::createUniformSampler2d("albedoSampler", 0));
-
-	vis::setRenderBin(*ss, vis::RenderBinId::CelestialBody);
-
-	return ss;
-}
-
-EntityPtr EntityFactory::createSun(const EntityFactory::VisContext& visContext) const
-{
-	osg::ref_ptr<osg::StateSet> ss = createCelestialBodyStateSet(
-		visContext.programs->getRequiredProgram("sun"),
-		osgDB::readImageFile("Environment/Space/SunDisc.png"));
-
-	osg::ref_ptr<osg::BlendFunc> blendFunc = new osg::BlendFunc;
-	ss->setAttributeAndModes(blendFunc);
-
-	EntityPtr object(new Entity(generateNextEntityId()));
-	object->addComponent(std::make_shared<Node>());
-
-	float diameterScale = 1.15f; // account for disk in texture being slightly smaller than texture size
-	vis::RootNodePtr node(new vis::CameraRelativeBillboard(ss, sunDiameter * diameterScale, sunDiameter * diameterScale, sunDistance));
-
-	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
-	object->addComponent(simVisBindingComponent);
-
-	SimVisBindingPtr simVis(new CelestialObjectVisBinding(mContext.julianDateProvider, calcSunEclipticPosition, node));
-	simVisBindingComponent->bindings.push_back(simVis);
-
-	VisObjectsComponentPtr visObjectsComponent(new VisObjectsComponent(visContext.scene));
-	visObjectsComponent->addObject(node);
-	object->addComponent(visObjectsComponent);
-
-	vis::LightPtr light(new vis::Light(osg::Vec3f(-1,0,0)));
-	visObjectsComponent->addObject(light);
-
-	{ // TODO: reused sun ecliptic position calculated for the billboard above to avoid recalculating
-		SimVisBindingPtr simVis(new CelestialObjectVisBinding(mContext.julianDateProvider, calcSunEclipticPosition, light));
-		simVisBindingComponent->bindings.push_back(simVis);
-	}
-
-	return object;
-}
-
-EntityPtr EntityFactory::createMoon(const EntityFactory::VisContext& visContext) const
-{
-	osg::ref_ptr<osg::StateSet> ss = createCelestialBodyStateSet(
-		visContext.programs->getRequiredProgram("moon"),
-		osgDB::readImageFile("Environment/Space/MoonDisc.jpg"));
-
-	osg::Uniform* moonPhaseUniform = new osg::Uniform("moonPhase", 0.5f);
-	ss->addUniform(moonPhaseUniform);
-
-	EntityPtr object(new Entity(generateNextEntityId()));
-	object->addComponent(std::make_shared<Node>());
-
-	vis::RootNodePtr node(new vis::CameraRelativeBillboard(ss, moonDiameter, moonDiameter, moonDistance));
-
-	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
-	SimVisBindingPtr simVis(new MoonVisBinding(mContext.julianDateProvider, moonPhaseUniform, node));
-	simVisBindingComponent->bindings.push_back(simVis);
-	object->addComponent(simVisBindingComponent);
-
-	VisObjectsComponentPtr visObjectsComponent(new VisObjectsComponent(visContext.scene));
-	visObjectsComponent->addObject(node);
-	object->addComponent(visObjectsComponent);
-
-	return object;
-}
-
-EntityPtr EntityFactory::createStars(const EntityFactory::VisContext& visContext) const
-{
-	vis::StarfieldConfig config;
-	config.program = visContext.programs->getRequiredProgram("starfield");
-	vis::RootNodePtr starfield(new vis::Starfield(config));
-
-	auto calcStarfieldEclipticPosition = [](double julianDate) { return LatLon(0, 0); };
-
-	EntityPtr object(new Entity(generateNextEntityId()));
-	object->addComponent(std::make_shared<Node>());
-
-	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
-	SimVisBindingPtr simVis(new CelestialObjectVisBinding(mContext.julianDateProvider, calcStarfieldEclipticPosition, starfield));
-	simVisBindingComponent->bindings.push_back(simVis);
-	object->addComponent(simVisBindingComponent);
-
-	VisObjectsComponentPtr visObjectsComponent(new VisObjectsComponent(visContext.scene));
-	visObjectsComponent->addObject(starfield);
-	object->addComponent(visObjectsComponent);
-
-	return object;
 }
 
 const skybolt::ScenarioObjectPath& EntityFactory::getScenarioObjectDirectoryForTemplate(const std::string& templateName) const

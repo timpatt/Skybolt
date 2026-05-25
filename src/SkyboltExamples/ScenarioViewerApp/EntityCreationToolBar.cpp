@@ -10,6 +10,7 @@
 
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltEngine/EntityFactory.h>
+#include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltSim/World.h>
 
 #include <QBoxLayout>
@@ -73,7 +74,8 @@ static QMenu* createCreateMenu(const EntityCreationToolBarConfig& config)
 }
 
 EntityCreationToolBar::EntityCreationToolBar(const EntityCreationToolBarConfig& config) :
-	QToolBar(config.parent)
+	QToolBar(config.parent),
+	mWorld(config.world)
 {
 	QToolButton* createButton = new QToolButton(config.parent);
 	createButton->setToolTip("Add item");
@@ -104,6 +106,14 @@ EntityCreationToolBar::EntityCreationToolBar(const EntityCreationToolBarConfig& 
 
 void EntityCreationToolBar::setSelectedEntity(const skybolt::sim::EntityId& entityId)
 {
-	mDeleteButton->setEnabled(entityId != sim::nullEntityId());
+	bool deletable = (entityId != sim::nullEntityId());
+	if (sim::EntityPtr entity = mWorld->getEntityById(entityId); entity)
+	{
+		if (auto scenarioMetadata = entity->getFirstComponent<ScenarioMetadataComponent>(); scenarioMetadata)
+		{
+			deletable = scenarioMetadata->userDeletable;
+		}
+	}
+	mDeleteButton->setEnabled(deletable);
 	mSelectedEntityId = entityId;
 }

@@ -102,3 +102,37 @@ TEST_CASE("calcMoonEclipticPosition")
 	CHECK(almostEqual(3.08745254, pos.lon, 1e-3));
 	CHECK(almostEqual(0.088121674, pos.lat, 1e-3));
 }
+
+TEST_CASE("convertHorizontalToEquatorial is inverse of convertEquatorialToHorizontal")
+{
+	LatLon equatorial;
+	equatorial.lon = 5.999149429857;
+	equatorial.lat = -0.120878223;
+
+	LatLon observer;
+	observer.lon = 0.785398;
+	observer.lat = 0.20944;
+
+	double julianDate = calcJulianDate(2018, 3, 3, 0);
+
+	AzimuthElevation azEl = convertEquatorialToHorizontal(julianDate, equatorial, observer);
+	LatLon result = convertHorizontalToEquatorial(julianDate, azEl, observer);
+
+	CHECK(almostEqual(equatorial.lon, result.lon, 1e-10));
+	CHECK(almostEqual(equatorial.lat, result.lat, 1e-10));
+}
+
+TEST_CASE("convertEquatorialToEcliptic is inverse of convertEclipticToEquatorial")
+{
+	LatLon ecliptic;
+	ecliptic.lon = 0.593412;
+	ecliptic.lat = 0.977384;
+
+	double julianDate = calcJulianDate(1950, 1, 1, 0);
+
+	LatLon equatorial = convertEclipticToEquatorial(julianDate, ecliptic);
+	LatLon result = convertEquatorialToEcliptic(julianDate, equatorial);
+
+	CHECK(almostEqual(ecliptic.lon, result.lon, 1e-10));
+	CHECK(almostEqual(ecliptic.lat, result.lat, 1e-10));
+}

@@ -75,6 +75,22 @@ LatLon convertEclipticToEquatorial(double julianDate, const LatLon& ecliptic)
 	return equatorial;
 }
 
+LatLon convertEquatorialToEcliptic(double julianDate, const LatLon& equatorial)
+{
+	double epsilon = calcEarthAxialTilt(julianDate);
+
+	// Inverse of convertEclipticToEquatorial: rotate by -epsilon around X axis
+	double sd = -std::sin(epsilon) * std::sin(equatorial.lon) * std::cos(equatorial.lat) + std::cos(epsilon) * std::sin(equatorial.lat);
+	double cacd = std::cos(equatorial.lon) * std::cos(equatorial.lat);
+	double sacd = std::cos(epsilon) * std::sin(equatorial.lon) * std::cos(equatorial.lat) + std::sin(epsilon) * std::sin(equatorial.lat);
+
+	LatLon ecliptic;
+	ecliptic.lon = std::atan2(sacd, cacd);
+	double r = std::sqrt(cacd * cacd + sacd * sacd);
+	ecliptic.lat = std::atan2(sd, r);
+	return ecliptic;
+}
+
 double calcHourAngleOfVernalEquinox(double julianDate)
 {
 	// Based on https://github.com/pytroll/pyorbital/blob/main/pyorbital/astronomy.py
@@ -120,6 +136,33 @@ AzimuthElevation convertEquatorialToHorizontal(double julianDate, const LatLon& 
 		std::atan2(yp, xp) + skybolt::math::piD(),
 		std::atan2(zp, sqrt(xp * xp + yp * yp))
 	};
+}
+
+LatLon convertHorizontalToEquatorial(double julianDate, const AzimuthElevation& azimuthElevation, const LatLon& observer)
+{
+	double az = azimuthElevation.x;
+	double el = azimuthElevation.y;
+
+	// Inverse of convertEquatorialToHorizontal
+	double azShifted = az - skybolt::math::piD();
+	double xp = std::cos(azShifted) * std::cos(el);
+	double yp = std::sin(azShifted) * std::cos(el);
+	double zp = std::sin(el);
+
+	double x = xp * std::sin(observer.lat) + zp * std::cos(observer.lat);
+	double y = yp;
+	double z = -xp * std::cos(observer.lat) + zp * std::sin(observer.lat);
+
+	double hourAngle = std::atan2(y, x);
+	double dec = std::atan2(z, std::sqrt(x * x + y * y));
+
+	double lst = calcHourAngleOfVernalEquinox(julianDate) + observer.lon;
+	double ra = lst - hourAngle;
+
+	LatLon equatorial;
+	equatorial.lon = ra;
+	equatorial.lat = dec;
+	return equatorial;
 }
 
 LatLon calcSunEclipticPosition(double julianDate)

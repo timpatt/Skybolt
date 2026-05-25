@@ -145,3 +145,105 @@ TEST_CASE("Use explicit to/from json methods if an object provides them")
 	readReflectedObject(registry, instance, json);
 	CHECK(readObject.data == 123);
 }
+
+struct TestObjectWithVectorProperty
+{
+	std::vector<int> intVectorProperty;
+	std::vector<TestNestedObject> objectVectorProperty;
+};
+
+SKYBOLT_REFLECT(TestObjectWithVectorProperty) {
+	registry.type<TestObjectWithVectorProperty>("TestObjectWithVectorProperty")
+		.property("intVectorProperty", &TestObjectWithVectorProperty::intVectorProperty)
+		.property("objectVectorProperty", &TestObjectWithVectorProperty::objectVectorProperty);
+}
+
+TEST_CASE("Read and write vector of primitives to JSON")
+{
+	refl::TypeRegistry registry;
+
+	// Write
+	TestObjectWithVectorProperty originalObject;
+	originalObject.intVectorProperty = { 10, 20, 30 };
+	nlohmann::json json = writeReflectedObject(registry, refl::makeRefInstance(registry, &originalObject));
+
+	// Read
+	TestObjectWithVectorProperty readObject;
+	auto instance = refl::makeRefInstance(registry, &readObject);
+	readReflectedObject(registry, instance, json);
+
+	REQUIRE(readObject.intVectorProperty.size() == 3);
+	CHECK(readObject.intVectorProperty[0] == 10);
+	CHECK(readObject.intVectorProperty[1] == 20);
+	CHECK(readObject.intVectorProperty[2] == 30);
+}
+
+TEST_CASE("Read and write empty vector to JSON")
+{
+	refl::TypeRegistry registry;
+
+	// Write
+	TestObjectWithVectorProperty originalObject;
+	// Leave intVectorProperty empty
+	nlohmann::json json = writeReflectedObject(registry, refl::makeRefInstance(registry, &originalObject));
+
+	// Read
+	TestObjectWithVectorProperty readObject;
+	readObject.intVectorProperty = { 99 }; // pre-populate to ensure it gets cleared
+	auto instance = refl::makeRefInstance(registry, &readObject);
+	readReflectedObject(registry, instance, json);
+
+	CHECK(readObject.intVectorProperty.empty());
+}
+
+TEST_CASE("Read and write vector of objects to JSON")
+{
+	refl::TypeRegistry registry;
+
+	// Write
+	TestObjectWithVectorProperty originalObject;
+	originalObject.objectVectorProperty = { TestNestedObject(5), TestNestedObject(7) };
+	nlohmann::json json = writeReflectedObject(registry, refl::makeRefInstance(registry, &originalObject));
+
+	// Read
+	TestObjectWithVectorProperty readObject;
+	auto instance = refl::makeRefInstance(registry, &readObject);
+	readReflectedObject(registry, instance, json);
+
+	REQUIRE(readObject.objectVectorProperty.size() == 2);
+	CHECK(readObject.objectVectorProperty[0].intProperty == 5);
+	CHECK(readObject.objectVectorProperty[1].intProperty == 7);
+}
+
+TEST_CASE("Read and write present optional to JSON")
+{
+	refl::TypeRegistry registry;
+
+	// Write
+	std::optional<int> originalValue = 42;
+	nlohmann::json json = writeReflectedObject(registry, refl::makeRefInstance(registry, &originalValue));
+
+	// Read
+	std::optional<int> readValue;
+	auto instance = refl::makeRefInstance(registry, &readValue);
+	readReflectedObject(registry, instance, json);
+
+	REQUIRE(readValue.has_value());
+	CHECK(*readValue == 42);
+}
+
+TEST_CASE("Read and write empty optional to JSON")
+{
+	refl::TypeRegistry registry;
+
+	// Write
+	std::optional<int> originalValue; // unset
+	nlohmann::json json = writeReflectedObject(registry, refl::makeRefInstance(registry, &originalValue));
+
+	// Read into a pre-populated optional to ensure it gets cleared
+	std::optional<int> readValue = 99;
+	auto instance = refl::makeRefInstance(registry, &readValue);
+	readReflectedObject(registry, instance, json);
+
+	CHECK(!readValue.has_value());
+}

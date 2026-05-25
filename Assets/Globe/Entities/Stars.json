@@ -1,0 +1,11 @@
+{
+	"components": [
+		{"visualStars": {
+		}},
+		{"scenarioMetadata": {
+			"persistAcrossLoad": true,
+			"scenarioObjectDirectory": "Celestial",
+			"userDeletable": false
+		}}
+	]
+}

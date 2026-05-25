@@ -79,6 +79,57 @@ static void jsonToExistingReflVariant(refl::TypeRegistry& registry, refl::Instan
 	}
 }
 
+static void readReflectedOptional(refl::TypeRegistry& registry, refl::Instance& object, refl::StdOptionalValueAccessor& accessor, const nlohmann::json& json)
+{
+	if (json.is_null())
+	{
+		accessor.setValues(object, {});
+		return;
+	}
+
+	refl::TypePtr valueType = registry.getTypeByName(accessor.valueTypeName);
+	if (!valueType)
+	{
+		throw std::runtime_error("Could not find type '" + accessor.valueTypeName + "' for optional deserialization");
+	}
+
+	// Create a default instance first so we have something to read into
+	std::unique_ptr<refl::Instance> value = valueType->createDefaultInstance();
+	if (!value)
+	{
+		throw std::runtime_error("Could not create default instance of type '" + accessor.valueTypeName + "' for optional deserialization");
+	}
+
+	// Now read into the instance we created
+	jsonToExistingReflVariant(registry, *value, json);
+	accessor.setValues(object, { *value });
+}
+
+static void readReflectedVector(refl::TypeRegistry& registry, refl::Instance& object, refl::StdVectorValueAccessor& accessor, const nlohmann::json& json)
+{
+	refl::TypePtr valueType = registry.getTypeByName(accessor.valueTypeName);
+	if (!valueType)
+	{
+		throw std::runtime_error("Could not find type '" + accessor.valueTypeName + "' for vector deserialization");
+	}
+
+	std::vector<refl::Instance> values;
+	for (const nlohmann::json& elementJson : json)
+	{
+		// Create a default instance first so we have something to read into
+		std::unique_ptr<refl::Instance> value = valueType->createDefaultInstance();
+		if (!value)
+		{
+			throw std::runtime_error("Could not create default instance of type '" + accessor.valueTypeName + "' for vector deserialization");
+		}
+
+		// Now read into the instance we created
+		jsonToExistingReflVariant(registry, *value, elementJson);
+		values.push_back(std::move(*value));
+	}
+	accessor.setValues(object, values);
+}
+
 void readReflectedObject(refl::TypeRegistry& registry, refl::Instance& object, const nlohmann::json& json)
 {
 	refl::TypePtr type = object.getType();
@@ -87,7 +138,18 @@ void readReflectedObject(refl::TypeRegistry& registry, refl::Instance& object, c
 		ExplicitSerialization& serialization = object.cast<ExplicitSerialization>();
 		serialization.fromJson(registry, json);
 	}
-	else // use reflection based serialization
+	else if (auto accessor = type->getContainerValueAccessor(); accessor)
+	{
+		if (auto optionalAccessor = dynamic_cast<refl::StdOptionalValueAccessor*>(accessor.get()); optionalAccessor)
+		{
+			readReflectedOptional(registry, object, *optionalAccessor, json);
+		}
+		else if (auto vectorAccessor = dynamic_cast<refl::StdVectorValueAccessor*>(accessor.get()); vectorAccessor)
+		{
+			readReflectedVector(registry, object, *vectorAccessor, json);
+		}
+	}
+	else
 	{
 		readReflectedObjectProperties(registry, object, json);
 	}
@@ -169,12 +231,34 @@ static nlohmann::json toJson(refl::TypeRegistry& registry, const refl::Type& typ
 	return {};
 }
 
+static nlohmann::json writeReflectedOptional(refl::TypeRegistry& registry, const refl::Instance& object, refl::StdOptionalValueAccessor& accessor)
+{
+	std::vector<refl::Instance> values = accessor.getValues(registry, object);
+	if (values.empty())
+	{
+		return nlohmann::json(); // null json for empty optional
+	}
+	const refl::Instance& value = values.front();
+	return toJson(registry, *value.getType(), value);
+}
+
+static nlohmann::json writeReflectedVector(refl::TypeRegistry& registry, const refl::Instance& object, refl::StdVectorValueAccessor& accessor)
+{
+	nlohmann::json json = nlohmann::json::array();
+	for (const refl::Instance& value : accessor.getValues(registry, object))
+	{
+		json.push_back(toJson(registry, *value.getType(), value));
+	}
+	return json;
+}
+
 nlohmann::json writeReflectedObject(refl::TypeRegistry& registry, const refl::Instance& object)
 {
 	nlohmann::json json;
 
 	const auto& type = object.getType();
 
+	// Write using explicit serialization implementation if it exists
 	if (type->isDerivedFrom<ExplicitSerialization>())
 	{
 		const ExplicitSerialization& serialization = object.cast<ExplicitSerialization>();
@@ -182,7 +266,19 @@ nlohmann::json writeReflectedObject(refl::TypeRegistry& registry, const refl::In
 		return json;
 	}
 	
-	// use reflection based serialization
+	// Fallback to reflection based serialization
+	if (auto accessor = type->getContainerValueAccessor(); accessor)
+	{
+		if (auto optionalValueTranslator = dynamic_cast<refl::StdOptionalValueAccessor*>(accessor.get()); optionalValueTranslator)
+		{
+			return writeReflectedOptional(registry, object, *optionalValueTranslator);
+		}
+		else if (auto vectorValueTranslator = dynamic_cast<refl::StdVectorValueAccessor*>(accessor.get()); vectorValueTranslator)
+		{
+			return writeReflectedVector(registry, object, *vectorValueTranslator);
+		}
+	}
+
 	return writeReflectedObjectProperties(registry, object);
 }
 

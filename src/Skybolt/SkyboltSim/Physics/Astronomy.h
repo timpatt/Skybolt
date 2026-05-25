@@ -21,6 +21,8 @@ double calcEarthAxialTilt(double julianDate);
 
 LatLon convertEclipticToEquatorial(double julianDate, const LatLon& ecliptic);
 
+LatLon convertEquatorialToEcliptic(double julianDate, const LatLon& equatorial);
+
 //! @returns hour angle of the vernal equinox (a.k.a Greenwich mean sidereal time) in radians
 double calcHourAngleOfVernalEquinox(double julianDate);
 
@@ -31,6 +33,8 @@ double calcHourAngle(double julianDate, const LatLon& equatorial, const LatLon& 
 double calcLocalHour(double julianDate, const LatLon& observer);
 
 AzimuthElevation convertEquatorialToHorizontal(double julianDate, const LatLon& equatorial, const LatLon& observer);
+
+LatLon convertHorizontalToEquatorial(double julianDate, const AzimuthElevation& azimuthElevation, const LatLon& observer);
 
 LatLon calcSunEclipticPosition(double julianDate);
 

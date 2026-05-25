@@ -35,4 +35,5 @@ public:
 private:
 	QToolButton* mDeleteButton;
 	skybolt::sim::EntityId mSelectedEntityId;
+	skybolt::NonNullPtr<skybolt::sim::World> mWorld;
 };

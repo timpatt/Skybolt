@@ -26,6 +26,7 @@
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/ControlInputsComponent.h>
 #include <SkyboltSim/Components/SimpleDynamicBodyComponent.h>
+#include <SkyboltSim/Components/SunComponent.h>
 #include <SkyboltSim/Components/FuselageComponent.h>
 #include <SkyboltSim/Components/JetTurbineComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
@@ -330,6 +331,8 @@ static sim::ComponentPtr loadScenarioMetadata(Entity* entity, const ComponentFac
 {
 	auto component = std::make_shared<ScenarioMetadataComponent>();
 	component->directory = parseStringList(json.at("scenarioObjectDirectory").get<std::string>(), "/");
+	component->userDeletable = readOptionalOrDefault(json, "userDeletable", true);
+	component->persistAcrossLoad = readOptionalOrDefault(json, "persistAcrossLoad", false);
 	return component;
 }
 
@@ -373,6 +376,11 @@ static sim::ComponentPtr loadClouds(Entity* entity, const ComponentFactoryContex
 	return std::make_shared<CloudComponent>();
 }
 
+static sim::ComponentPtr loadSun(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	return std::make_shared<sim::SunComponent>();
+}
+
 void addDefaultFactories(ComponentFactoryRegistry& registry)
 {
 	registry["shipWake"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadShipWake);
@@ -393,6 +401,7 @@ void addDefaultFactories(ComponentFactoryRegistry& registry)
 	registry["reactionControlSystem"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadReactonControlSystem);
 	registry["rocketMotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadRocketMotor);
 	registry["scenarioMetadata"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadScenarioMetadata);
+	registry["sun"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadSun);
 	registry["tailRotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadTailRotor);
 }
 

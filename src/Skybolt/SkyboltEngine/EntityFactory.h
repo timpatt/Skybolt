@@ -79,7 +79,6 @@ private:
 private:
 	Strings mTemplateNames;
 	std::map<std::string, skybolt::ScenarioObjectPath> mTemplateDirectories;
-	std::map<std::string, std::function<sim::EntityPtr()>> mBuiltinTemplates; // TODO: genericize these
 
 	TemplateJsonMap mTemplateJsonMap;
 
