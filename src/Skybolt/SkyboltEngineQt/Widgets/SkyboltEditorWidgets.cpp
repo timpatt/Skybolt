@@ -63,12 +63,15 @@ void setDoubleValueInDisplayUnits(QtValue& value, double v)
 	value.setValue(v);
 }
 
+
 QWidget* createDoubleEditorWithUnits(QtValue* value, QWidget* parent)
 {
-	QLineEdit* widget = createDoubleLineEdit(parent);
+	constexpr int decimalCount = 9;
+
+	QLineEdit* widget = createDoubleLineEdit(parent, decimalCount);
 
 	auto widgetTextSetter = [widget](double value) {
-		widget->setText(QString::number(value, 'f', 4));
+		widget->setText(QString::number(value, 'g', decimalCount));
 	};
 	widgetTextSetter(getDoubleValueInDisplayUnits(*value));
 

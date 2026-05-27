@@ -4,8 +4,17 @@
 		}},
 		{"planet": {
 			"radius": 6371000,
-			"ocean": true,
-			"atmosphere": {}
+			"ocean": true
+		}},
+		{"atmosphere": {
+			"rayleighScatteringCoeffAt440nm": 3.31e-5,
+			"rayleighScaleHeight": 8000.0,
+			"mieScaleHeight": 1200.0,
+			"mieAngstromAlpha": 0.0,
+			"mieExtinctionCoeff": 4.44e-6,
+			"mieSingleScatteringAlbedo": 0.9,
+			"miePhaseFunctionG": 0.93,
+			"useEarthOzone": true
 		}},
 		{"clouds": {}},
 		{"planetElevationTileSource": {
@@ -50,16 +59,6 @@
 			"features": {
 				"directory": "Tiles/Earth/Features",
 				"buildingTypesFilename": "Environment/BuildingTypes.json"
-			},
-			"atmosphere": {
-				"earthReyleighScatteringCoefficient": 1.24062e-6,
-				"rayleighScaleHeight": 8000.0,
-				"mieScaleHeight": 1200.0,
-				"mieAngstromAlpha": 0.0,
-				"mieAngstromBeta": 5.328e-3,
-				"mieSingleScatteringAlbedo": 0.9,
-				"miePhaseFunctionG": 0.93,
-				"useEarthOzone": true
 			},
 			"clouds": {
 				"map": "Environment/Cloud/cloud_combined_8192.png"

@@ -31,15 +31,15 @@ static osg::Vec3 Interpolate(const std::vector<double>& wavelengths, const std::
 		atmosphere::Interpolate(wavelengths, wavelength_function, wavelength.z()));
 }
 
-ScatteringCoefficientCalculator createEarthReyleighScatteringCoefficientCalculator(double coefficientPreLambdaPowFourDivide)
+ScatteringCoefficientCalculator createEarthRayleighScatteringCoefficientCalculator(double rayleighScatteringCoeffAt440nm)
 {
 	return [=](double wavelengthNanometers) {
-		return coefficientPreLambdaPowFourDivide * std::pow(wavelengthNanometers * 0.001, -4.0);
+		return rayleighScatteringCoeffAt440nm * std::pow(wavelengthNanometers / 440.0, -4.0);
 	};
 }
 
 // @param coefficientPreLambdaPowFourDivide is divided by wavelength^4 to calculate the scattering coefficient.
-ScatteringCoefficientCalculator createTableReyleighScatteringCoefficientCalculator(const std::vector<double>& coefficient, const std::vector<double>& wavelengths)
+ScatteringCoefficientCalculator createTableRayleighScatteringCoefficientCalculator(const std::vector<double>& coefficient, const std::vector<double>& wavelengths)
 {
 	return [=](double wavelengthNanometers) {
 		return atmosphere::Interpolate(wavelengths, coefficient, wavelengthNanometers);
@@ -107,7 +107,7 @@ BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config) :
 	for (int lambda = kLambdaMin; lambda <= kLambdaMax; lambda += 10)
 	{
 		double lambdaMicroMeters = static_cast<double>(lambda) * 1e-3;  // micro-meters
-		double mie = config.mieAngstromBeta / config.mieScaleHeight * pow(lambdaMicroMeters, -config.mieAngstromAlpha);
+		double mie = config.mieExtinctionCoeff * pow(lambdaMicroMeters, -config.mieAngstromAlpha);
 		generatorConfig.wavelengths.push_back(lambda);
 		if (use_constant_solar_spectrum)
 		{
@@ -118,7 +118,7 @@ BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config) :
 			generatorConfig.solarIrradiance.push_back(kSolarIrradiance[(lambda - kLambdaMin) / 10]);
 		}
 
-		generatorConfig.rayleighScattering.push_back(config.reyleighScatteringCoefficientCalculator(lambda));
+		generatorConfig.rayleighScattering.push_back(config.rayleighScatteringCoefficientCalculator(lambda));
 		generatorConfig.mieScattering.push_back(mie * config.mieSingleScatteringAlbedo);
 		generatorConfig.mieExtinction.push_back(mie);
 		generatorConfig.absorptionExtinction.push_back(config.useEarthOzone ?

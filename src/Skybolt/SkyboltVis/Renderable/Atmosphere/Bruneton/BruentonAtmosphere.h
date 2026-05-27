@@ -16,31 +16,31 @@ namespace vis {
 
 class BruentonAtmosphereGenerator;
 
-struct ReyleighScatteringCoefficientRepresentation
+struct RayleighScatteringCoefficientRepresentation
 {
-	virtual ~ReyleighScatteringCoefficientRepresentation() {}
+	virtual ~RayleighScatteringCoefficientRepresentation() {}
 
 };
 
 using ScatteringCoefficientCalculator = std::function<double(double wavelengthNanometers)>;
 
 // @param coefficientPreLambdaPowFourDivide is divided by wavelength^4 to calculate the scattering coefficient.
-ScatteringCoefficientCalculator createEarthReyleighScatteringCoefficientCalculator(double coefficientPreLambdaPowFourDivide);
+ScatteringCoefficientCalculator createEarthRayleighScatteringCoefficientCalculator(double coefficientPreLambdaPowFourDivide);
 
 // @param coefficientPreLambdaPowFourDivide is divided by wavelength^4 to calculate the scattering coefficient.
-ScatteringCoefficientCalculator createTableReyleighScatteringCoefficientCalculator(const std::vector<double>& coefficient, const std::vector<double>& wavelengths);
+ScatteringCoefficientCalculator createTableRayleighScatteringCoefficientCalculator(const std::vector<double>& coefficient, const std::vector<double>& wavelengths);
 
 struct BruentonAtmosphereConfig
 {
 	double bottomRadius = 6360000.0;
 	double topRadius = 6420000.0;
 
-	ScatteringCoefficientCalculator reyleighScatteringCoefficientCalculator; //!< Returns the reyleigh scattering coefficient for a given wavelength
+	ScatteringCoefficientCalculator rayleighScatteringCoefficientCalculator; //!< Returns the reyleigh scattering coefficient for a given wavelength
 	double rayleighScaleHeight = 8000.0;
 
 	double mieScaleHeight = 1200.0;
 	double mieAngstromAlpha = 0.0;
-	double mieAngstromBeta = 5.328e-3;
+	double mieExtinctionCoeff = 4.44e-6;
 	double mieSingleScatteringAlbedo = 0.9;
 	double miePhaseFunctionG = 0.8;
 

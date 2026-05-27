@@ -19,6 +19,7 @@
 #include <SkyboltSim/CameraController/PlanetCameraController.h>
 #include <SkyboltSim/CameraController/CameraControllerSelector.h>
 #include <SkyboltSim/Components/AssetDescriptionComponent.h>
+#include <SkyboltSim/Components/AtmosphereComponent.h>
 #include <SkyboltSim/Components/AttacherComponent.h>
 #include <SkyboltSim/Components/AttachmentPointsComponent.h>
 #include <SkyboltSim/Components/CloudComponent.h>
@@ -215,6 +216,11 @@ static sim::ComponentPtr loadShipWake(Entity* entity, const ComponentFactoryCont
 	return component;
 }
 
+static sim::ComponentPtr loadAtmosphere(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	return std::make_shared<AtmosphereComponent>();
+}
+
 static sim::ComponentPtr loadNode(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	return std::make_shared<Node>();
@@ -384,6 +390,7 @@ static sim::ComponentPtr loadSun(Entity* entity, const ComponentFactoryContext& 
 void addDefaultFactories(ComponentFactoryRegistry& registry)
 {
 	registry["shipWake"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadShipWake);
+	registry["atmosphere"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAtmosphere);
 	registry["attacher"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttacher);
 	registry["attachmentPoint"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttachmentPoint);
 	registry["assetDescription"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAssetDescription);

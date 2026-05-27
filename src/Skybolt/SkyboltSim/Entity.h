@@ -68,6 +68,18 @@ public:
 		return component;
 	}
 
+	template <class DerivedT>
+	std::shared_ptr<DerivedT> getOrCreateComponent()
+	{
+		auto c = getFirstComponent<DerivedT>();
+		if (!c)
+		{
+			c = std::make_shared<DerivedT>();
+			addComponent(c);
+		}
+		return c;
+	}
+
 	const EntityId& getId() const { return mId; }
 
 public: // SimUpdatable interface

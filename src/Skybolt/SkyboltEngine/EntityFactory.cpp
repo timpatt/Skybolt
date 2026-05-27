@@ -25,6 +25,7 @@
 #include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/WorldUtil.h>
+#include <SkyboltSim/Components/AtmosphereComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/Node.h>
@@ -420,6 +421,7 @@ static osg::ref_ptr<osg::Texture2D> readTilingNonSrgbTexture(const std::string& 
 static void loadVisualPlanet(Entity* entity, const EntityFactory::Context& context, const EntityFactory::VisContext& visContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	auto planetComponent = entity->getFirstComponentRequired<PlanetComponent>();
+	auto atmosphereComponent = entity->getFirstComponent<AtmosphereComponent>();
 	auto oceanComponent = entity->getFirstComponent<OceanComponent>();
 
 	vis::PlanetConfig config;
@@ -441,46 +443,24 @@ static void loadVisualPlanet(Entity* entity, const EntityFactory::Context& conte
 		}
 	}
 
+	if (atmosphereComponent)
 	{
-		auto it = json.find("atmosphere");
-		if (it != json.end())
-		{
-			const nlohmann::json& atmosphere = it.value();
-			
-			vis::BruentonAtmosphereConfig atmosphereConfig;
-			atmosphereConfig.bottomRadius = readOptionalOrDefault(atmosphere, "bottomRadius", planetComponent->radius);
-			atmosphereConfig.topRadius = readOptionalOrDefault(atmosphere, "topRadius", planetComponent->radius * 1.0094); // TODO: determine programatically from scale height
+		const double topOfAtmosphereDensityCutoffFraction = 0.002;
+		const double thickness = std::max(atmosphereComponent->rayleighScaleHeight, atmosphereComponent->mieScaleHeight) * -std::log(topOfAtmosphereDensityCutoffFraction);
 
-			if (auto coefficient = readOptional<double>(atmosphere, "earthReyleighScatteringCoefficient"))
-			{
-				atmosphereConfig.reyleighScatteringCoefficientCalculator = vis::createEarthReyleighScatteringCoefficientCalculator(*coefficient);
-			}
-			else if (auto table = readOptional<nlohmann::json>(atmosphere, "reyleighScatteringCoefficientTable"))
-			{
-				auto coefficients = table->at("coefficients");
-				auto wavelengthsNm = table->at("wavelengthsNm");
-				if (coefficients.size() != wavelengthsNm.size())
-				{
-					throw Exception("Must have equal number of coefficients and wavelengths");
-				}
+		vis::BruentonAtmosphereConfig atmosphereConfig;
+		atmosphereConfig.bottomRadius = planetComponent->radius;
+		atmosphereConfig.topRadius = planetComponent->radius + thickness;
+		atmosphereConfig.rayleighScatteringCoefficientCalculator = vis::createEarthRayleighScatteringCoefficientCalculator(atmosphereComponent->rayleighScatteringCoeffAt440nm);
+		atmosphereConfig.rayleighScaleHeight = atmosphereComponent->rayleighScaleHeight;
+		atmosphereConfig.mieScaleHeight = atmosphereComponent->mieScaleHeight;
+		atmosphereConfig.mieAngstromAlpha = atmosphereComponent->mieAngstromAlpha;
+		atmosphereConfig.mieExtinctionCoeff = atmosphereComponent->mieExtinctionCoeff;
+		atmosphereConfig.mieSingleScatteringAlbedo = atmosphereComponent->mieSingleScatteringAlbedo;
+		atmosphereConfig.miePhaseFunctionG = atmosphereComponent->mieSingleScatteringAlbedo;
+		atmosphereConfig.useEarthOzone = atmosphereComponent->useEarthOzone;
 
-				atmosphereConfig.reyleighScatteringCoefficientCalculator = vis::createTableReyleighScatteringCoefficientCalculator(coefficients, wavelengthsNm);
-			}
-			else
-			{
-				throw Exception("Reyleigh scattering coefficient not defined");
-			}
-
-			atmosphereConfig.rayleighScaleHeight = atmosphere.at("rayleighScaleHeight").get<double>();
-			atmosphereConfig.mieScaleHeight = atmosphere.at("mieScaleHeight").get<double>();
-			atmosphereConfig.mieAngstromAlpha = atmosphere.at("mieAngstromAlpha").get<double>();
-			atmosphereConfig.mieAngstromBeta = atmosphere.at("mieAngstromBeta").get<double>();
-			atmosphereConfig.mieSingleScatteringAlbedo = atmosphere.at("mieSingleScatteringAlbedo").get<double>();
-			atmosphereConfig.miePhaseFunctionG = atmosphere.at("miePhaseFunctionG").get<double>();
-			atmosphereConfig.useEarthOzone = readOptionalOrDefault<bool>(atmosphere, "useEarthOzone", false);
-
-			config.atmosphereConfig = atmosphereConfig;
-		}
+		config.atmosphereConfig = atmosphereConfig;
 	}
 	
 	auto elevationComponent = entity->getFirstComponentRequired<PlanetElevationComponent>();

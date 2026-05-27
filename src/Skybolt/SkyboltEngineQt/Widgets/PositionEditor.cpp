@@ -39,7 +39,7 @@ protected:
 		layout.addWidget(editor, row, 1);
 
 		QDoubleValidator* validator = new QDoubleValidator();
-		validator->setNotation(QDoubleValidator::StandardNotation);
+		validator->setNotation(QDoubleValidator::ScientificNotation);
 		validator->setDecimals(decimalCount);
 		editor->setValidator(validator);
 
