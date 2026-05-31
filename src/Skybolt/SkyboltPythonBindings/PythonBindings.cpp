@@ -106,6 +106,14 @@ static void removeNamespaceQualifier(std::string& str)
 	}
 }
 
+static std::string getTypeName(const Component& component)
+{
+	std::string name(typeid(component).name());
+	py::detail::clean_type_id(name);
+	removeNamespaceQualifier(name);
+	return name;
+}
+
 static std::vector<ComponentPtr> getComponentsOfTypeName(Entity* entity, const std::string& typeName)
 {
 	std::vector<ComponentPtr> result;
@@ -113,9 +121,7 @@ static std::vector<ComponentPtr> getComponentsOfTypeName(Entity* entity, const s
 	std::vector<ComponentPtr> components = entity->getComponents();
 	for (const ComponentPtr& component : components)
 	{
-		std::string name(typeid(*component).name());
-		py::detail::clean_type_id(name);
-		removeNamespaceQualifier(name);
+		std::string name = getTypeName(*component);
 		if (name == typeName)
 		{
 			result.push_back(component);
@@ -128,6 +134,26 @@ static ComponentPtr getFirstComponentOfTypeName(Entity* entity, const std::strin
 {
 	const auto v = getComponentsOfTypeName(entity, typeName);
 	return v.empty() ? nullptr : v.front();
+}
+
+static std::string getAvailableComponentNamesString(const Entity& entity)
+{
+	std::vector<std::string> names;
+	for (const ComponentPtr& component : entity.getComponents())
+	{
+		names.push_back(getTypeName(*component));
+	}
+	return "[" + boost::join(names, ", ") + "]";
+}
+
+static ComponentPtr getFirstComponentOfTypeNameRequired(Entity* entity, const std::string& typeName)
+{
+	const auto v = getComponentsOfTypeName(entity, typeName);
+	if (v.empty())
+	{
+		throw std::runtime_error("Could not find component of type: " + typeName + ". Available components: " + getAvailableComponentNamesString(*entity));
+	}
+	return v.front();
 }
 
 static double dotFunc(const Vector3& a, const Vector3& b)

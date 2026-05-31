@@ -36,8 +36,8 @@ void PlanetVisBinding::syncVis(const GeocentricToNedConverter& converter)
 
 	if (auto cloud = mEntity->getFirstComponent<sim::CloudComponent>(); cloud)
 	{
-		visPlanet->setCloudsVisible(cloud->cloudsVisible);
-		visPlanet->setCloudCoverageFraction(cloud->cloudCoverageFraction);
+		visPlanet->setCloudsVisible(!cloud->layers.empty());
+		visPlanet->setCloudCoverageFraction(float(cloud->layers.size() ? cloud->layers.front().coverageFraction : 0.0));
 	}
 }
 

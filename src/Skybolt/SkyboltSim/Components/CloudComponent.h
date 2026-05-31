@@ -11,18 +11,39 @@
 
 namespace skybolt::sim {
 
-struct CloudComponent : public Component
+struct CloudLayer
 {
-public:
-	bool cloudsVisible = true;
-	std::optional<float> cloudCoverageFraction;
+	double bottomAltitude;
+	double topAltitude;
+	double density; //!< In range [0, inf)
+	double coverageFraction; //!< Fraction of sky covered by this cloud layer, in range [0, 1].
+	std::string type;
 };
 
-SKYBOLT_REFLECT(CloudComponent) {
-	registry.type<CloudComponent>("CloudComponent")
+SKYBOLT_REFLECT(CloudLayer)
+{
+	registry.type<CloudLayer>("CloudLayer")
+		.property("bottomAltitude", &CloudLayer::bottomAltitude)
+		.property("topAltitude", &CloudLayer::topAltitude)
+		.property("density", &CloudLayer::density)
+		.property("coverageFraction", &CloudLayer::coverageFraction)
+		.property("type", &CloudLayer::type);
+};
+
+struct CloudComponent : public skybolt::sim::Component
+{
+public:
+	std::vector<CloudLayer> layers;
+	bool planetaryCoverageEnabled;
+};
+
+
+SKYBOLT_REFLECT(CloudComponent)
+{
+	registry.type<CloudComponent>("CloudsComponent")
 		.superType<Component>()
-		.property("cloudsVisible", &CloudComponent::cloudsVisible)
-		.property("cloudCoverageFraction", &CloudComponent::cloudCoverageFraction);
-}
+		.property("layers", &CloudComponent::layers)
+		.property("planetaryCoverageEnabled", &CloudComponent::planetaryCoverageEnabled);
+};
 
 } // namespace skybolt::sim
