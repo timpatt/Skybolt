@@ -35,7 +35,19 @@ struct RangeInclusive
 
 	T size() const
 	{
-		return maximum - minimum;
+		if (isEmpty())
+		{
+			return T(0);
+		}
+
+		if constexpr (std::is_integral_v<T>)
+		{
+			return maximum - minimum + 1;
+		}
+		else
+		{
+			return maximum - minimum;
+		}
 	}
 
 	bool operator ==(const RangeInclusive<T>& other) const
