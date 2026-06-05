@@ -16,6 +16,7 @@ struct ScenarioMetadataComponent : public sim::Component
 	bool serializable = true; //!< True if the entity should be loaded and saved
 	bool userDeletable = true; //! True if the entity can be deleted by the user from the UI.
 	bool persistAcrossLoad = false; //!< True if the entity should continue to exist even if it doesn't exist in in simulation state being load in. Setting to true is useful for procedural flyweight entities.
+	bool replicatable = true; //!< True if the entity should be replicated to clients over network.
 
 	ScenarioObjectPath directory; //!< Directory in the scenario hierarchy in which the entity resides
 };

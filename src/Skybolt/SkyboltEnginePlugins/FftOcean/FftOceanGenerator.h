@@ -79,6 +79,7 @@ public:
 	void calculate(float time, const std::span<glm::vec3>& result);
 
 	void setWindVelocity(const glm::vec2& windVelocity);
+	glm::vec2 getWindVelocity() const { return mWindVelocity; }
 
 	glm::ivec2 getTextureSizePixels() const { return glm::ivec2(mTextureSizePixels, mTextureSizePixels); }
 	glm::dvec2 getTextureWorldSize() const { return glm::dvec2(mTextureWorldSize, mTextureWorldSize); }

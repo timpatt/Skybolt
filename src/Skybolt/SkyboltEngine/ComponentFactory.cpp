@@ -339,6 +339,7 @@ static sim::ComponentPtr loadScenarioMetadata(Entity* entity, const ComponentFac
 	component->directory = parseStringList(json.at("scenarioObjectDirectory").get<std::string>(), "/");
 	component->userDeletable = readOptionalOrDefault(json, "userDeletable", true);
 	component->persistAcrossLoad = readOptionalOrDefault(json, "persistAcrossLoad", false);
+	component->replicatable = readOptionalOrDefault(json, "replicatable", true);
 	return component;
 }
 
