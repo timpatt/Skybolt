@@ -47,6 +47,8 @@ static osg::BoundingBoxf createBuilding(const Building& building, const Building
 
 	osg::BoundingBoxf bounds;
 
+	float totalTextureRepeatsX = 0;
+
 	size_t index = posBuffer->size();
 	int pointCount = (int)building.points.size();
 	for (int i = 0; i < pointCount; ++i)
@@ -91,10 +93,14 @@ static osg::BoundingBoxf createBuilding(const Building& building, const Building
 		float textureRepeatsX = horizontalWidth / textureWorldWidth;
 		textureRepeatsX = std::ceil(textureRepeatsX * facade.horizontalSectionsInTexture) / (float)facade.horizontalSectionsInTexture;
 
-		uvBuffer->push_back(osg::Vec4f(i * textureRepeatsX, 0, facadeIndex, buildingIndex));
-		uvBuffer->push_back(osg::Vec4f(nextIndex * textureRepeatsX, 0, facadeIndex, buildingIndex));
-		uvBuffer->push_back(osg::Vec4f(nextIndex * textureRepeatsX, textureRepeatsY, facadeIndex, buildingIndex));
-		uvBuffer->push_back(osg::Vec4f(i * textureRepeatsX, textureRepeatsY, facadeIndex, buildingIndex));
+		float newTotalTextureRepeatsX = totalTextureRepeatsX + textureRepeatsX;
+
+		uvBuffer->push_back(osg::Vec4f(totalTextureRepeatsX, 0, facadeIndex, buildingIndex));
+		uvBuffer->push_back(osg::Vec4f(newTotalTextureRepeatsX, 0, facadeIndex, buildingIndex));
+		uvBuffer->push_back(osg::Vec4f(newTotalTextureRepeatsX, textureRepeatsY, facadeIndex, buildingIndex));
+		uvBuffer->push_back(osg::Vec4f(totalTextureRepeatsX, textureRepeatsY, facadeIndex, buildingIndex));
+
+		std::swap(totalTextureRepeatsX, newTotalTextureRepeatsX);
 
 		// Indicies
 		indexBuffer->push_back(index);
