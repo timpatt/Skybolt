@@ -13,6 +13,7 @@
 #include <SkyboltCommon/Math/MathUtility.h>
 
 #include <ostream>
+#include <queue>
 
 using namespace skybolt;
 
@@ -51,6 +52,8 @@ struct AsyncQuadTreeTile : public skybolt::QuadTreeTile<osg::Vec2d, AsyncQuadTre
 	void requestCancelLoad();
 
 	ProgressCallbackPtr progressCallback; //!< nullptr if load has not been initiated
+
+	bool skipLoading = false; //!< Set to true to indicate that this tile should not be loaded, for example because the tile is not visible
 };
 
 typedef skybolt::DiQuadTree<struct AsyncQuadTreeTile> WorldTileTree;
@@ -100,12 +103,14 @@ void AsyncQuadTreeTile::requestCancelLoad()
 	}
 }
 
-QuadTreeTileLoader::QuadTreeTileLoader(const AsyncTileLoaderPtr& asyncTileLoader, const QuadTreeSubdivisionPredicatePtr& predicate) :
-	mAsyncTileLoader(asyncTileLoader),
-	mSubdivisionPredicate(predicate)
+QuadTreeTileLoader::QuadTreeTileLoader(AsyncTileLoaderPtr asyncTileLoader, QuadTreeSubdivisionPredicatePtr subdivisionPredicate, QuadTreeTileLoadPredicatePtr loadPredicate) :
+	mAsyncTileLoader(std::move(asyncTileLoader)),
+	mSubdivisionPredicate(std::move(subdivisionPredicate)),
+	mTileLoadPredicate(std::move(loadPredicate))
 {
 	assert(mAsyncTileLoader);
 	assert(mSubdivisionPredicate);
+	assert(mTileLoadPredicate);
 
 	Box2d leftBounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(0, math::halfPiD()));
 	Box2d rightBounds(osg::Vec2d(0, -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
@@ -171,88 +176,93 @@ void QuadTreeTileLoader::update()
 
 void QuadTreeTileLoader::traveseToLoadAndUnload(QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile)
 {
-	auto state = tile.getState();
-	if (state == AsyncQuadTreeTile::State::NotLoaded)
-	{
-		loadTile(tile);
-	}
-	if (state != AsyncQuadTreeTile::State::Loaded)
-	{
-		return;
-	}
+	// Traverse quad tree to determine which tiles should be loaded, which should be subdivided, and which should be merged.
+	// Uses breadth first traversal to ensure that all tiles of the same level are processed before tiles of the next level, which is not
+	// strictly necessary, but allows us to quickly load the fewer lower LOD tiles before waiting for all the higher LOD tiles to load.
+	std::queue<AsyncQuadTreeTile*> queue;
+	queue.push(&tile);
 
-	bool shouldSubdivide = (*mSubdivisionPredicate)(tile.bounds, tile.key, *tile.getData());
-
-	if (shouldSubdivide)
+	while (!queue.empty())
 	{
-		if (!tile.hasChildren()) // subdivide if not currently subdivided
+		AsyncQuadTreeTile& current = *queue.front();
+		queue.pop();
+
+		auto state = current.getState();
+		if (state == AsyncQuadTreeTile::State::NotLoaded)
 		{
-			tree.subdivide(tile);
-			for (int c = 0; c < 4; ++c)
+			if ((*mTileLoadPredicate)(current.bounds, current.key))
 			{
-				loadTile(*tile.children[c]);
+				current.skipLoading = false;
+				loadTile(current);
+			}
+			else
+			{
+				current.skipLoading = true;
 			}
 		}
-	}
-	else
-	{
-		if (tile.hasChildren())  // tile should not be subdivided. Merge children.
-		{
-			// All tile loads the subtree will be cancelled as a result of the merge,
-			tree.merge(tile);
-		}
-	}
 
-	// Continue traversing to children
-	if (tile.hasChildren())
-	{
-		for (int i = 0; i < 4; ++i)
+		bool shouldSubdivide = (*mSubdivisionPredicate)(current.bounds, current.key, current.getData());
+
+		if (shouldSubdivide)
 		{
-			AsyncQuadTreeTile& child = *tile.children[i];
-			traveseToLoadAndUnload(tree, child);
+			if (!current.hasChildren()) // subdivide if not currently subdivided
+			{
+				tree.subdivide(current);
+			}
+		}
+		else
+		{
+			if (current.hasChildren()) // tile should not be subdivided. Merge children.
+			{
+				// All tile loads in the subtree will be cancelled as a result of the merge.
+				tree.merge(current);
+			}
+		}
+
+		// Enqueue children for bredth-first traversal at the next level
+		if (current.hasChildren())
+		{
+			for (int i = 0; i < 4; ++i)
+			{
+				queue.push(current.children[i].get());
+			}
 		}
 	}
 }
 
 void QuadTreeTileLoader::populateLoadedTree(AsyncQuadTreeTile& srcTile, skybolt::QuadTree<LoadedTile>& dstTree, LoadedTile& dstTile) const
 {
-	if (srcTile.getData())
-	{
-		dstTile.images = *srcTile.dataPtr;
+	dstTile.images = srcTile.getData() ? *srcTile.dataPtr : nullptr;
 
-		if (srcTile.hasChildren())
+	if (srcTile.hasChildren())
+	{
+		bool allChildrenLoadedOrSkipped = true;
+		for (int i = 0; i < 4; ++i)
 		{
-			bool allChildrenLoaded = true;
+			auto& child = srcTile.children[i];
+			if (!child->getData() && !child->skipLoading)
+			{
+				allChildrenLoadedOrSkipped = false;
+				break;
+			}
+		}
+
+		if (allChildrenLoadedOrSkipped)
+		{
+			if (!dstTile.hasChildren())
+			{
+				dstTree.subdivide(dstTile);
+			}
+
 			for (int i = 0; i < 4; ++i)
 			{
-				if (!srcTile.children[i]->getData())
-				{
-					allChildrenLoaded = false;
-					break;
-				}
+				populateLoadedTree(*srcTile.children[i], dstTree, *dstTile.children[i]);
 			}
-
-			if (allChildrenLoaded)
-			{
-				if (!dstTile.hasChildren())
-				{
-					dstTree.subdivide(dstTile);
-				}
-
-				for (int i = 0; i < 4; ++i)
-				{
-					populateLoadedTree(*srcTile.children[i], dstTree, *dstTile.children[i]);
-				}
-			}
-		}
-		else if (dstTile.hasChildren())
-		{
-			dstTree.merge(dstTile);
 		}
 	}
-	else
+	else if (dstTile.hasChildren())
 	{
-		dstTile.images = nullptr;
+		dstTree.merge(dstTile);
 	}
 }
 

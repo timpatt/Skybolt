@@ -30,15 +30,34 @@ struct QuadTreeTileLoaderListener
 
 struct QuadTreeSubdivisionPredicate
 {
+	// NOTE: we use a functor struct to represent the predicate rather than a std::function because the client may want to modify predicate
+	// state after providing the predicate to the QuadTreeTileLoader and std::function would require copying the predicate which would break this.
+
 	virtual ~QuadTreeSubdivisionPredicate() = default;
 
-	//! Returns true if the tile with the given key should be subdivded.
-	//! @param images specifies the tile's images, which are useful if the subdivision decision is based on image content,
-	//!        for example how close the camera is to elevations stored in a height map image.
-	virtual bool operator()(const Box2d& bounds, const QuadTreeTileKey& key, const TileImages& images) = 0;
+//! @returns true if the tile with the given key should be subdivded.
+//! @param images specifies the tile's images if the tile is loaded, otherwise nullptr. This is useful if the subdivision decision
+//!     is based on image content, for example how close the camera is to elevations stored in a height map image.
+	virtual bool operator()(const Box2d& bounds, const QuadTreeTileKey& key, const TileImages* images) = 0;
 };
 
 using QuadTreeSubdivisionPredicatePtr = std::shared_ptr<QuadTreeSubdivisionPredicate>;
+
+struct QuadTreeTileLoadPredicate
+{
+	virtual ~QuadTreeTileLoadPredicate() = default;
+
+	//! @returns true if the tile with the given key should be loaded.
+	virtual bool operator()(const Box2d& bounds, const QuadTreeTileKey& key) = 0;
+};
+
+using QuadTreeTileLoadPredicatePtr = std::shared_ptr<QuadTreeTileLoadPredicate>;
+
+struct QuadTreeTileAlwaysLoad : public QuadTreeTileLoadPredicate
+{
+	~QuadTreeTileAlwaysLoad() override = default;
+	bool operator()(const Box2d& bounds, const QuadTreeTileKey& key) override { return true; }
+};
 
 struct AsyncQuadTreeTile;
 
@@ -51,7 +70,7 @@ struct AsyncQuadTreeTile;
 class QuadTreeTileLoader : public skybolt::Listenable<QuadTreeTileLoaderListener>
 {
 public:
-	QuadTreeTileLoader(const AsyncTileLoaderPtr& asyncTileLoader, const QuadTreeSubdivisionPredicatePtr& predicate);
+	QuadTreeTileLoader(AsyncTileLoaderPtr asyncTileLoader, QuadTreeSubdivisionPredicatePtr subdivisionPredicate, QuadTreeTileLoadPredicatePtr loadPredicate = std::make_shared<QuadTreeTileAlwaysLoad>());
 
 	~QuadTreeTileLoader();
 
@@ -71,6 +90,8 @@ public:
 private:
 	void traveseToLoadAndUnload(skybolt::QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile);
 	
+	//! Populates destTree with only loaded (or skipped for loading) tiles from srcTile. Tiles will be added to destTree if they are loaded in srcTile, otherwise they will be removed from destTree.
+	//! This is used to create a view of the tree which only contains tiles with all siblings loaded, i.e. no missing tiles that are still loading.
 	void populateLoadedTree(AsyncQuadTreeTile& srcTile, skybolt::QuadTree<LoadedTile>& destTree, LoadedTile& destTile) const;
 
 	void loadTile(AsyncQuadTreeTile& tile);
@@ -81,6 +102,7 @@ private:
 
 	AsyncTileLoaderPtr mAsyncTileLoader;
 	QuadTreeSubdivisionPredicatePtr mSubdivisionPredicate;
+	QuadTreeTileLoadPredicatePtr mTileLoadPredicate;
 	AsyncTileTreePtr mAsyncTree;
 	LoadedTileTreePtr mLoadedTree;
 

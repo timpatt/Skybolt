@@ -45,11 +45,38 @@ class DummyQuadTreeSubdivisionPredicate : public QuadTreeSubdivisionPredicate
 public:
 	~DummyQuadTreeSubdivisionPredicate() override = default;
 
-	bool operator()(const Box2d& bounds, const QuadTreeTileKey& key, const TileImages& images) override
+	bool operator()(const Box2d& bounds, const QuadTreeTileKey& key, const TileImages* images) override
 	{
+		// Only subdivide if the tile is loaded
+		// This represents a common use case for quad-tree based terrain rendering where we want the terrain to progressivly refine (subdivide) one level at a time,
+		// allowing the user to quickly see a low resolution version before waiting longer for the higher detail tiles load.
+		if (onlySubdivideIfLoaded && !images)
+		{
+			return false;
+		}
+
 		return key.level < maxSubdivisionLevel;
 	}
 	int maxSubdivisionLevel = 0;
+	bool onlySubdivideIfLoaded = true;
+};
+
+static bool hasRequestForKey(const std::vector<DummyAsyncTileLoader::Request>& requests, const QuadTreeTileKey& key)
+{
+	return std::find_if(requests.begin(), requests.end(), [&](const auto& request) { return request.key == key; }) != requests.end();
+}
+
+class DummyQuadTreeTileLoadPredicate : public QuadTreeTileLoadPredicate
+{
+public:
+	~DummyQuadTreeTileLoadPredicate() override = default;
+
+	bool operator()(const Box2d& bounds, const QuadTreeTileKey& key) override
+	{
+		return allowedKeys.find(key) != allowedKeys.end();
+	}
+
+	std::set<QuadTreeTileKey> allowedKeys;
 };
 
 struct DummyTileImages : public TileImages
@@ -132,6 +159,47 @@ SCENARIO("Test QuadTreeTileLoader requests load of tiles that pass predicate")
 	}
 }
 
+TEST_CASE("QuadTreeTileLoader skips tiles that fail tile load predicate")
+{
+	auto asyncTileLoader = std::make_shared<DummyAsyncTileLoader>();
+	auto subdivisionPredicate = std::make_shared<DummyQuadTreeSubdivisionPredicate>();
+	auto loadPredicate = std::make_shared<DummyQuadTreeTileLoadPredicate>();
+	QuadTreeTileLoader loader(asyncTileLoader, subdivisionPredicate, loadPredicate);
+	auto loadedTree = loader.getLoadedTree();
+
+	loader.update();
+
+	CHECK(asyncTileLoader->requests.empty());
+	CHECK(loadedTree->leftTree.getRoot().images == nullptr);
+	CHECK(loadedTree->rightTree.getRoot().images == nullptr);
+}
+
+TEST_CASE("QuadTreeTileLoader loads tiles when tile load predicate later allows them")
+{
+	auto asyncTileLoader = std::make_shared<DummyAsyncTileLoader>();
+	auto subdivisionPredicate = std::make_shared<DummyQuadTreeSubdivisionPredicate>();
+	auto loadPredicate = std::make_shared<DummyQuadTreeTileLoadPredicate>();
+	QuadTreeTileLoader loader(asyncTileLoader, subdivisionPredicate, loadPredicate);
+	auto loadedTree = loader.getLoadedTree();
+
+	loader.update();
+	CHECK(asyncTileLoader->requests.empty());
+
+	loadPredicate->allowedKeys.insert(QuadTreeTileKey(0, 0, 0));
+	loadPredicate->allowedKeys.insert(QuadTreeTileKey(0, 1, 0));
+	loader.update();
+
+	REQUIRE(asyncTileLoader->requests.size() == 2);
+	CHECK(loadedTree->leftTree.getRoot().images == nullptr);
+	CHECK(loadedTree->rightTree.getRoot().images == nullptr);
+
+	loadAllTiles(asyncTileLoader->requests);
+	loader.update();
+
+	CHECK(loadedTree->leftTree.getRoot().images != nullptr);
+	CHECK(loadedTree->rightTree.getRoot().images != nullptr);
+}
+
 static std::shared_ptr<QuadTreeTileLoader::LoadedTileTree> createTree()
 {
 	Box2d leftBounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(0, math::halfPiD()));
@@ -145,6 +213,52 @@ static std::shared_ptr<QuadTreeTileLoader::LoadedTileTree> createTree()
 		return tile;
 	},
 		QuadTreeTileKey(0, 0, 0), leftBounds, QuadTreeTileKey(0, 1, 0), rightBounds);
+}
+
+TEST_CASE("QuadTreeTileLoader loads child tiles even when parent tiles are skipped by tile load predicate")
+{
+	auto asyncTileLoader = std::make_shared<DummyAsyncTileLoader>();
+	auto subdivisionPredicate = std::make_shared<DummyQuadTreeSubdivisionPredicate>();
+	auto loadPredicate = std::make_shared<DummyQuadTreeTileLoadPredicate>();
+	QuadTreeTileLoader loader(asyncTileLoader, subdivisionPredicate, loadPredicate);
+	auto loadedTree = loader.getLoadedTree();
+
+	subdivisionPredicate->maxSubdivisionLevel = 1;
+	subdivisionPredicate->onlySubdivideIfLoaded = false;
+	loadPredicate->allowedKeys = {
+		QuadTreeTileKey(1, 0, 0),
+		QuadTreeTileKey(1, 1, 0),
+		QuadTreeTileKey(1, 0, 1),
+		QuadTreeTileKey(1, 1, 1),
+		QuadTreeTileKey(1, 2, 0),
+		QuadTreeTileKey(1, 3, 0),
+		QuadTreeTileKey(1, 2, 1),
+		QuadTreeTileKey(1, 3, 1)
+	};
+
+	loader.update();
+
+	CHECK(asyncTileLoader->requests.size() == 8);
+	CHECK(hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(1, 0, 0)));
+	CHECK(hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(1, 1, 0)));
+	CHECK(hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(1, 0, 1)));
+	CHECK(hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(1, 1, 1)));
+	CHECK(hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(1, 2, 0)));
+	CHECK(hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(1, 3, 0)));
+	CHECK(hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(1, 2, 1)));
+	CHECK(hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(1, 3, 1)));
+	CHECK(!hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(0, 0, 0)));
+	CHECK(!hasRequestForKey(asyncTileLoader->requests, QuadTreeTileKey(0, 1, 0)));
+
+	loadAllTiles(asyncTileLoader->requests);
+	loader.update();
+
+	CHECK(loadedTree->leftTree.getRoot().hasChildren());
+	CHECK(loadedTree->rightTree.getRoot().hasChildren());
+	CHECK(loadedTree->leftTree.getRoot().images == nullptr);
+	CHECK(loadedTree->rightTree.getRoot().images == nullptr);
+	CHECK(loadedTree->leftTree.getRoot().children[0]->images != nullptr);
+	CHECK(loadedTree->rightTree.getRoot().children[0]->images != nullptr);
 }
 
 TEST_CASE("Find all leaf tiles of a tree")

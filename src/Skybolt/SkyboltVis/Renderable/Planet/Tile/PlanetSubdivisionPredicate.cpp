@@ -31,15 +31,23 @@ static bool hasAnyChildren(const std::vector<TileSourcePtr>& tileSources, const 
 	return false;
 }
 
-bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeTileKey& key, const TileImages& images)
+bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeTileKey& key, const TileImages* images)
 {
+	// Don't subdivide if the tile is not loaded yet.
+	if (!images)
+	{
+		return false;
+	}
+
+	// Don't subdivide if the are no children available in the tile source data.
 	if (!hasAnyChildren(tileSources, key))
 	{
 		return false;
 	}
 
-	const auto& tileImages = static_cast<const PlanetTileImages&>(images);
-	std::optional<HeightMapElevationBounds> elevationBounds = getHeightMapElevationBounds(*tileImages.heightMapImage.image);
+	// Get tile elevation bounds
+	auto tileImages = static_cast<const PlanetTileImages*>(images);
+	std::optional<HeightMapElevationBounds> elevationBounds = getHeightMapElevationBounds(*tileImages->heightMapImage.image);
 	if (!elevationBounds)
 	{
 		if (!mHasMissingElevationBoundsError)
@@ -50,6 +58,7 @@ bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeT
 		return false;
 	}
 
+	// Subdivide if projected size of the tile at the observer position is above a threshold.
 	Box2d latLonBounds(math::vec2SwapComponents(bounds.minimum), math::vec2SwapComponents(bounds.maximum));
 
 	osg::Vec2d latLon = nearestPointInSolidBox(observerLatLon, latLonBounds);
