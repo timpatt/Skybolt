@@ -42,6 +42,7 @@ FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mOneOnTextureWorldSize(1.0f / mTextureWorldSize),
 	mGravity(config.gravity),
 	mWaveSpectrumWindow(config.waveSpectrumWindow),
+	mWaveSteepness(config.waveSteepness),
 	mUseMultipleCores(config.useMultipleCores),
 	mWindVelocity(config.windVelocity),
 	mFftGeneratorData(new FftGeneratorData)
@@ -397,7 +398,6 @@ void FftOceanGenerator::calculate(float t, const std::span<glm::vec3>& result)
 	//std::cout << "time " << timer.count() << std::endl;
 
 	// Output results to vector displacement image
-	float lambda = 8.f; // Controls wave peak steepness
 	float signs[] = { 1.0f, -1.0f };
 
 	glm::vec3* data = result.data();
@@ -409,8 +409,8 @@ void FftOceanGenerator::calculate(float t, const std::span<glm::vec3>& result)
 			int index = m * mTextureSizePixels + n;
 			int sign = (int)signs[(n + m) & 1];
 
-			data[index].x = filterNan(mFftOutputHorizontal[0][index].real() * sign * lambda, 0.f);
-			data[index].y = filterNan(mFftOutputHorizontal[1][index].real() * sign * lambda, 0.f);
+			data[index].x = filterNan(mFftOutputHorizontal[0][index].real() * sign * mWaveSteepness, 0.f);
+			data[index].y = filterNan(mFftOutputHorizontal[1][index].real() * sign * mWaveSteepness, 0.f);
 			data[index].z = filterNan(mFftOutputVertical[index].real() * sign, 0.f);
 		}
 	}

@@ -35,6 +35,7 @@ struct FftOceanGeneratorConfig
 	glm::vec2 windVelocity;
 	float gravity;
 	WaveSpectrumWindow waveSpectrumWindow;
+	float waveSteepness = 6.4f; //!< In range [0, inf). TODO: change input range to be [0, 1] and scale internally to make it easier to control.
 	bool useMultipleCores = false;
 };
 
@@ -108,6 +109,7 @@ private:
 	const float mOneOnTextureWorldSize;
 	const float mGravity;
 	const WaveSpectrumWindow mWaveSpectrumWindow;
+	const float mWaveSteepness;
 	const bool mUseMultipleCores;
 
 	glm::vec2 mWindVelocity;
