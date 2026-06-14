@@ -89,6 +89,7 @@ static std::unique_ptr<EngineRoot> createEngineRoot(bool enableVis = true, bool 
 
 	EngineRootConfig config;
 	config.engineSettings = settings;
+	config.assetSearchPaths = getDefaultAssetSearchPaths();
 	config.enableVis = enableVis;
 	auto engineRoot = std::make_unique<EngineRoot>(config);
 	engineRoot->loadPlugins(pluginFactories);

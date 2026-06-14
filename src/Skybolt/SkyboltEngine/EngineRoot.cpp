@@ -125,6 +125,21 @@ static file::Path getCacheDir()
 	return getDefaultCacheDir();
 }
 
+std::vector<std::string> getDefaultAssetSearchPaths()
+{
+	std::vector<std::string> assetSearchPaths = {
+		"Assets/",
+		"../Assets/"
+	};
+
+	if (const char* path = std::getenv("SKYBOLT_ASSETS_PATH"); path)
+	{
+		auto paths = file::splitByPathListSeparator(std::string(path));
+		assetSearchPaths.insert(assetSearchPaths.begin(), paths.begin(), paths.end());
+	}
+	return assetSearchPaths;
+}
+
 EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	scheduler(new px_sched::Scheduler),
 	fileLocator(locateFile),
@@ -143,19 +158,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	schedulerParams.num_threads = threadCount;
 	scheduler->init(schedulerParams);
 
-	std::vector<std::string> assetSearchPaths = {
-		"Assets/",
-		"../Assets/"
-	};
-
-	if (const char* path = std::getenv("SKYBOLT_ASSETS_PATH"); path)
-	{
-		auto paths = file::splitByPathListSeparator(std::string(path));
-		assetSearchPaths.insert(assetSearchPaths.begin(), paths.begin(), paths.end());
-	}
-
 	std::set<std::string> requiredPackages = {"Core", "Globe"};
-	for (const auto& assetSearchPath : assetSearchPaths)
+	for (const auto& assetSearchPath : config.assetSearchPaths)
 	{
 		file::Paths folders = file::findFoldersInDirectory(assetSearchPath);
 		for (const auto& folder : folders)

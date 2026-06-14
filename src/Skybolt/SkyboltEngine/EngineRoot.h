@@ -27,8 +27,11 @@ typedef std::function<PluginPtr(const PluginConfig&)> PluginFactory;
 struct EngineRootConfig
 {
 	nlohmann::json engineSettings;
+	std::vector<std::string> assetSearchPaths;
 	bool enableVis = true; //!< True if the visual subsystem is enabled
 };
+
+std::vector<std::string> getDefaultAssetSearchPaths();
 
 class EngineRoot
 {

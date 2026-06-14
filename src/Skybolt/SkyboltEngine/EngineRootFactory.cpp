@@ -47,6 +47,7 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFa
 {
 	EngineRootConfig config;
 	config.engineSettings = settings;
+	config.assetSearchPaths = getDefaultAssetSearchPaths();
 	auto engineRoot = std::make_unique<EngineRoot>(config);
 	engineRoot->loadPlugins(pluginFactories);
 	return engineRoot;
