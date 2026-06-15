@@ -115,7 +115,6 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 	float surfaceAreaPerBlade = readOptionalOrDefault(json, "surfaceAreaPerBlade", 1.3f);
 	int bladeCount = readOptionalOrDefault(json, "bladeCount", 4);
 
-	// TODO: read from json
 	params->pitchResponseRate = readOptionalOrDefault(json, "pitchResponseRate", 3);
 	params->minPitch = readOptionalOrDefault(json, "minPitch", 1.15)  * skybolt::math::degToRadF();
 	params->pitchRange = readOptionalOrDefault(json, "pitchRange", 6.87)  * skybolt::math::degToRadF();
@@ -145,8 +144,8 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 static sim::ComponentPtr loadTailRotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	PropellerParams params;
-	params.minPitch = readOptionalOrDefault(json, "minPitch", -5.7)  * skybolt::math::degToRadF();
-	params.pitchRange = readOptionalOrDefault(json, "pitchRange", 11)  * skybolt::math::degToRadF();
+	params.minPitch = readOptionalOrDefault(json, "minPitch", -20)  * skybolt::math::degToRadF();
+	params.maxPitch = readOptionalOrDefault(json, "maxPitch", 20)  * skybolt::math::degToRadF();
 	params.pitchResponseRate = readOptionalOrDefault(json, "pitchResponseRate", 10);
 	params.rpmMultiplier = json.at("rpmMultiplier").get<double>();
  	params.thrustPerRpmPerPitch = readOptionalOrDefault(json, "thrustPerRpmPerPitch", 10.0);

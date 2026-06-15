@@ -38,12 +38,11 @@ void PropellerComponent::updatePreDynamicsSubstep()
 	std::swap(mDt, dt);
 
 	// Apply control input
-	float maxPitch = mParams.pitchRange + mParams.minPitch;
-	float desiredPitch = getUnitNormalized(*mInput) * maxPitch;
+	float desiredPitch = std::lerp(mParams.minPitch, mParams.maxPitch, getUnitNormalized(*mInput));
 
 	 // First order lag function of peddle input
 	mPitch += (desiredPitch - mPitch) * std::min(1.0f, mParams.pitchResponseRate * float(dt));
-	mPitch = std::clamp(mPitch, mParams.minPitch, maxPitch);
+	mPitch = std::clamp(mPitch, mParams.minPitch, mParams.maxPitch);
 	mRpm = mDriverRpm * mParams.rpmMultiplier;
 
 	// Spin propeller

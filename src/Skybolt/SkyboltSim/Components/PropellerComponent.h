@@ -18,8 +18,8 @@ namespace sim {
 struct PropellerParams
 {
 	float rpmMultiplier;
-	float pitchRange;
 	float minPitch;
+	float maxPitch;
 	float pitchResponseRate;
 	float thrustPerRpmPerPitch; // Newtons per rpm per radian of pitch
 };
