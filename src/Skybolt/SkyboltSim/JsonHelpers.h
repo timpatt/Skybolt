@@ -62,6 +62,14 @@ inline Quaternion readOptionalQuaternion(const nlohmann::json& j, const std::str
 
 inline LatLon readLatLon(const nlohmann::json& j)
 {
+	if (!j.is_array())
+	{
+		throw std::runtime_error("Expected array for LatLon");
+	}
+	if (j.size() != 2)
+	{
+		throw std::runtime_error("Expected array of size 2 for LatLon");
+	}
 	return LatLon(j[0].get<double>() * skybolt::math::degToRadD(), j[1].get<double>() * skybolt::math::degToRadD());
 }
 
@@ -72,6 +80,14 @@ inline nlohmann::json writeJson(const LatLon& v)
 
 inline LatLonAlt readLatLonAlt(const nlohmann::json& j)
 {
+	if (!j.is_array())
+	{
+		throw std::runtime_error("Expected array for LatLonAlt");
+	}
+	if (j.size() != 3)
+	{
+		throw std::runtime_error("Expected array of size 3 for LatLonAlt");
+	}
 	return LatLonAlt(j[0].get<double>() * skybolt::math::degToRadD(), j[1].get<double>() * skybolt::math::degToRadD(), j[2].get<double>());
 }
 
