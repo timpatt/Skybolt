@@ -25,7 +25,17 @@
 
 namespace skybolt {
 
-class EntityFactory
+class EntityFactoryBase
+{
+public:
+	virtual ~EntityFactoryBase() = default;
+	virtual sim::EntityPtr createEntity(const std::string& templateName, const std::string& instanceName = "", const sim::Vector3& positionn = math::dvec3Zero(), const sim::Quaternion& orientation = math::dquatIdentity(), sim::EntityId id = sim::nullEntityId()) const = 0;
+
+	typedef std::map<std::string, nlohmann::json> TemplateJsonMap;
+	virtual const TemplateJsonMap& getTemplateJsonMap() const = 0;
+};
+
+class EntityFactory : public EntityFactoryBase
 {
 public:
 	struct VisContext
@@ -54,8 +64,9 @@ public:
 	};
 
 	EntityFactory(const Context& context, const std::vector<std::filesystem::path>& entityFilenames);
+	~EntityFactory() override = default;
 
-	sim::EntityPtr createEntity(const std::string& templateName, const std::string& instanceName = "", const sim::Vector3& position = math::dvec3Zero(), const sim::Quaternion& orientation = math::dquatIdentity(), sim::EntityId id = sim::nullEntityId()) const;
+	sim::EntityPtr createEntity(const std::string& templateName, const std::string& instanceName = "", const sim::Vector3& position = math::dvec3Zero(), const sim::Quaternion& orientation = math::dquatIdentity(), sim::EntityId id = sim::nullEntityId()) const override;
 	sim::EntityPtr createEntityFromJson(const nlohmann::json& json, const std::string& templateName, const std::string& instanceName, const sim::Vector3& position, const sim::Quaternion& orientation, sim::EntityId id = sim::nullEntityId()) const;
 
 	typedef std::vector<std::string> Strings;
@@ -65,16 +76,13 @@ public:
 	const skybolt::ScenarioObjectPath& getScenarioObjectDirectoryForTemplate(const std::string& templateName) const;
 
 	typedef std::map<std::string, nlohmann::json> TemplateJsonMap;
-	const TemplateJsonMap& getTemplateJsonMap() const { return mTemplateJsonMap; }
+	const TemplateJsonMap& getTemplateJsonMap() const override { return mTemplateJsonMap; }
 
-	std::string createUniqueObjectName(const std::string& baseName) const;
+	std::string createUniqueEntityName(const std::string& baseName) const;
+
+	bool isEntityNameUnique(const std::string& name) const;
 
 	sim::EntityId generateNextEntityId() const;
-
-private:
-	sim::EntityPtr createSun(const EntityFactory::VisContext& visContext) const;
-	sim::EntityPtr createMoon(const EntityFactory::VisContext& visContext) const;
-	sim::EntityPtr createStars(const EntityFactory::VisContext& visContext) const;
 
 private:
 	Strings mTemplateNames;

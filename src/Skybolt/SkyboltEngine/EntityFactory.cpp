@@ -817,16 +817,20 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 	}
 }
 
-EntityPtr EntityFactory::createEntity(const std::string& templateName, const std::string& nameIn, const Vector3& position, const Quaternion& orientation, EntityId id) const
+EntityPtr EntityFactory::createEntity(const std::string& templateName, const std::string& instanceName, const Vector3& position, const Quaternion& orientation, EntityId id) const
 {
 	{
 		auto i = mTemplateJsonMap.find(templateName);
 		if (i != mTemplateJsonMap.end())
 		{
-			std::string instanceName = nameIn.empty() ? createUniqueObjectName(templateName) : nameIn;
+			// Construct unique instance name
+			std::string uniqueInstanceName = instanceName.empty()
+				? createUniqueEntityName(templateName)
+				: (isEntityNameUnique(instanceName) ? instanceName : createUniqueEntityName(instanceName));
+
 			try
 			{
-				return createEntityFromJson(i->second, templateName, instanceName, position, orientation, id);
+				return createEntityFromJson(i->second, templateName, uniqueInstanceName, position, orientation, id);
 			}
 			catch (const std::exception& e)
 			{
@@ -847,17 +851,22 @@ const skybolt::ScenarioObjectPath& EntityFactory::getScenarioObjectDirectoryForT
 	return getDefaultEntityScenarioObjectDirectory();
 }
 
-std::string EntityFactory::createUniqueObjectName(const std::string& baseName) const
+std::string EntityFactory::createUniqueEntityName(const std::string& baseName) const
 {
 	for (int i = 1; i < INT_MAX; ++i)
 	{
 		std::string name = baseName + std::to_string(i);
-		if (mContext.simWorld->findObjectByName(name) == nullptr)
+		if (isEntityNameUnique(name))
 		{
 			return name;
 		}
 	}
 	throw skybolt::Exception("Could not create unique object name from base name: " + baseName);
+}
+
+bool EntityFactory::isEntityNameUnique(const std::string& name) const
+{
+	return mContext.simWorld->findObjectByName(name) == nullptr;
 }
 
 sim::EntityId EntityFactory::generateNextEntityId() const

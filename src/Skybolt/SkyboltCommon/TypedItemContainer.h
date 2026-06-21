@@ -117,7 +117,7 @@ public:
 		return result;
 	}
 
-	inline std::vector<BaseTPtr> getAllItems() const
+	inline const std::vector<BaseTPtr>& getAllItems() const
 	{
 		return mComponents;
 	}
