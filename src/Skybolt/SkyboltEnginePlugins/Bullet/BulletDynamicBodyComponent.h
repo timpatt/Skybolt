@@ -46,6 +46,10 @@ public: // DynamicBodyComponent interface
 	void setMass(double mass) override;
 	double getMass() const override { return mMass; }
 
+	Vector3 getMomentOfInertia() const override;
+
+	Vector3 getCenterOfMass() const override;
+
 	void setCenterOfMass(const Vector3& relPosition) override;
 
 	//! Apply force at center of mass. Force is in world axes.
@@ -58,6 +62,10 @@ public: // DynamicBodyComponent interface
 	void applyTorque(const Vector3& torque) override;
 
 	void setCollisionsEnabled(bool enabled) override;
+
+	void setLinearDamping(double damping) override;
+
+	void setAngularDamping(double damping) override;
 
 	RigidBody* getRigidBody() const { return mBody; }
 

@@ -33,7 +33,12 @@ public:
 	virtual void setMass(double mass) = 0;
 	virtual double getMass() const = 0;
 
-	//! relPosition is in body axes
+	virtual Vector3 getMomentOfInertia() const = 0;
+	
+	//! Gets the center of mass relative to the body position in body axes
+	virtual Vector3 getCenterOfMass() const = 0;
+
+	//! Sets the center of mass relative to the body position in body axes
 	virtual void setCenterOfMass(const Vector3& relPosition) = 0;
 
 	//! Apply force at center of mass during the next dynamics substep. Force is in world axes.
@@ -51,6 +56,10 @@ public:
 	const std::vector<AppliedForce>& getForcesAppliedInLastSubstep() const { return mForcesAppliedInLastSubstep; }
 
 	virtual void setCollisionsEnabled(bool enabled) = 0;
+
+	virtual void setLinearDamping(double damping) = 0;
+
+	virtual void setAngularDamping(double damping) = 0;
 
 protected:
 	std::vector<AppliedForce> mForcesAppliedInLastSubstep;

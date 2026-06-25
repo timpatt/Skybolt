@@ -18,8 +18,12 @@ public:
 	SimpleDynamicBodyComponent(Node* node, Motion* motion, double mass, const Vector3& momentofInertia);
 
 	double getMass() const override  { return mMass; }
-
 	void setMass(double mass) override { mMass = mass; }
+
+	virtual Vector3 getMomentOfInertia() const { return mMomentOfInertia; }
+
+	virtual Vector3 getCenterOfMass() const { return mCenterOfMass; }
+
 	void setCenterOfMass(const Vector3& relPosition) override { mCenterOfMass = relPosition; }
 
 	//! Apply force at center of mass. Force is in world axes.
@@ -31,7 +35,11 @@ public:
 	//! Apply torque. Torque is in world axes.
 	void applyTorque(const Vector3& torque) override;
 
-	virtual void setCollisionsEnabled(bool enabled) override {}
+	void setCollisionsEnabled(bool enabled) override {} // Not implemented
+
+	void setLinearDamping(double damping) override {} // Not implemented
+
+	void setAngularDamping(double damping) override {} // Not implemented
 
 	std::vector<std::type_index> getExposedTypes() const override
 	{

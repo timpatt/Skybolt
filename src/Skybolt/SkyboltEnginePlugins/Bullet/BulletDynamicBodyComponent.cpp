@@ -117,6 +117,31 @@ void BulletDynamicBodyComponent::updatePostDynamics()
 	mCurrentForces.clear();
 }
 
+Vector3 BulletDynamicBodyComponent::getMomentOfInertia() const
+{
+	return toGlmDvec3(mMomentOfInertia);
+}
+
+Vector3 BulletDynamicBodyComponent::getCenterOfMass() const
+{
+	return toGlmDvec3(mCenterOfMass);
+}
+
+void BulletDynamicBodyComponent::setCenterOfMass(const Vector3& relPosition)
+{
+	mCenterOfMass = toBtVector3(relPosition);
+	setPosition(mNodePosition); // update rigid body position
+}
+
+void BulletDynamicBodyComponent::setMass(double mass)
+{
+	mMass = mass;
+	if (mDynamicsEnabled)
+	{
+		mBody->setMassProps(mass, mMomentOfInertia);
+	}
+}
+
 void BulletDynamicBodyComponent::setDynamicsEnabled(bool enabled)
 {
 	mDynamicsEnabled = enabled;
@@ -177,27 +202,22 @@ void BulletDynamicBodyComponent::applyTorque(const Vector3& torque)
 	mBody->applyTorque(toBtVector3(torque));
 }
 
-void BulletDynamicBodyComponent::setCenterOfMass(const Vector3& relPosition)
-{
-	mCenterOfMass = toBtVector3(relPosition);
-	setPosition(mNodePosition); // update rigid body position
-}
-
-void BulletDynamicBodyComponent::setMass(double mass)
-{
-	mMass = mass;
-	if (mDynamicsEnabled)
-	{
-		mBody->setMassProps(mass, mMomentOfInertia);
-	}
-}
-
 void BulletDynamicBodyComponent::setCollisionsEnabled(bool enabled)
 {
 	if (enabled)
 		mBody->setCollisionGroupMask(~0);
 	else
 		mBody->setCollisionGroupMask(0);
+}
+
+void BulletDynamicBodyComponent::setLinearDamping(double damping)
+{
+	mBody->setDamping(damping, mBody->getAngularDamping());
+}
+
+void BulletDynamicBodyComponent::setAngularDamping(double damping)
+{
+	mBody->setDamping(mBody->getLinearDamping(), damping);
 }
 
 } // namespace sim
