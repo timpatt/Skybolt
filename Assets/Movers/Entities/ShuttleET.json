@@ -9,7 +9,6 @@
 			"size": [47, 5, 5]
 		}},
 		{"fuselage": {
-			"momentMultiplier": 1000
 		}},
 		{"visualModel": {
 			"model": "Models/ShuttleET/ShuttleET.osgt",

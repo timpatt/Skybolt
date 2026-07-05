@@ -47,23 +47,22 @@
 			}
 		]},
 		{"fuselage": {
-			"momentMultiplier": 1000,
-			"pitchDueToAngleOfAttack": -0.002,
-			"yawDueToSideSlipAngle": -0.002,
-			"dragConstant": [1.5, 30, 30]
+			"pitchAccelDueToAngleOfAttack": 0.0,
+			"dragConstant": [2, 25, 30]
 		}},
 		{"mainRotor": {
-			"name": "mainRotor1",
-			"maxRpm": 324,
-			"diskRadius": 8.18,
+			"maxRpm": 260,
+			"diskRadius": 8,
 			"positionRelBody": [0.8346, 0, -1.5534],
-			"orientationRelBody": {"angleDeg":0, "axis":[ 0, 1, 0]}
+			"orientationRelBody": {"angleDeg":-3, "axis":[ 0, 1, 0]},
+			"inducedVelocity": [[0, 15], [40, 8], [100, 5]]
 		}},
 		{"tailRotor": {
-			"name": "tailRotor1",
 			"rpmMultiplier": -200,
 			"positionRelBody": [-8.9844, 0.3785, -1.8014],
 			"orientationRelBody": {"angleDeg":69, "axis":[ 1, 0, 0]}
+		}},
+		{"aircraftTrimmer": {
 		}},
 		{"visualModel": {
 			"model": "Models/UH60/UH60_Fuselage.osgb",

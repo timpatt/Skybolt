@@ -9,7 +9,6 @@
 			"size": [45, 3.7, 3.7]
 		}},
 		{"fuselage": {
-			"momentMultiplier": 1000
 		}},
 		{"visualModel": {
 			"model": "Models/ShuttleSRB/ShuttleSRB.osgt",

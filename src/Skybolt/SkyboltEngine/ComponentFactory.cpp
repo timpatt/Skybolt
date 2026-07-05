@@ -68,26 +68,30 @@ static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryCont
 	params.stallLift = readOptionalOrDefault(json, "stallLift", 1.0);
 	params.liftArea = readOptionalOrDefault(json, "liftArea", 0.0);
 
-	params.momentMultiplier = json.at("momentMultiplier");
+	params.dragConstant = readOptionalVector3(json, "dragConstant");
 
-	params.dragConst = readOptionalVector3(json, "dragConstant");
+	// Read wing parameters
+	params.effectiveWingSpan = readOptionalOrDefault(json, "effectiveWingSpan", 10.0);
+	params.wingOswaldEfficiencyFactor = readOptionalOrDefault(json, "wingOswaldEfficiencyFactor", 0.75);
 
-	params.rollDueToSideSlipAngle = readOptionalOrDefault(json, "rollDueToSideSlipAngle", 0.0);
-	params.rollDueToRollRate = readOptionalOrDefault(json, "rollDueToRollRate", -2.0);
-	params.rollDueToYawRate = readOptionalOrDefault(json, "rollDueToYawRate", 0.0);
-	params.rollDueToAileron = readOptionalOrDefault(json, "rollDueToAileron", 0.0);
+	// Read aerodynamic derivatives
+	params.rollAccelDueToSideSlipAngle = readOptionalOrDefault(json, "rollAccelDueToSideSlipAngle", 0.0);
+	params.rollAccelDueToRollRate = readOptionalOrDefault(json, "rollAccelDueToRollRate", -1.0);
+	params.rollAccelDueToYawRate = readOptionalOrDefault(json, "rollAccelDueToYawRate", 0.0);
+	params.rollAccelDueToAileron = readOptionalOrDefault(json, "rollAccelDueToAileron", 0.0);
 
-	params.pitchNeutralMoment = 0;
-	params.pitchDueToAngleOfAttack = readOptionalOrDefault(json, "pitchDueToAngleOfAttack", 0.0);
-	params.pitchDueToPitchRate = readOptionalOrDefault(json, "pitchDueToPitchRate", -10.0);
-	params.pitchDueToElevator = readOptionalOrDefault(json, "pitchDueToElevator", 0.0);
+	params.pitchAccelDueToAngleOfAttack = readOptionalOrDefault(json, "pitchAccelDueToAngleOfAttack", -0.2);
+	params.pitchAccelDueToPitchRate = readOptionalOrDefault(json, "pitchAccelDueToPitchRate", -1.0);
+	params.pitchAccelDueToElevator = readOptionalOrDefault(json, "pitchAccelDueToElevator", 0.0);
 
-	params.yawDueToSideSlipAngle = readOptionalOrDefault(json, "yawDueToSideSlipAngle", 0.0);
-	params.yawDueToRollRate = readOptionalOrDefault(json, "yawDueToRollRate", 0.0);
-	params.yawDueToYawRate = readOptionalOrDefault(json, "yawDueToYawRate", -10.0);
-	params.yawDueToRudder = readOptionalOrDefault(json, "yawDueToRudder", 0.0);
+	params.yawAccelDueToSideSlipAngle = readOptionalOrDefault(json, "yawAccelDueToSideSlipAngle", -2.0);
+	params.yawAccelDueToRollRate = readOptionalOrDefault(json, "yawAccelDueToRollRate", 0.0);
+	params.yawAccelDueToYawRate = readOptionalOrDefault(json, "yawAccelDueToYawRate", -1.0);
+	params.yawAccelDueToRudder = readOptionalOrDefault(json, "yawAccelDueToRudder", 0.0);
 
-	params.maxAutoTrimAngleOfAttack = readOptional<double>(json, "maxAutoTrimAngleOfAttack");
+	params.pitchBaseAccel = readOptionalOrDefault(json, "pitchBaseAccel", 0.0);
+
+	params.aerodynamicDerivativeReferenceSpeed = readOptionalOrDefault(json, "aerodynamicDerivativeReferenceSpeed", 100);
 
 	FuselageComponentConfig config;
 	config.params = params;
@@ -100,6 +104,7 @@ static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryCont
 	if (inputs && hasControlSurfaces)
 	{
 		config.stickInput = inputs->createOrGet("stick", glm::vec2(0), posNegUnitRange<glm::vec2>());
+		config.stickTrimInput = inputs->createOrGet("stickTrim", glm::vec2(0), posNegUnitRange<glm::vec2>());
 		config.rudderInput = inputs->createOrGet("pedal", 0.0f, posNegUnitRange<float>());
 
 	}
@@ -112,18 +117,20 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 
 	params->maxRpm = json.at("maxRpm").get<double>();
 
-	float surfaceAreaPerBlade = readOptionalOrDefault(json, "surfaceAreaPerBlade", 1.3f);
+	float surfaceAreaPerBlade = readOptionalOrDefault(json, "surfaceAreaPerBlade", 4.5f);
 	int bladeCount = readOptionalOrDefault(json, "bladeCount", 4);
 
-	params->pitchResponseRate = readOptionalOrDefault(json, "pitchResponseRate", 3);
-	params->minPitch = readOptionalOrDefault(json, "minPitch", 1.15)  * skybolt::math::degToRadF();
-	params->pitchRange = readOptionalOrDefault(json, "pitchRange", 6.87)  * skybolt::math::degToRadF();
-	params->maxTppPitch = readOptionalOrDefault(json, "maxTppPitch", 6)  * skybolt::math::degToRadF();
-	params->maxTppRoll = readOptionalOrDefault(json, "maxTppRoll", 3)  * skybolt::math::degToRadF();
-	params->tppPitchOffset = readOptionalOrDefault(json, "tppPitchOffset", -3.f)  * skybolt::math::degToRadF();
-	params->liftConst = 0.5f * 5.9f * surfaceAreaPerBlade * bladeCount; // 0.5 * liftSlope[1/rad] * bladeSurfaceArea * bladeCount
-	params->diskRadius = readOptionalOrDefault(json, "diskRadius", 7.3f);
-	params->zeroLiftAlpha = 0;
+	params->minCollectivePitch = readOptionalOrDefault(json, "minCollectivePitch", 0)  * skybolt::math::degToRadD();
+	params->maxCollectivePitch = readOptionalOrDefault(json, "maxCollectivePitch", 12)  * skybolt::math::degToRadD();
+	params->maxTppPitch = readOptionalOrDefault(json, "maxTppPitch", 6)  * skybolt::math::degToRadD();
+	params->maxTppRoll = readOptionalOrDefault(json, "maxTppRoll", 4)  * skybolt::math::degToRadD();
+	params->planAreaOfAllBlades = surfaceAreaPerBlade * bladeCount;
+	params->diskRadius = readOptionalOrDefault(json, "diskRadius", 7.5);
+	params->zeroLiftAngleOfAttack = readOptionalOrDefault(json, "zeroLiftAngleOfAttack", 0.0);
+	params->bladeStallAngleOfAttack = readOptionalOrDefault(json, "bladeStallAngleOfAttack", 15 * skybolt::math::degToRadD());
+	params->bladeLiftSlopePerRadian = readOptionalOrDefault(json, "bladeLiftSlopePerRadian", 5.7);
+	params->stallLiftCoefficient = readOptionalOrDefault(json, "stallLiftCoefficient", 0.7);
+	params->inducedVelocity = math::readOptionalScalarOrCurve(json, "inducedVelocity", 10.0); // Use reasonable default if not specified
 
 	auto inputsComponent = entity->getFirstComponentRequired<ControlInputsComponent>();
 
@@ -135,6 +142,7 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 	.positionRelBody = readVector3(json.at("positionRelBody")),
 	.orientationRelBody = readOptionalQuaternion(json, "orientationRelBody"),
 	.cyclicInput = inputsComponent->createOrGet("stick", glm::vec2(0), posNegUnitRange<glm::vec2>()),
+	.cyclicTrimInput = inputsComponent->createOrGet("stickTrim", glm::vec2(0), posNegUnitRange<glm::vec2>()),
 	.collectiveInput = inputsComponent->createOrGet("collective", 0.0f, unitRange<float>())
 	});
 	component->setNormalizedRpm(1.0f);

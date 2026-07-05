@@ -6,43 +6,49 @@
 
 #pragma once
 
+#include <SkyboltCommon/Math/LookupTable1D.h>
 #include <SkyboltSim/Component.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include "SkyboltSim/Components/ControlInputsComponent.h"
+#include <SkyboltSim/Components/Trimmable.h>
 
 namespace skybolt {
 namespace sim {
 
+using ScalarOrCurve = std::variant<double, math::LookupTable1D>;
+
 struct FuselageParams
 {
 	// Lift
-	float liftSlope; // Cl per radian
-	float zeroLiftAlpha;
-	float stallAlpha;
-	float stallLift; // Cl in stalled region
-	float liftArea; // m^2
+	double liftSlope; // Cl per radian
+	double zeroLiftAlpha;
+	double stallAlpha;
+	double stallLift; // Cl in stalled region
+	double liftArea; // m^2
 
-	Vector3 dragConst; // Cd * area in each direction
+	Vector3 dragConstant; // Cd * area in each direction
+
+	// Wing
+	double effectiveWingSpan;
+	double wingOswaldEfficiencyFactor;
 
 	// Moments
-	float momentMultiplier;
+	ScalarOrCurve rollAccelDueToSideSlipAngle;
+	double rollAccelDueToRollRate;
+	double rollAccelDueToYawRate;
+	double rollAccelDueToAileron;
 
-	float rollDueToSideSlipAngle;
-	float rollDueToRollRate;
-	float rollDueToYawRate;
-	float rollDueToAileron;
+	double pitchBaseAccel;
+	ScalarOrCurve pitchAccelDueToAngleOfAttack;
+	double pitchAccelDueToPitchRate;
+	double pitchAccelDueToElevator;
 
-	float pitchNeutralMoment;
-	float pitchDueToAngleOfAttack;
-	float pitchDueToPitchRate;
-	float pitchDueToElevator;
+	ScalarOrCurve yawAccelDueToSideSlipAngle;
+	double yawAccelDueToRollRate;
+	double yawAccelDueToYawRate;
+	double yawAccelDueToRudder;
 
-	float yawDueToSideSlipAngle;
-	float yawDueToRollRate;
-	float yawDueToYawRate;
-	float yawDueToRudder;
-
-	std::optional<float> maxAutoTrimAngleOfAttack; //!< pitch auto trim disabled if empty
+	double aerodynamicDerivativeReferenceSpeed;
 };
 
 struct FuselageComponentConfig
@@ -52,16 +58,42 @@ struct FuselageComponentConfig
 	Motion* motion;
 	DynamicBodyComponent* body;
 	ControlInputVec2Ptr stickInput; //!< Optional. Range is [-1, 1]. Positive backward and right.
+	ControlInputVec2Ptr stickTrimInput; //!< Optional. Range is [-1, 1]. Positive backward and right.
 	ControlInputFloatPtr rudderInput; //!< Optional. Range [-1, 1]
 };
 
-class FuselageComponent : public Component
+class FuselageComponent : public Component, public Trimmable
 {
 public:
 	FuselageComponent(const FuselageComponentConfig& config);
 
-	float getAngleOfAttack() const { return mAngleOfAttack; }
-	float getSideSlipAngle() const { return mSideSlipAngle; }
+	double getAngleOfAttack() const { return mAngleOfAttackFromLastTimestep; }
+	double getSideSlipAngle() const { return mSideSlipAngleFromLastTimestep; }
+
+	double calcLiftCoefficent(double alpha) const;
+
+	struct CalcMomentArgs
+	{
+		const Controls& controls;
+		double airDensity;
+		double angleOfAttack;
+		double sideSlipAngle;
+		Vector3 angularVelocityInBodyAxes;
+	};
+
+	Vector3 calcMomentInBodyAxes(const CalcMomentArgs& args) const;
+
+	double calcParasiteDragScalar(const Vector3 &velocityLocal, double density) const;
+	double calcInducedDragScalar(const Vector3 &velocityLocal, double density, double liftForce) const;
+
+public: // Component interface
+	std::vector<std::type_index> getExposedTypes() const override
+	{
+		return {typeid(FuselageComponent), typeid(Trimmable)};
+	}
+
+public: // Trimmable interface
+	Vector3 calcRotationalTrimMomentInBodyAxes(const Controls& controls) const override;
 
 public: // SimUpdatable interface
 	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
@@ -73,22 +105,16 @@ public: // SimUpdatable interface
 	void updatePreDynamicsSubstep();
 
 private:
-	Vector3 calcDragForce(const Vector3 &velocityLocal, const Vector3 &dragDirection, float density) const;
-	Vector3 calcMoment(const Vector3 &angularVelocity, float angleOfAttackFactor, float sideSlipFactor,
-				   float velSqLength, float airDensity) const;
-
-	float calcTrimmedAngleOfAttack(float angleOfAttack, float airDensity, float speedSquared) const;
-
-private:
 	const FuselageParams mParams;
 	Node* mNode;
 	Motion* mMotion;
 	DynamicBodyComponent* mBody;
-	ControlInputVec2Ptr mStickInput;
-	ControlInputFloatPtr mRudderInput;
+	ControlInputVec2Ptr mStickInput; //!< May be null
+	ControlInputVec2Ptr mStickTrimInput; //!< May be null
+	ControlInputFloatPtr mRudderInput; //!< May be null
 
-	float mAngleOfAttack = 0;
-	float mSideSlipAngle = 0;
+	double mAngleOfAttackFromLastTimestep = 0;
+	double mSideSlipAngleFromLastTimestep = 0;
 	SecondsD mDt = 0;
 };
 

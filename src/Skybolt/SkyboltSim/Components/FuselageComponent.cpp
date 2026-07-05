@@ -9,7 +9,9 @@
 #include "SkyboltSim/Components/Node.h"
 #include "SkyboltSim/Components/Motion.h"
 #include "SkyboltSim/Physics/Atmosphere.h"
+#include "SkyboltSim/Spatial/Geocentric.h"
 #include "SkyboltSim/Spatial/GreatCircle.h"
+#include "SkyboltSim/Spatial/Orientation.h"
 
 #include <algorithm>
 
@@ -22,6 +24,7 @@ FuselageComponent::FuselageComponent(const FuselageComponentConfig& config) :
 	mMotion(config.motion),
 	mBody(config.body),
 	mStickInput(config.stickInput),
+	mStickTrimInput(config.stickTrimInput),
 	mRudderInput(config.rudderInput)
 {
 	assert(mNode);
@@ -45,112 +48,181 @@ void FuselageComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 	mDt += dt;
 }
 
+static Vector3 calculateLiftDirection(const Vector3& velocity, const Vector3& bodyUp) {
+    // Prevent division by zero if velocity is zero or extremely small
+    if (glm::dot(velocity, velocity) < 1e-6f)
+	{
+        return glm::normalize(bodyUp); 
+    }
+
+    // Find the vector perpendicular to both velocity and up
+    Vector3 right = glm::cross(velocity, bodyUp);
+
+    // Handle the edge case where velocity is perfectly parallel to bodyUp 
+    if (glm::dot(right, right) < 1e-6f)
+	{
+        return glm::normalize(bodyUp);
+    }
+
+    // Get the lift direction
+    return glm::normalize(glm::cross(right, velocity));
+}
+
 void FuselageComponent::updatePreDynamicsSubstep()
 {
 	SecondsD dt = 0;
 	std::swap(mDt, dt);
 
-	const Vector3& velocityLocal = glm::inverse(mNode->getOrientation()) * mMotion->linearVelocity;
+	const Quaternion& orientation = mNode->getOrientation();
+	const Vector3& velocityLocal = glm::inverse(orientation) * mMotion->linearVelocity;
 
 	// angle of attack and side slip
-	mAngleOfAttack = (float)std::atan2(velocityLocal.z, velocityLocal.x);
-	mSideSlipAngle = (float)std::atan2(-velocityLocal.y, velocityLocal.x);
+	double angleOfAttack = std::atan2(velocityLocal.z, velocityLocal.x);
+	double sideSlipAngle = std::atan2(-velocityLocal.y, velocityLocal.x);
 
-	// calculate lift
-	Vector3 lift;
-	const float airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
+	// Calculate lift
+	const double airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
+	double liftCoeff = calcLiftCoefficent(angleOfAttack);
 
-	float alphaDelta = mAngleOfAttack - mParams.zeroLiftAlpha;
+	Vector3 liftDirection = calculateLiftDirection(mMotion->linearVelocity, orientation * Vector3(0, 0, -1));
+	double liftMagnitude = liftCoeff * mParams.liftArea * 0.5 * airDensity * glm::dot(velocityLocal, velocityLocal);
 
-	float liftCoeff;
-	if (std::abs(alphaDelta) > mParams.stallAlpha)
-	{
-		liftCoeff = mParams.stallLift;
-	}
-	else
-	{
-		liftCoeff = mParams.liftSlope * alphaDelta;
-	}
-
-	lift = Vector3(0.0f, 0.0f, -liftCoeff * mParams.liftArea * 0.5f * airDensity * glm::dot(velocityLocal, velocityLocal));
+	Vector3 lift = liftDirection * liftMagnitude;
 
 	double speed = glm::length(mMotion->linearVelocity);
 	
-	//apply forces
+	// Apply forces
 	if (speed > 0.0f)
 	{
-		Vector3 drag = calcDragForce(velocityLocal, -mMotion->linearVelocity / speed, airDensity);
+		Vector3 dragDirection = -mMotion->linearVelocity / speed;
+		Vector3 drag = dragDirection * (calcParasiteDragScalar(velocityLocal, airDensity) + calcInducedDragScalar(velocityLocal, airDensity, liftMagnitude));
 		mBody->applyCentralForce(drag);
 	}
 
-	Quaternion orientation = mNode->getOrientation();
-	mBody->applyCentralForce(orientation * lift);
+	mBody->applyCentralForce(lift);
 
-	// apply moments
-	const float maxEffectiveSpeedForMoments = 100.0f;
-	float speedForMoments = std::min(float(speed), maxEffectiveSpeedForMoments);
-	float speedForMomentsSq = speedForMoments * speedForMoments;
+	// Resolve stick input
+	glm::dvec2 stickInput = mStickInput ? glm::dvec2(mStickInput->value) : glm::dvec2(0,0);
+	if (mStickTrimInput)
+	{
+		stickInput = glm::clamp(stickInput + glm::dvec2(mStickTrimInput->value), glm::dvec2(-1), glm::dvec2(1));
+	}
 
-	const Vector3 localAngularVelocity = glm::inverse(orientation) * mMotion->angularVelocity;
+	// Apply moments
+	const Vector3 moment = calcMomentInBodyAxes(CalcMomentArgs{
+		.controls = Controls{
+			.stickInput = stickInput,
+			.rudderInput = mRudderInput ? mRudderInput->value : 0
+		},
+		.airDensity = airDensity,
+		.angleOfAttack = angleOfAttack,
+		.sideSlipAngle = sideSlipAngle,
+		.angularVelocityInBodyAxes = glm::inverse(orientation) * mMotion->angularVelocity
+	});
+	mBody->applyTorque(orientation * moment);
 
-	double speedSquared = speed * speed;
-	float trimmedAngleOfAttack = calcTrimmedAngleOfAttack(mAngleOfAttack, airDensity, speedSquared);
-
-	const Vector3 moment = calcMoment(localAngularVelocity, sin(trimmedAngleOfAttack), sin(mSideSlipAngle), speedForMomentsSq, airDensity);
-
-	mBody->applyTorque(orientation * moment * (double)mParams.momentMultiplier);
+	// Cache some values so they can be queried by the API
+	mAngleOfAttackFromLastTimestep = angleOfAttack;
+	mSideSlipAngleFromLastTimestep = sideSlipAngle;
 }
 
-Vector3 FuselageComponent::calcDragForce(const Vector3 &velocityLocal, const Vector3 &dragDirection, float density) const
+double FuselageComponent::calcLiftCoefficent(double alpha) const
 {
-	double CDrag = velocityLocal.x*velocityLocal.x * mParams.dragConst.x
-			     + velocityLocal.y*velocityLocal.y * mParams.dragConst.y
-				 + velocityLocal.z*velocityLocal.z * mParams.dragConst.z;
-	return dragDirection * CDrag * 0.5 * (double)density;
+	double alphaDelta = alpha - mParams.zeroLiftAlpha;
+	if (std::abs(alphaDelta) > mParams.stallAlpha)
+	{
+		return mParams.stallLift;
+	}
+	return mParams.liftSlope * alphaDelta;
 }
 
-Vector3 FuselageComponent::calcMoment(const Vector3 &angularVelocity, float angleOfAttackFactor, float sideSlipFactor,
-									  float velSqLength, float airDensity) const
+Vector3 FuselageComponent::calcRotationalTrimMomentInBodyAxes(const Controls& controls) const
 {
-	Vector3 moment;
+	const Vector3& velocityLocal = glm::inverse(mNode->getOrientation()) * mMotion->linearVelocity;
+
+	return calcMomentInBodyAxes(CalcMomentArgs{
+		.controls = controls,
+		.airDensity = calcAirDensity(calcAltitude(mNode->getPosition())),
+		.angleOfAttack = std::atan2(velocityLocal.z, velocityLocal.x),
+		.sideSlipAngle = std::atan2(-velocityLocal.y, velocityLocal.x),
+		.angularVelocityInBodyAxes = {} // In trim condition the angular velocity is zero
+	});
+}
+
+constexpr double airDensityAtSeaLevel = 1.225; //!< kg/m^3
+
+static double fakeWeathercockCurve(double angleToWind)
+{
+	// The weathercock factor is a measure of how much the fuselage will tend to align with the relative wind.
+	// In reality this is a complex function of the fuselage shape, but here we use a simple fudge as a fallback for when a lookup table is not provided. It's not physically realistic, but better than nothing.
+	return std::sin(angleToWind);
+}
+
+static double lookupWeathercockFactor(const ScalarOrCurve& v, double angleToWind)
+{
+	if (std::holds_alternative<double>(v))
+	{
+		return std::get<double>(v) * fakeWeathercockCurve(angleToWind);
+	}
+	const math::LookupTable1D& table = std::get<math::LookupTable1D>(v);
+	return math::interpolateTableLinear(table, angleToWind, /* extrapolate */ false).value_or(0.0);
+}
+
+Vector3 FuselageComponent::calcMomentInBodyAxes(const CalcMomentArgs& args) const
+{
+	const double speed = glm::length(mMotion->linearVelocity);
+
+	double speedScaleFactor = std::min(speed, mParams.aerodynamicDerivativeReferenceSpeed) / mParams.aerodynamicDerivativeReferenceSpeed;
+	speedScaleFactor *= speedScaleFactor; // Scale by square of speed ratio, since aerodynamic forces scale with the square of speed
+
+	double rollAngle = math::eulerFromQuat(toLtpNed(GeocentricOrientation(mNode->getOrientation()), geocentricToLatLon(mNode->getPosition())).orientation).x;
+
+	Vector3 accel;
 
 	// Roll
-	moment.x = mParams.rollDueToSideSlipAngle * sideSlipFactor * velSqLength + mParams.rollDueToRollRate * angularVelocity.x
-		+ mParams.rollDueToYawRate * angularVelocity.z;
-	
+	accel.x = lookupWeathercockFactor(mParams.rollAccelDueToSideSlipAngle, args.sideSlipAngle) * speedScaleFactor
+		+ mParams.rollAccelDueToRollRate * args.angularVelocityInBodyAxes.x
+		+ mParams.rollAccelDueToYawRate * args.angularVelocityInBodyAxes.z;
+
 	// Pitch
-	moment.y = mParams.pitchNeutralMoment * velSqLength + mParams.pitchDueToAngleOfAttack * angleOfAttackFactor * velSqLength
-			 + mParams.pitchDueToPitchRate * angularVelocity.y;
+	accel.y = mParams.pitchBaseAccel * speedScaleFactor + lookupWeathercockFactor(mParams.pitchAccelDueToAngleOfAttack, args.angleOfAttack) * speedScaleFactor
+			 + mParams.pitchAccelDueToPitchRate * args.angularVelocityInBodyAxes.y;
 
 	// Yaw
-	moment.z = mParams.yawDueToSideSlipAngle * sideSlipFactor * velSqLength + mParams.yawDueToRollRate * angularVelocity.x + mParams.yawDueToYawRate * angularVelocity.z;
+	accel.z = lookupWeathercockFactor(mParams.yawAccelDueToSideSlipAngle, args.sideSlipAngle) * speedScaleFactor + mParams.yawAccelDueToRollRate * args.angularVelocityInBodyAxes.x + mParams.yawAccelDueToYawRate * args.angularVelocityInBodyAxes.z;
 
 	// Control inputs
-	if (mStickInput)
-	{
-		moment.x += mParams.rollDueToAileron * mStickInput->value.x * velSqLength;
-		moment.y += mParams.pitchDueToElevator * mStickInput->value.y * velSqLength;
-	}
+	accel.x += mParams.rollAccelDueToAileron * args.controls.stickInput.x * speedScaleFactor;
+	accel.y += mParams.pitchAccelDueToElevator * args.controls.stickInput.y * speedScaleFactor;
+	accel.z += mParams.yawAccelDueToRudder * args.controls.rudderInput * speedScaleFactor;
 
-	if (mRudderInput)
-	{
-		moment.z += mParams.yawDueToRudder * mRudderInput->value * velSqLength;
-	}
+	Vector3 moment = accel * mBody->getMomentOfInertia();
 
-	return moment * (double)airDensity;
+	return moment * (double)args.airDensity / airDensityAtSeaLevel;
 }
 
-float FuselageComponent::calcTrimmedAngleOfAttack(float angleOfAttack, float airDensity, float speedSquared) const
+
+double FuselageComponent::calcParasiteDragScalar(const Vector3 &velocityLocal, double density) const
 {
-	if (mParams.maxAutoTrimAngleOfAttack)
+	// Drag = 0.5 * airDensity * v^2 * Cd * A.
+	// Here we've combined Cd * A into dragConst
+	double CDrag = velocityLocal.x*velocityLocal.x * mParams.dragConstant.x
+			     + velocityLocal.y*velocityLocal.y * mParams.dragConstant.y
+				 + velocityLocal.z*velocityLocal.z * mParams.dragConstant.z;
+	return CDrag * 0.5 * density;
+}
+
+double FuselageComponent::calcInducedDragScalar(const Vector3 &velocityLocal, double density, double liftForce) const
+{
+	if (mParams.effectiveWingSpan <= 0)
 	{
-		float cruiseTrimAlpha = mBody->getMass() * 9.81f / (mParams.liftSlope * mParams.liftArea * 0.5f * airDensity * speedSquared);
-		return mAngleOfAttack - std::clamp(cruiseTrimAlpha, -*mParams.maxAutoTrimAngleOfAttack, *mParams.maxAutoTrimAngleOfAttack);
+		return 0;
 	}
-	else
-	{
-		return angleOfAttack;
-	}
+
+	double q = 0.5 * density * dot(velocityLocal, velocityLocal);
+	double numerator  =liftForce * liftForce;
+	double denominator =q * math::piD() * mParams.effectiveWingSpan * mParams.effectiveWingSpan * mParams.wingOswaldEfficiencyFactor;
+	return numerator / denominator;
 }
 
 } // namespace sim

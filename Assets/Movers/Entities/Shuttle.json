@@ -11,7 +11,6 @@
 			"size": [37, 6.7, 6.7]
 		}},
 		{"fuselage": {
-			"momentMultiplier": 100000
 		}},
 		{"rocketMotor": {
 			"maxThrust": 5300000

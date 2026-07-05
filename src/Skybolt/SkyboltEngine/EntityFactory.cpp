@@ -110,7 +110,7 @@ static void convertSrgbToTexturizerMap(osg::Image& image)
 class MainRotorVisComponent : public SimVisBinding
 {
 public:
-	MainRotorVisComponent(MainRotorComponent* rotor, const Positionable* attachedBody, const vis::RootNodePtr& visObject) :
+	MainRotorVisComponent(NonNullPtr<Rotor> rotor, const Positionable* attachedBody, const vis::RootNodePtr& visObject) :
 		mRotor(rotor),
 		mAttachedBody(attachedBody),
 		mVisObject(visObject)
@@ -120,14 +120,14 @@ public:
 
 	void syncVis(const GeocentricToNedConverter& converter) override
 	{
-		Vector3 pos = mAttachedBody->getPosition() + mAttachedBody->getOrientation() * mRotor->getPositionRelBody();
+		Vector3 pos = mAttachedBody->getPosition() + mAttachedBody->getOrientation() * mRotor->getHubPositionRelBody();
 
 		mVisObject->setPosition(converter.convertPosition(pos));
 		mVisObject->setOrientation(osg::Quat(mRotor->getRotationAngle(), osg::Vec3f(0, 0, 1)) * converter.convert(mAttachedBody->getOrientation() * mRotor->getTppOrientationRelBody()));
 	}
 
 private:
-	MainRotorComponent* mRotor;
+	NonNullPtr<Rotor> mRotor;
 	const Positionable* mAttachedBody;
 	vis::RootNodePtr mVisObject;
 };
@@ -257,7 +257,7 @@ static void loadVisualMainRotor(Entity* entity, const EntityFactory::Context& co
 	vis::ModelPtr model = createVisualModel(json, *visContext.modelFactory);
 	visObjectsComponent->addObject(model);
 
-	auto rotor = entity->getFirstComponentRequired<MainRotorComponent>();
+	auto rotor = entity->getFirstComponentRequired<Rotor>();
 	auto node = entity->getFirstComponentRequired<Node>();
 
 	SimVisBindingPtr simVis(new MainRotorVisComponent(rotor.get(), node.get(), model));

@@ -76,14 +76,17 @@ public:
 		return nullptr;
 	}
 
+	//! @returns true if the control was present and set
 	template <typename T>
-	void setIfPresent(const std::string& controlName, const T& value)
+	bool setIfPresent(const std::string& controlName, const T& value)
 	{
 		auto input = get<T>(controlName);
 		if (input)
 		{
 			input->value = value;
+			return true;
 		}
+		return false;
 	}
 
 	template <typename T>

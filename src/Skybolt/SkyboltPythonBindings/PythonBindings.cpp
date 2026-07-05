@@ -430,7 +430,7 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("setSimTime", &Component::setSimTime);
 
 	py::class_<MainRotorComponent, std::shared_ptr<MainRotorComponent>, Component>(m, "MainRotorComponent")
-		.def("getPitchAngle", &MainRotorComponent::getPitchAngle)
+		.def("getCollectivePitchAngle", &MainRotorComponent::getCollectivePitchAngle)
 		.def("getRotationAngle", &MainRotorComponent::getRotationAngle)
 		.def("getTppOrientationRelBody", &MainRotorComponent::getTppOrientationRelBody)
 		.def("setNormalizedRpm", &MainRotorComponent::setNormalizedRpm);

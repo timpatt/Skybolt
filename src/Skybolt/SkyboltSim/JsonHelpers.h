@@ -16,14 +16,29 @@
 namespace skybolt {
 namespace sim {
 
+inline glm::dvec2 readDvec2(const nlohmann::json& j)
+{
+	return glm::dvec2(j[0].get<double>(), j[1].get<double>());
+}
+
+inline std::optional<glm::dvec2> readOptionalDvec2(const nlohmann::json& j, const std::string& name)
+{
+	auto i = j.find(name);
+	if (i != j.end())
+	{
+		return readDvec2(*i);
+	}
+	return std::nullopt;
+}
+
+inline nlohmann::json writeJson(const glm::dvec2& v)
+{
+	return {v[0], v[1]};
+}
+
 inline Vector3 readVector3(const nlohmann::json& j)
 {
 	return Vector3(j[0].get<double>(), j[1].get<double>(), j[2].get<double>());
-}
-
-inline nlohmann::json writeJson(const Vector3& v)
-{
-	return {v[0], v[1], v[2]};
 }
 
 inline Vector3 readOptionalVector3(const nlohmann::json& j, const std::string& name)
@@ -34,6 +49,11 @@ inline Vector3 readOptionalVector3(const nlohmann::json& j, const std::string& n
 		return readVector3(*i);
 	}
 	return math::dvec3Zero();
+}
+
+inline nlohmann::json writeJson(const Vector3& v)
+{
+	return {v[0], v[1], v[2]};
 }
 
 inline Quaternion readQuaternion(const nlohmann::json& j)

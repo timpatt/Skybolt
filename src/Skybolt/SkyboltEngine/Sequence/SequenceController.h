@@ -8,7 +8,7 @@
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include <SkyboltSim/SkyboltSimFwd.h>
-#include <SkyboltCommon/Math/InterpolateTableLinear.h>
+#include <SkyboltCommon/Math/LookupTable1D.h>
 
 #include <boost/signals2.hpp>
 #include <algorithm>
