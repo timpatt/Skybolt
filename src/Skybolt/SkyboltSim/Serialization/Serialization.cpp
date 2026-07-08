@@ -52,7 +52,7 @@ static std::optional<refl::Instance> jsonToReflVariant(refl::TypeRegistry& regis
 		{ registry.getOrCreateType<std::optional<unsigned int>>().get(), createOptionalToReflVariantTranslator<unsigned int>() },
 		{ registry.getOrCreateType<std::optional<float>>().get(), createOptionalToReflVariantTranslator<float>() },
 		{ registry.getOrCreateType<std::optional<double>>().get(), createOptionalToReflVariantTranslator<double>() },
-		{ registry.getOrCreateType<std::optional<std::string>>().get(), createToReflVariantTranslator<std::string>() },
+		{ registry.getOrCreateType<std::optional<std::string>>().get(), createOptionalToReflVariantTranslator<std::string>() },
 
 		{ registry.getOrCreateType<sim::Vector3>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::makeValueInstance(registry, readVector3(json)); }},
 		{ registry.getOrCreateType<sim::Quaternion>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::makeValueInstance(registry, readQuaternion(json)); }},
