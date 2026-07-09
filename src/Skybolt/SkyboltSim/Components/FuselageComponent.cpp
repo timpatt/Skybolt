@@ -32,17 +32,6 @@ FuselageComponent::FuselageComponent(const FuselageComponentConfig& config) :
 	assert(mBody);
 }
 
-static double calcAltitude(const sim::Vector3& position)
-{
-	return glm::length(position) - earthRadius();
-}
-
-static double calcAirDensity(double altitude)
-{
-	static Atmosphere atmosphere = createEarthAtmosphere();
-	return atmosphere.getDensity(altitude);
-}
-
 void FuselageComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
 	mDt += dt;
@@ -74,32 +63,24 @@ void FuselageComponent::updatePreDynamicsSubstep()
 	std::swap(mDt, dt);
 
 	const Quaternion& orientation = mNode->getOrientation();
-	const Vector3& velocityLocal = glm::inverse(orientation) * mMotion->linearVelocity;
+	const Vector3& velocityInBodyAxes = glm::inverse(orientation) * mMotion->linearVelocity;
 
-	// angle of attack and side slip
-	double angleOfAttack = std::atan2(velocityLocal.z, velocityLocal.x);
-	double sideSlipAngle = std::atan2(-velocityLocal.y, velocityLocal.x);
+	// Calculate angle of attack and side slip
+	double angleOfAttack = std::atan2(velocityInBodyAxes.z, velocityInBodyAxes.x);
+	double sideSlipAngle = std::atan2(-velocityInBodyAxes.y, velocityInBodyAxes.x);
 
-	// Calculate lift
-	const double airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
-	double liftCoeff = calcLiftCoefficent(angleOfAttack);
-
-	Vector3 liftDirection = calculateLiftDirection(mMotion->linearVelocity, orientation * Vector3(0, 0, -1));
-	double liftMagnitude = liftCoeff * mParams.liftArea * 0.5 * airDensity * glm::dot(velocityLocal, velocityLocal);
-
-	Vector3 lift = liftDirection * liftMagnitude;
-
-	double speed = glm::length(mMotion->linearVelocity);
-	
-	// Apply forces
-	if (speed > 0.0f)
-	{
-		Vector3 dragDirection = -mMotion->linearVelocity / speed;
-		Vector3 drag = dragDirection * (calcParasiteDragScalar(velocityLocal, airDensity) + calcInducedDragScalar(velocityLocal, airDensity, liftMagnitude));
-		mBody->applyCentralForce(drag);
-	}
-
+	// Apply lift
+	double airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
+	Vector3 lift = calcLiftForceInWorldAxes({
+		.velocityInBodyAxes = velocityInBodyAxes,
+		.angleOfAttack = angleOfAttack,
+		.airDensity = airDensity
+	});
 	mBody->applyCentralForce(lift);
+
+	// Apply drag
+	Vector3 drag = calcTotalDragForceInWorldAxes(velocityInBodyAxes, airDensity, glm::length(lift));
+	mBody->applyCentralForce(drag);
 
 	// Resolve stick input
 	glm::dvec2 stickInput = mStickInput ? glm::dvec2(mStickInput->value) : glm::dvec2(0,0);
@@ -136,17 +117,35 @@ double FuselageComponent::calcLiftCoefficent(double alpha) const
 	return mParams.liftSlope * alphaDelta;
 }
 
-Vector3 FuselageComponent::calcRotationalTrimMomentInBodyAxes(const Controls& controls) const
+Vector3 FuselageComponent::calcTrimRotationalMomentInBodyAxes(const Controls& controls) const
 {
-	const Vector3& velocityLocal = glm::inverse(mNode->getOrientation()) * mMotion->linearVelocity;
+	const Vector3& velocityInBodyAxes = glm::inverse(mNode->getOrientation()) * mMotion->linearVelocity;
 
 	return calcMomentInBodyAxes(CalcMomentArgs{
 		.controls = controls,
 		.airDensity = calcAirDensity(calcAltitude(mNode->getPosition())),
-		.angleOfAttack = std::atan2(velocityLocal.z, velocityLocal.x),
-		.sideSlipAngle = std::atan2(-velocityLocal.y, velocityLocal.x),
+		.angleOfAttack = std::atan2(velocityInBodyAxes.z, velocityInBodyAxes.x),
+		.sideSlipAngle = std::atan2(-velocityInBodyAxes.y, velocityInBodyAxes.x),
 		.angularVelocityInBodyAxes = {} // In trim condition the angular velocity is zero
 	});
+}
+
+Vector3 FuselageComponent::calcTrimNetForceInWorldAxes(const Controls& controls) const
+{
+	Vector3 upDir = calcLtpUpDirection(mNode->getPosition()).value_or(math::dvec3Zero());
+	Vector3 horizontalVelocityInWorldAxes = mMotion->linearVelocity - upDir * glm::dot(upDir, mMotion->linearVelocity); // Trim for level flight, so ignore vertical component of velocity when calculating net force
+
+	Vector3 velocityInBodyAxes = glm::inverse(mNode->getOrientation()) * horizontalVelocityInWorldAxes;
+
+	double airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
+	double angleOfAttack = std::atan2(velocityInBodyAxes.z, velocityInBodyAxes.x);
+
+	Vector3 lift = calcLiftForceInWorldAxes({
+		.velocityInBodyAxes = velocityInBodyAxes,
+		.angleOfAttack = angleOfAttack,
+		.airDensity = airDensity});
+	Vector3 drag = calcTotalDragForceInWorldAxes(velocityInBodyAxes, airDensity, glm::length(lift));
+	return lift + drag;
 }
 
 constexpr double airDensityAtSeaLevel = 1.225; //!< kg/m^3
@@ -201,28 +200,62 @@ Vector3 FuselageComponent::calcMomentInBodyAxes(const CalcMomentArgs& args) cons
 	return moment * (double)args.airDensity / airDensityAtSeaLevel;
 }
 
+Vector3 FuselageComponent::calcLiftForceInWorldAxes(const CalcLiftForceArgs& args) const
+{
+	// Calculate lift
+	const double airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
+	double liftCoeff = calcLiftCoefficent(args.angleOfAttack);
 
-double FuselageComponent::calcParasiteDragScalar(const Vector3 &velocityLocal, double density) const
+	Vector3 liftDirection = calculateLiftDirection(mNode->getOrientation() * args.velocityInBodyAxes, mNode->getOrientation() * Vector3(0, 0, -1));
+	double liftMagnitude = liftCoeff * mParams.liftArea * 0.5 * airDensity * glm::dot(args.velocityInBodyAxes, args.velocityInBodyAxes);
+
+	return liftDirection * liftMagnitude;
+}
+
+Vector3 FuselageComponent::calcTotalDragForceInWorldAxes(const Vector3& velocityInBodyAxes, double airDensity, double liftForce) const
+{
+	double speed = glm::length(velocityInBodyAxes);
+	if (speed > 0.0f)
+	{
+		Vector3 velocityWorld = mNode->getOrientation() * velocityInBodyAxes;
+		Vector3 dragDirection = -velocityWorld / speed;
+		return dragDirection * (calcParasiteDragScalar(velocityInBodyAxes, airDensity) + calcInducedDragScalar(velocityInBodyAxes, airDensity, liftForce));
+	}
+	return math::dvec3Zero();
+}
+
+double FuselageComponent::calcParasiteDragScalar(const Vector3 &velocityInBodyAxes, double density) const
 {
 	// Drag = 0.5 * airDensity * v^2 * Cd * A.
 	// Here we've combined Cd * A into dragConst
-	double CDrag = velocityLocal.x*velocityLocal.x * mParams.dragConstant.x
-			     + velocityLocal.y*velocityLocal.y * mParams.dragConstant.y
-				 + velocityLocal.z*velocityLocal.z * mParams.dragConstant.z;
+	double CDrag = velocityInBodyAxes.x*velocityInBodyAxes.x * mParams.dragConstant.x
+			     + velocityInBodyAxes.y*velocityInBodyAxes.y * mParams.dragConstant.y
+				 + velocityInBodyAxes.z*velocityInBodyAxes.z * mParams.dragConstant.z;
 	return CDrag * 0.5 * density;
 }
 
-double FuselageComponent::calcInducedDragScalar(const Vector3 &velocityLocal, double density, double liftForce) const
+double FuselageComponent::calcInducedDragScalar(const Vector3 &velocityInBodyAxes, double density, double liftForce) const
 {
 	if (mParams.effectiveWingSpan <= 0)
 	{
 		return 0;
 	}
 
-	double q = 0.5 * density * dot(velocityLocal, velocityLocal);
+	double q = 0.5 * density * dot(velocityInBodyAxes, velocityInBodyAxes);
 	double numerator  =liftForce * liftForce;
-	double denominator =q * math::piD() * mParams.effectiveWingSpan * mParams.effectiveWingSpan * mParams.wingOswaldEfficiencyFactor;
+	double denominator = q * math::piD() * mParams.effectiveWingSpan * mParams.effectiveWingSpan * mParams.wingOswaldEfficiencyFactor;
 	return numerator / denominator;
+}
+
+double FuselageComponent::calcAltitude(const sim::Vector3& position)
+{
+	return glm::length(position) - earthRadius();
+}
+
+double FuselageComponent::calcAirDensity(double altitude)
+{
+	static Atmosphere atmosphere = createEarthAtmosphere();
+	return atmosphere.getDensity(altitude);
 }
 
 } // namespace sim

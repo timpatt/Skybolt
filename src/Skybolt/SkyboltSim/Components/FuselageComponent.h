@@ -83,8 +83,21 @@ public:
 
 	Vector3 calcMomentInBodyAxes(const CalcMomentArgs& args) const;
 
-	double calcParasiteDragScalar(const Vector3 &velocityLocal, double density) const;
-	double calcInducedDragScalar(const Vector3 &velocityLocal, double density, double liftForce) const;
+	struct CalcLiftForceArgs
+	{
+		const Vector3& velocityInBodyAxes;
+		double angleOfAttack;
+		double airDensity;
+	};
+
+	Vector3 calcLiftForceInWorldAxes(const CalcLiftForceArgs& args) const;
+	Vector3 calcTotalDragForceInWorldAxes(const Vector3& velocityInBodyAxes, double airDensity, double liftForce) const;
+
+	double calcParasiteDragScalar(const Vector3 &velocityInBodyAxes, double density) const;
+	double calcInducedDragScalar(const Vector3 &velocityInBodyAxes, double density, double liftForce) const;
+
+	static double calcAltitude(const sim::Vector3& position);
+	static double calcAirDensity(double altitude);
 
 public: // Component interface
 	std::vector<std::type_index> getExposedTypes() const override
@@ -93,7 +106,9 @@ public: // Component interface
 	}
 
 public: // Trimmable interface
-	Vector3 calcRotationalTrimMomentInBodyAxes(const Controls& controls) const override;
+	Vector3 calcTrimRotationalMomentInBodyAxes(const Controls& controls) const override;
+
+	Vector3 calcTrimNetForceInWorldAxes(const Controls& controls) const override;
 
 public: // SimUpdatable interface
 	void advanceSimTime(SecondsD newTime, SecondsD dt) override;

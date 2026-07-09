@@ -69,8 +69,6 @@ public:
 
 	void setNormalizedRpm(double rpm) { mDriverRpm = rpm; }
 
-	double getCollectivePitchAngle() const {return mCollectivePitch;}
-
 	void setRotationAngle(double angle) {mRotationAngle = angle;}
 	double getRotationAngle() const override {return mRotationAngle;}
 
@@ -81,10 +79,6 @@ public:
 	//! @param airspeed is the airspeed of the helicopter.
 	double calculateInducedVelocity(double airspeed) const;
 
-	//! Calculates the induced velocity, which is the downward velocity of the air through the rotor disk.
-	//! Uses the current airspeed of the helicopter.
-	double calculateInducedVelocity() const;
-
 	struct BladeAirflow
 	{
 		double bladeSpeedRelAirflow;
@@ -94,7 +88,7 @@ public:
 	//! @returns std::nullopt if there is no forward airflow through the blade element
 	static std::optional<MainRotorComponent::BladeAirflow> calculateBladeElementAirflow(const Vector3& airflowVelInTppFrame, double meanBladeSpeedRelHeli, const Vector3& bladeTravelDirectionInTppFrame, double bladePitch);
 
-	Vector3 calculateHubForceInBodyAxes(double inducedVel, const Quaternion& tppOrientationRelBody) const;
+	Vector3 calculateHubForceInBodyAxes(const Vector3& bodyLinearVelocityInWorldAxes, const Quaternion& tppOrientationRelBody, double collectiveInput) const;
 
 public: // Component interface
 	std::vector<std::type_index> getExposedTypes() const override
@@ -103,7 +97,9 @@ public: // Component interface
 	}
 
 public: // Trimmable interface
-	Vector3 calcRotationalTrimMomentInBodyAxes(const Controls& controls) const override;
+	Vector3 calcTrimRotationalMomentInBodyAxes(const Controls& controls) const override;
+
+	Vector3 calcTrimNetForceInWorldAxes(const Controls& controls) const override;
 
 public: // SimUpdatable interface
 	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
@@ -136,7 +132,6 @@ private:
 
 	double mRpm;
 	double mRotationAngle;
-	double mCollectivePitch;
 	Quaternion mTppOrientationRelBody;
 	SecondsD mDt = 0;
 };

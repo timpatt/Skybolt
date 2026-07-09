@@ -9,6 +9,7 @@
 #include "SkyboltSim/Components/DynamicBodyComponent.h"
 #include "SkyboltSim/Components/Node.h"
 #include "SkyboltSim/Components/Motion.h"
+#include "SkyboltSim/Spatial/Geocentric.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/Units.h>
 
@@ -25,7 +26,6 @@ MainRotorComponent::MainRotorComponent(const MainRotorComponentConfig& config) :
 	mDriverRpm(0.0f),
 	mRpm(0.0f),
 	mRotationAngle(0.0f),
-	mCollectivePitch(config.params->minCollectivePitch),
 	mPositionRelBody(config.positionRelBody),
 	mOrientationRelBody(config.orientationRelBody),
 	mTppOrientationRelBody(config.orientationRelBody),
@@ -47,10 +47,6 @@ void MainRotorComponent::updatePreDynamicsSubstep()
 	SecondsD dt = 0;
 	std::swap(mDt, dt);
 	
-	// Calculate collective pitch.
-	// Collective pitch is typically connected to collective through direct linkages, so assume there's no lag.
-	mCollectivePitch = std::lerp(mParams->minCollectivePitch, mParams->maxCollectivePitch, mCollectiveInput->value);
-
 	// Calc rotor RPM
 	assert(mDriverRpm >= 0.0f && mDriverRpm <= 1.0f);
 	mRpm = mDriverRpm * mParams->maxRpm;
@@ -58,12 +54,6 @@ void MainRotorComponent::updatePreDynamicsSubstep()
 	// Spin rotor
 	mRotationAngle += mRpm * skybolt::rpmToRadPerSec * dt;
 	mRotationAngle = fmod(mRotationAngle, skybolt::math::twoPiF());
-
-	// Calculate induced velocity
-	Quaternion bodyOrientation = mNode->getOrientation();
-	const Vector3 velocityLocal = glm::inverse(bodyOrientation) * mMotion->linearVelocity;
-	const double airspeed = glm::length(velocityLocal);
-	double inducedVel = calculateInducedVelocity(airspeed); // induced velocity curve lookup
 
 	// Calculate TPP orientation from cyclic
 	glm::dvec2 trim = mCyclicTrimInput ? glm::dvec2(mCyclicTrimInput->value) : glm::dvec2(0.0, 0.0);
@@ -73,9 +63,10 @@ void MainRotorComponent::updatePreDynamicsSubstep()
 	if (mBody)
 	{
 		// Calc lift
-		Vector3 force = calculateHubForceInBodyAxes(inducedVel, mTppOrientationRelBody);
+		Vector3 force = calculateHubForceInBodyAxes(mMotion->linearVelocity, mTppOrientationRelBody, mCollectiveInput->value);
 		assert(force < 1e10); // make sure it hasn't blown up
 
+		const Quaternion& bodyOrientation = mNode->getOrientation();
 		mBody->applyForce(bodyOrientation * force, bodyOrientation * mPositionRelBody);
 	}
 }
@@ -108,11 +99,6 @@ double MainRotorComponent::calculateInducedVelocity(double airspeed) const
 	return inducedVel;
 }
 
-double MainRotorComponent::calculateInducedVelocity() const
-{
-	return calculateInducedVelocity(glm::length(mMotion->linearVelocity));
-}
-
 static const int elementCount = 4; //!< This is the number of integration elements to use around the rotor disk, not the number of rotor blades.
 
 std::optional<MainRotorComponent::BladeAirflow> MainRotorComponent::calculateBladeElementAirflow(const Vector3& airflowVelInTppFrame, double meanBladeSpeedRelHeli, const Vector3& bladeTravelDirectionInTppFrame, double bladePitch)
@@ -133,10 +119,17 @@ std::optional<MainRotorComponent::BladeAirflow> MainRotorComponent::calculateBla
 //! The RMS is used because the lift is proportional to the square of the velocity, which is proportional to the square of the distance from the center of rotation. The RMS of a uniform distribution from 0 to 1 is sqrt(1/3).
 const double rootMeanSquaredBladeStation = std::sqrt(1.0 / 3.0);
 
-Vector3 MainRotorComponent::calculateHubForceInBodyAxes(double inducedVelocity, const Quaternion& tppOrientationRelBody) const
+Vector3 MainRotorComponent::calculateHubForceInBodyAxes(const Vector3& bodyLinearVelocityInWorldAxes, const Quaternion& tppOrientationRelBody, double collectiveInput) const
 {
+	const double airspeed = glm::length(bodyLinearVelocityInWorldAxes);
+	double inducedVelocity = calculateInducedVelocity(airspeed);
+
+	// Calculate collective pitch.
+	// Collective pitch is typically connected to collective through direct linkages, so assume there's no lag.
+	double collectivePitch = std::lerp(mParams->minCollectivePitch, mParams->maxCollectivePitch, collectiveInput);
+
 	// Calculate relative velocity experienced by rotor disk plane perpendicular to the Tip Path Plane (TPP).
-	Vector3 airflowVelInTppFrame = glm::inverse(mNode->getOrientation() * tppOrientationRelBody) * -mMotion->linearVelocity;
+	Vector3 airflowVelInTppFrame = glm::inverse(mNode->getOrientation() * tppOrientationRelBody) * -bodyLinearVelocityInWorldAxes;
 	airflowVelInTppFrame += inducedVelocity * Vector3(0, 0, 1); // Induced airflow velocity is downward
 	
 	double bladeStation = mParams->diskRadius * rootMeanSquaredBladeStation;
@@ -152,7 +145,7 @@ Vector3 MainRotorComponent::calculateHubForceInBodyAxes(double inducedVelocity, 
 
 		Vector3 bladeVelocityDir(-std::sin(elementAzimuth), std::cos(elementAzimuth), 0.0);
 	
-		if (std::optional<MainRotorComponent::BladeAirflow> airflow = calculateBladeElementAirflow(airflowVelInTppFrame, meanBladeSpeed, bladeVelocityDir, mCollectivePitch); airflow)
+		if (std::optional<MainRotorComponent::BladeAirflow> airflow = calculateBladeElementAirflow(airflowVelInTppFrame, meanBladeSpeed, bladeVelocityDir, collectivePitch); airflow)
 		{
 			constexpr double airDensity = 1.225; // kg/m^3 at sea level TODO: use actual air density from atmosphere model
 
@@ -178,15 +171,29 @@ Vector3 MainRotorComponent::calculateHubForceInBodyAxes(double inducedVelocity, 
 	return tppOrientationRelBody * Vector3(0, 0, -lift);
 }
 
-Vector3 MainRotorComponent::calcRotationalTrimMomentInBodyAxes(const Controls& controls) const
+Vector3 MainRotorComponent::calcTrimRotationalMomentInBodyAxes(const Controls& controls) const
 {
 	if (!mBody)
 	{
 		return math::dvec3Zero();
 	}
 
-	Vector3 force = calculateHubForceInBodyAxes(calculateInducedVelocity(), calcTppOrientationFromControls(controls.stickInput));
+	Vector3 force = calculateHubForceInBodyAxes(mMotion->linearVelocity, calcTppOrientationFromControls(controls.stickInput), controls.collectiveInput);
 	return glm::cross(mPositionRelBody - mBody->getCenterOfMass(), force);
+}
+
+Vector3 MainRotorComponent::calcTrimNetForceInWorldAxes(const Controls& controls) const
+{
+	if (!mBody)
+	{
+		return math::dvec3Zero();
+	}
+
+	Vector3 upDir = calcLtpUpDirection(mNode->getPosition()).value_or(math::dvec3Zero());
+	Vector3 horizontalVelocityInWorldAxes = mMotion->linearVelocity - upDir * glm::dot(upDir, mMotion->linearVelocity); // Trim for level flight, so ignore vertical component of velocity when calculating net force
+
+	Vector3 force = calculateHubForceInBodyAxes(horizontalVelocityInWorldAxes, calcTppOrientationFromControls(controls.stickInput), controls.collectiveInput);
+	return mNode->getOrientation() * force;
 }
 
 } // namespace sim

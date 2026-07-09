@@ -21,11 +21,16 @@ public:
 	{
 		glm::dvec2 stickInput; //!< range [-1, 1]. Positive backward and right.
 		double rudderInput; //!< range [-1, 1]
+		double collectiveInput; //!< range [0, 1]
 	};
 
-	//! Calculates the moment required to achieve zero angular velocity, given the control inputs.
+	//! Calculates the moment at zero angular velocity, given the control inputs.
 	//! Used by a trim solver to find the control inputs that achieve a trimmed state.
-	virtual Vector3 calcRotationalTrimMomentInBodyAxes(const Controls& controls) const = 0;
+	virtual Vector3 calcTrimRotationalMomentInBodyAxes(const Controls& controls) const = 0;
+
+	//! Calculates the force applied to a body in level flight (zero vertical velocity), given the control inputs.
+	//! Gravity should not be included in this calculation, as it is applied separately.
+	virtual Vector3 calcTrimNetForceInWorldAxes(const Controls& controls) const = 0;
 };
 
 } // namespace sim
