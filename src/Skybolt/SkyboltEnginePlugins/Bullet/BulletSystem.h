@@ -6,13 +6,18 @@
 
 #pragma once
 
+#include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltSim/System/CollisionSystem.h>
 
 class btCollisionObject;
 
 namespace skybolt::sim {
 
+class BulletCollisionObject;
 class BulletWorld;
+
+const BulletCollisionObject* getWrappedCollisionObject(const btCollisionObject& object);
+void setPointerToWrappedCollisionObject(btCollisionObject& object, BulletCollisionObject* bulletCollisionObject);
 
 class BulletSystem : public CollisionSystem
 {
@@ -25,7 +30,7 @@ public:
 
 	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
 
-	std::optional<RayIntersectionResult> intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask) const override;
+	std::optional<RayIntersectionResult> intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask, const Entity* entityToIgnore = nullptr) const override;
 
 	void performSubStep();
 

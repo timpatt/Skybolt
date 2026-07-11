@@ -9,6 +9,7 @@
 #include <SkyboltCommon/Event.h>
 #include <SkyboltCommon/SkyboltCommonFwd.h>
 #include <SkyboltSim/EntityId.h>
+#include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltSim/System/System.h>
 
 #include <optional>
@@ -37,13 +38,13 @@ public:
 	~CollisionSystem() override = default;
 	EventEmitterPtr getEventEmitter() const { return mEventEmitter; }
 
-	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &position, const Vector3 &direction, double length, int collisionFilterMask) const
+	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &position, const Vector3 &direction, double length, int collisionFilterMask, const Entity* entityToIgnore = nullptr) const
 	{
 		Vector3 end = position + length * direction;
-		return intersectRay(position, end, collisionFilterMask);
+		return intersectRay(position, end, collisionFilterMask, entityToIgnore);
 	}
 
-	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask) const { return std::nullopt; };
+	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask, const Entity* entityToIgnore = nullptr) const { return std::nullopt; };
 
 protected:
 	EventEmitterPtr mEventEmitter = std::make_shared<EventEmitter>();

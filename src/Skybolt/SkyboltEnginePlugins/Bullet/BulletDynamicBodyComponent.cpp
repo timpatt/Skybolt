@@ -6,6 +6,7 @@
 
 
 #include "BulletDynamicBodyComponent.h"
+#include "BulletSystem.h"
 #include "BulletWorld.h"
 #include "BulletTypeConversion.h"
 #include <SkyboltSim/Components/Motion.h>
@@ -35,7 +36,7 @@ BulletDynamicBodyComponent::BulletDynamicBodyComponent(const BulletDynamicBodyCo
 	mBody = mWorld->createRigidBody(config.shape, config.mass, mMomentOfInertia, btVector3(0,0,0), btQuaternion::getIdentity(), config.velocity, config.collisionGroupMask, config.collisionFilterMask);
 	mBody->setFriction(1.0);
 	mBody->setDamping(0.0, 0.0);
-	mBody->setUserPointer(this);
+	setPointerToWrappedCollisionObject(*mBody, this);
 
 	setPosition(mNode->getPosition());
 	setOrientation(mNode->getOrientation());

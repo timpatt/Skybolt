@@ -5,29 +5,38 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "BulletSystem.h"
+#include "BulletCollisionObject.h"
 #include "BulletWorld.h"
 #include "BulletDynamicBodyComponent.h"
 #include "BulletTypeConversion.h"
 #include "KinematicBody.h"
 
+#include <SkyboltSim/Entity.h>
+
 namespace skybolt::sim {
 
-static EntityId getEntity(const Component& component)
+const BulletCollisionObject* getWrappedCollisionObject(const btCollisionObject& object)
 {
-	if (auto body = dynamic_cast<const BulletDynamicBodyComponent*>(&component); body)
-	{
-		return body->getOwnerEntityId();
-	}
-	else if (auto body = dynamic_cast<const KinematicBody*>(&component); body)
-	{
-		return body->getOwnerEntityId();
-	}
-	return nullEntityId();
+	return static_cast<const BulletCollisionObject*>(object.getUserPointer());
+}
+
+void setPointerToWrappedCollisionObject(btCollisionObject& object, BulletCollisionObject* bulletCollisionObject)
+{
+	object.setUserPointer(bulletCollisionObject);
 }
 
 sim::EntityId getEntity(const btCollisionObject& object)
 {
-	return getEntity(*static_cast<const Component*>(object.getUserPointer()));
+	return static_cast<const BulletCollisionObject*>(object.getUserPointer())->getOwnerEntityId();
+}
+
+const btCollisionObject* getBtCollisionObject(const Entity& entity)
+{
+	if (auto bulletCollisionObject = entity.getFirstComponent<BulletCollisionObject>())
+	{
+		return bulletCollisionObject->getBtCollisionObject();
+	}
+	return nullptr;
 }
 
 BulletSystem::BulletSystem(BulletWorld* world) :
@@ -41,9 +50,11 @@ void BulletSystem::advanceSimTime(SecondsD newTime, SecondsD dt)
 	mDt += dt;
 }
 
-std::optional<RayIntersectionResult> BulletSystem::intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask) const
+std::optional<RayIntersectionResult> BulletSystem::intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask, const Entity* entityToIgnore) const
 {
-	return mWorld->intersectRay(start, end, collisionFilterMask);
+	const btCollisionObject* objectToIgnore = entityToIgnore ? getBtCollisionObject(*entityToIgnore) : nullptr;
+
+	return mWorld->intersectRay(start, end, collisionFilterMask, objectToIgnore);
 }
 
 void BulletSystem::performSubStep()

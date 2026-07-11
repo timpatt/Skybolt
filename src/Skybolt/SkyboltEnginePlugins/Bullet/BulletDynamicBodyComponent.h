@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "BulletCollisionObject.h"
 #include "RigidBody.h"
 #include "SkyboltSim/Components/DynamicBodyComponent.h"
 #include <vector>
@@ -35,7 +36,7 @@ struct BulletDynamicBodyComponentConfig
 	int collisionFilterMask;
 };
 
-class BulletDynamicBodyComponent : public DynamicBodyComponent
+class BulletDynamicBodyComponent : public DynamicBodyComponent, public BulletCollisionObject
 {
 public: // DynamicBodyComponent interface
 	BulletDynamicBodyComponent(const BulletDynamicBodyComponentConfig& config);
@@ -69,10 +70,15 @@ public: // DynamicBodyComponent interface
 
 	RigidBody* getRigidBody() const { return mBody; }
 
+public: // BulletCollisionObject interface
+	const EntityId& getOwnerEntityId() const { return mOwnerEntityId; }
+
+	const btCollisionObject* getBtCollisionObject() const override { return mBody; }
+
 public: // Component interface
 	std::vector<std::type_index> getExposedTypes() const override
 	{
-		return {typeid(DynamicBodyComponent), typeid(BulletDynamicBodyComponent)};
+		return {typeid(DynamicBodyComponent), typeid(BulletDynamicBodyComponent), typeid(BulletCollisionObject)};
 	}
 
 public: // SimUpdatable interface
@@ -83,8 +89,6 @@ public: // SimUpdatable interface
 
 	void updatePreDynamics();
 	void updatePostDynamics();
-
-	EntityId getOwnerEntityId() const { return mOwnerEntityId; }
 
 protected:
 	void setPosition(const Vector3& position);

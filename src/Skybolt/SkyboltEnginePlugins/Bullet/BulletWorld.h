@@ -33,7 +33,7 @@ public:
 
 	inline btDiscreteDynamicsWorld* getDynamicsWorld() { return mDynamicsWorld.get(); }
 
-	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask);
+	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask, const btCollisionObject* objectToIgnore = nullptr);
 
 private:
 	btDiscreteDynamicsWorldPtr mDynamicsWorld;

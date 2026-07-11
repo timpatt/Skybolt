@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "BulletCollisionObject.h"
 #include "SkyboltBulletFwd.h"
 #include <SkyboltSim/Component.h>
 #include <SkyboltSim/EntityId.h>
@@ -19,7 +20,7 @@ namespace sim {
 class BulletWorld;
 class RigidBody;
 
-class KinematicBody : public Component
+class KinematicBody : public Component, public BulletCollisionObject
 {
 public:
 	KinematicBody(BulletWorld* world, EntityId ownerEntityId, Node* node, const btCollisionShapePtr& shape, int collisionGroupMask,
@@ -27,13 +28,24 @@ public:
 
 	~KinematicBody();
 
+public: // Component interface
+	std::vector<std::type_index> getExposedTypes() const override
+	{
+		return {typeid(KinematicBody), typeid(BulletCollisionObject)};
+	}
+
 	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
 		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::PreDynamicsSubStep, updatePreDynamics)
 	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
 
 	void updatePreDynamics();
 
-	EntityId getOwnerEntityId() const { return mOwnerEntityId; }
+public: // BulletCollisionObject interface
+	
+	const EntityId& getOwnerEntityId() const override { return mOwnerEntityId; }
+
+	const btCollisionObject* getBtCollisionObject() const override;
+
 
 private:
 	BulletWorld* mWorld;

@@ -6,6 +6,7 @@
 
 #include "KinematicBody.h"
 #include "BulletTypeConversion.h"
+#include "BulletSystem.h"
 #include "BulletWorld.h"
 #include "RigidBody.h"
 #include <SkyboltSim/EntityId.h>
@@ -23,7 +24,7 @@ KinematicBody::KinematicBody(BulletWorld* world, EntityId ownerEntityId, Node* n
 	// TODO: un-hardcode collision filter mask
 	mBody = world->createRigidBody(shape, 0, btVector3(0, 0, 0), toBtVector3(node->getPosition()), toBtQuaternion(node->getOrientation()), btVector3(0, 0, 0), collisionGroupMask, ~CollisionGroupMasks::terrain);
 	mBody->setFriction(1.0);
-	mBody->setUserPointer(this);
+	setPointerToWrappedCollisionObject(*mBody, this);
 }
 
 KinematicBody::~KinematicBody()
@@ -35,4 +36,9 @@ void KinematicBody::updatePreDynamics()
 {
 	mBody->setPosition(toBtVector3(mNode->getPosition()));
 	mBody->setOrientation(toBtQuaternion(mNode->getOrientation()));
+}
+
+const btCollisionObject* KinematicBody::getBtCollisionObject() const
+{
+	return mBody;
 }

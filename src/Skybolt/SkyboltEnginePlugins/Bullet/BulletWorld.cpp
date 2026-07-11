@@ -25,7 +25,8 @@ static btDiscreteDynamicsWorldPtr createDiscreteDynamicsWorld()
 	btWorld->setGravity(btVector3(0, 0, 0));
 	btWorld->getSolverInfo().m_splitImpulse = false; // Disable because it allows objects to penetrate to far into the ground
 
-	return btDiscreteDynamicsWorldPtr(btWorld, [=](btDiscreteDynamicsWorld* world) {
+	return btDiscreteDynamicsWorldPtr(btWorld, [=](btDiscreteDynamicsWorld* world)
+	{
 		delete world;
 		delete solver;
 		delete dispatcher;
@@ -55,11 +56,49 @@ void BulletWorld::destroyRigidBody(RigidBody* body)
 	delete body; 
 }
 
-std::optional<RayIntersectionResult> BulletWorld::intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask)
+struct IgnoreObjectRaycastCallback : public btCollisionWorld::ClosestRayResultCallback
+{
+	const btCollisionObject* mObjectToIgnore;
+
+	IgnoreObjectRaycastCallback(const btVector3& from, const btVector3& to, const btCollisionObject* objectToIgnore = nullptr) :
+		btCollisionWorld::ClosestRayResultCallback(from, to), mObjectToIgnore(objectToIgnore) {}
+
+	~IgnoreObjectRaycastCallback() override = default;
+
+	virtual bool needsCollision(btBroadphaseProxy* proxy0) const override
+	{
+		// Get the actual collision object from the proxy
+		const btCollisionObject* obj = static_cast<const btCollisionObject*>(proxy0->m_clientObject);
+		
+		// If it's the object we want to ignore, reject the collision
+		if (obj == mObjectToIgnore)
+			return false;
+
+		// Otherwise, fall back to default behavior
+		return btCollisionWorld::ClosestRayResultCallback::needsCollision(proxy0);
+	}
+
+	/*
+	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
+	{
+		// Check if the hit object is the one we want to ignore
+		if (rayResult.m_collisionObject == mObjectToIgnore)
+		{
+			// Return existing fractional distance and don't add this hit to the results.
+			return m_closestHitFraction; 
+		}
+		
+		// Otherwise, behave like the standard closest raycast
+		return btCollisionWorld::ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
+	}
+	*/
+};
+
+std::optional<RayIntersectionResult> BulletWorld::intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask, const btCollisionObject* objectToIgnore)
 {
 	btVector3 startBullet = toBtVector3(start);
 	btVector3 endBullet = toBtVector3(end);
-	btCollisionWorld::ClosestRayResultCallback rayCallback(startBullet, endBullet);
+	IgnoreObjectRaycastCallback rayCallback(startBullet, endBullet, objectToIgnore);
 	rayCallback.m_collisionFilterGroup = ~CollisionGroupMasks::terrain;
 	rayCallback.m_collisionFilterMask = collisionFilterMask;
 
