@@ -16,12 +16,16 @@
 
 namespace skybolt::sim {
 
+using CollisionCategoryMask = int;
+
 struct CollisionEvent : public Event
 {
-	EntityId entityA;
-	EntityId entityB;
+	EntityId entityA; //!< First object involved in the collision or nullEntityId() if not an entity
+	EntityId entityB; //!< Second object involved in the collision or nullEntityId() if not an entity
+	CollisionCategoryMask bodyCategoryA; //!< Collision category of the first collision object
+	CollisionCategoryMask bodyCategoryB; //!< Collision category of the second collision object
 	Vector3 position; //!< Position of impact point
-	Vector3 normalB; //!< Direction of entityB's normal force from the collision
+	Vector3 normalB; //!< Direction of the second object's normal force from the collision
 };
 
 struct RayIntersectionResult
@@ -38,13 +42,13 @@ public:
 	~CollisionSystem() override = default;
 	EventEmitterPtr getEventEmitter() const { return mEventEmitter; }
 
-	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &position, const Vector3 &direction, double length, int collisionFilterMask, const Entity* entityToIgnore = nullptr) const
+	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &position, const Vector3 &direction, double length, CollisionCategoryMask collisionFilterMask, const Entity* entityToIgnore = nullptr) const
 	{
 		Vector3 end = position + length * direction;
 		return intersectRay(position, end, collisionFilterMask, entityToIgnore);
 	}
 
-	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask, const Entity* entityToIgnore = nullptr) const { return std::nullopt; };
+	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &start, const Vector3 &end, CollisionCategoryMask collisionFilterMask, const Entity* entityToIgnore = nullptr) const { return std::nullopt; };
 
 protected:
 	EventEmitterPtr mEventEmitter = std::make_shared<EventEmitter>();
