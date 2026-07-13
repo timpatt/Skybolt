@@ -42,6 +42,8 @@ public:
 
 	void setDriverRpm(float rpm) {mDriverRpm = rpm;}
 
+	float getPropellerRpm() const { return mRpm; }
+
 	float getPitchAngle() const {return mPitch;}
 
 	void setRotationAngle(float angle) {mRotationAngle = angle;}

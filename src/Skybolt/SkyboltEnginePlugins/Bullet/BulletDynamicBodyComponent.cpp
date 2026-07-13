@@ -57,13 +57,13 @@ void BulletDynamicBodyComponent::updatePreDynamics()
 		auto newNodePosition = mNode->getPosition();
 		if (mNodePosition != newNodePosition)
 		{
-			setPosition(mNode->getPosition());
+			setPosition(newNodePosition);
 		}
 
 		auto newNodeOrientation = mNode->getOrientation();
 		if (mNodeOrientation != newNodeOrientation)
 		{
-			setOrientation(mNode->getOrientation());
+			setOrientation(newNodeOrientation);
 		}
 
 		mBody->setLinearVelocity(toBtVector3(mMotion->linearVelocity));

@@ -17,6 +17,12 @@ class Rotor
 public:
 	virtual ~Rotor() = default;
 
+	virtual double getNormalizedRpm() const = 0;
+
+	virtual void setNormalizedRpm(double rpm) = 0;
+
+	virtual double getRotorRpm() const = 0;
+
 	virtual double getRotationAngle() const = 0;
 
 	virtual const Vector3& getHubPositionRelBody() const = 0;

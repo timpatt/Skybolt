@@ -67,7 +67,11 @@ class MainRotorComponent : public Component, public Rotor, public Trimmable
 public:
 	MainRotorComponent(const MainRotorComponentConfig& config);
 
-	void setNormalizedRpm(double rpm) { mDriverRpm = rpm; }
+	double getNormalizedRpm() const override { return mDriverRpm; }
+
+	void setNormalizedRpm(double rpm) override { mDriverRpm = rpm; }
+
+	double getRotorRpm() const override { return mRpm; }
 
 	void setRotationAngle(double angle) {mRotationAngle = angle;}
 	double getRotationAngle() const override {return mRotationAngle;}
