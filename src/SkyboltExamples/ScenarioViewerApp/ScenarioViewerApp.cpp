@@ -62,7 +62,6 @@
 #include <SkyboltWidgets/Property/QtProperty.h>
 #include <SkyboltWidgets/Property/QtPropertyMetadata.h>
 #include <SkyboltWidgets/Property/QtPropertyReflection.h>
-#include <SkyboltWidgets/Property/QtMetaTypes.h>
 #include <SkyboltWidgets/Timeline/TimeControlWidget.h>
 #include <SkyboltWidgets/Timeline/TimelineWidget.h>
 #include <SkyboltWidgets/Timeline/TimeRateDialog.h>

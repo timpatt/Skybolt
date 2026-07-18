@@ -68,6 +68,12 @@ public: // DynamicBodyComponent interface
 
 	void setAngularDamping(double damping) override;
 
+	void setCollisionGroupMask(int mask) override;
+	int getCollisionGroupMask() const override;
+
+	void setCollisionFilterMask(int mask) override;
+	int getCollisionFilterMask() const override;
+
 	RigidBody* getRigidBody() const { return mBody; }
 
 public: // BulletCollisionObject interface

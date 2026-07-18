@@ -77,6 +77,12 @@ public:
 		angularDamping = damping;
 	}
 
+	void setCollisionGroupMask(int mask) override {}
+	int getCollisionGroupMask() const override { return 0; }
+
+	void setCollisionFilterMask(int mask) override {}
+	int getCollisionFilterMask() const override { return 0; }
+
 	double mMass = 1.0;
 	Vector3 mMomentOfInertia = Vector3(2.0, 3.0, 4.0);
 	Vector3 mCenterOfMass = math::dvec3Zero();

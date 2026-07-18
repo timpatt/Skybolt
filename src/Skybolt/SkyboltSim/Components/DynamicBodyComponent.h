@@ -61,6 +61,12 @@ public:
 
 	virtual void setAngularDamping(double damping) = 0;
 
+	virtual void setCollisionGroupMask(int mask) = 0;
+	virtual int getCollisionGroupMask() const = 0;
+
+	virtual void setCollisionFilterMask(int mask) = 0;
+	virtual int getCollisionFilterMask() const = 0;
+
 protected:
 	std::vector<AppliedForce> mForcesAppliedInLastSubstep;
 };

@@ -221,5 +221,25 @@ void BulletDynamicBodyComponent::setAngularDamping(double damping)
 	mBody->setDamping(mBody->getLinearDamping(), damping);
 }
 
+void BulletDynamicBodyComponent::setCollisionGroupMask(int mask)
+{
+	mBody->setCollisionGroupMask(mask);
+}
+
+int BulletDynamicBodyComponent::getCollisionGroupMask() const
+{
+	return mBody->getCollisionGroupMask();
+}
+
+void BulletDynamicBodyComponent::setCollisionFilterMask(int mask)
+{
+	mBody->setCollisionFlags(mask);
+}
+
+int BulletDynamicBodyComponent::getCollisionFilterMask() const
+{
+	return mBody->getCollisionFlags();
+}
+
 } // namespace sim
 } // namespace skybolt

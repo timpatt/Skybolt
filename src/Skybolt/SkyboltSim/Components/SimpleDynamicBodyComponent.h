@@ -41,6 +41,12 @@ public:
 
 	void setAngularDamping(double damping) override {} // Not implemented
 
+	void setCollisionGroupMask(int mask) override {} // Not implemented
+	int getCollisionGroupMask() const override { return 0; } // Not implemented
+
+	void setCollisionFilterMask(int mask) override {} // Not implemented
+	int getCollisionFilterMask() const override { return 0; } // Not implemented
+
 	std::vector<std::type_index> getExposedTypes() const override
 	{
 		return {typeid(DynamicBodyComponent), typeid(SimpleDynamicBodyComponent)};
