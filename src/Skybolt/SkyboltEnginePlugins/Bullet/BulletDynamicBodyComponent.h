@@ -62,19 +62,21 @@ public: // DynamicBodyComponent interface
 	//! Apply torque. Torque is in world axes.
 	void applyTorque(const Vector3& torque) override;
 
-	void setCollisionsEnabled(bool enabled) override;
 
 	void setLinearDamping(double damping) override;
 
 	void setAngularDamping(double damping) override;
+
+	RigidBody* getRigidBody() const { return mBody; }
+
+public: // CollisionBody interface
+	void setCollisionsEnabled(bool enabled) override;
 
 	void setCollisionGroupMask(int mask) override;
 	int getCollisionGroupMask() const override;
 
 	void setCollisionFilterMask(int mask) override;
 	int getCollisionFilterMask() const override;
-
-	RigidBody* getRigidBody() const { return mBody; }
 
 public: // BulletCollisionObject interface
 	const EntityId& getOwnerEntityId() const { return mOwnerEntityId; }
@@ -84,7 +86,7 @@ public: // BulletCollisionObject interface
 public: // Component interface
 	std::vector<std::type_index> getExposedTypes() const override
 	{
-		return {typeid(DynamicBodyComponent), typeid(BulletDynamicBodyComponent), typeid(BulletCollisionObject)};
+		return {typeid(DynamicBodyComponent), typeid(CollisionBody), typeid(BulletDynamicBodyComponent), typeid(BulletCollisionObject)};
 	}
 
 public: // SimUpdatable interface

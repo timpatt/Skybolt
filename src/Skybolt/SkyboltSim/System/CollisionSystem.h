@@ -22,8 +22,6 @@ struct CollisionEvent : public Event
 {
 	EntityId entityA; //!< First object involved in the collision or nullEntityId() if not an entity
 	EntityId entityB; //!< Second object involved in the collision or nullEntityId() if not an entity
-	CollisionGroupMask bodyCategoryA; //!< Collision category of the first collision object
-	CollisionGroupMask bodyCategoryB; //!< Collision category of the second collision object
 	Vector3 position; //!< Position of impact point
 	Vector3 normalB; //!< Direction of the second object's normal force from the collision
 };

@@ -11,6 +11,7 @@
 #include <SkyboltSim/Component.h>
 #include <SkyboltSim/EntityId.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
+#include <SkyboltSim/Components/CollisionBody.h>
 
 class btCollisionShape;
 
@@ -20,7 +21,7 @@ namespace sim {
 class BulletWorld;
 class RigidBody;
 
-class KinematicBody : public Component, public BulletCollisionObject
+class KinematicBody : public Component, public BulletCollisionObject, public CollisionBody
 {
 public:
 	KinematicBody(BulletWorld* world, EntityId ownerEntityId, Node* node, const btCollisionShapePtr& shape, int collisionGroupMask,
@@ -28,10 +29,17 @@ public:
 
 	~KinematicBody();
 
+public: // CollisionBody interface
+	void setCollisionsEnabled(bool enabled) override;
+	void setCollisionGroupMask(int mask) override;
+	int getCollisionGroupMask() const override;
+	void setCollisionFilterMask(int mask) override;
+	int getCollisionFilterMask() const override;
+
 public: // Component interface
 	std::vector<std::type_index> getExposedTypes() const override
 	{
-		return {typeid(KinematicBody), typeid(BulletCollisionObject)};
+		return {typeid(KinematicBody), typeid(BulletCollisionObject), typeid(CollisionBody)};
 	}
 
 	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS

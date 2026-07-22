@@ -17,6 +17,7 @@ class SimpleDynamicBodyComponent : public DynamicBodyComponent
 public:
 	SimpleDynamicBodyComponent(Node* node, Motion* motion, double mass, const Vector3& momentofInertia);
 
+public: // DynamicBodyComponent interface
 	double getMass() const override  { return mMass; }
 	void setMass(double mass) override { mMass = mass; }
 
@@ -35,11 +36,12 @@ public:
 	//! Apply torque. Torque is in world axes.
 	void applyTorque(const Vector3& torque) override;
 
-	void setCollisionsEnabled(bool enabled) override {} // Not implemented
-
 	void setLinearDamping(double damping) override {} // Not implemented
 
 	void setAngularDamping(double damping) override {} // Not implemented
+
+public: // CollisionBody interface
+	void setCollisionsEnabled(bool enabled) override {} // Not implemented
 
 	void setCollisionGroupMask(int mask) override {} // Not implemented
 	int getCollisionGroupMask() const override { return 0; } // Not implemented
@@ -47,12 +49,12 @@ public:
 	void setCollisionFilterMask(int mask) override {} // Not implemented
 	int getCollisionFilterMask() const override { return 0; } // Not implemented
 
+public: // Component interface
 	std::vector<std::type_index> getExposedTypes() const override
 	{
 		return {typeid(DynamicBodyComponent), typeid(SimpleDynamicBodyComponent)};
 	}
 
-public: // SimUpdatable interface
 	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
 
 	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS

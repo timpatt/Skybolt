@@ -38,6 +38,34 @@ void KinematicBody::updatePreDynamics()
 	mBody->setOrientation(toBtQuaternion(mNode->getOrientation()));
 }
 
+void KinematicBody::setCollisionsEnabled(bool enabled)
+{
+	if (enabled)
+		mBody->setCollisionGroupMask(~0);
+	else
+		mBody->setCollisionGroupMask(0);
+}
+
+void KinematicBody::setCollisionGroupMask(int mask)
+{
+	mBody->setCollisionGroupMask(mask);
+}
+
+int KinematicBody::getCollisionGroupMask() const
+{
+	return mBody->getCollisionGroupMask();
+}
+
+void KinematicBody::setCollisionFilterMask(int mask)
+{
+	mBody->setCollisionFlags(mask);
+}
+
+int KinematicBody::getCollisionFilterMask() const
+{
+	return mBody->getCollisionFlags();
+}
+
 const btCollisionObject* KinematicBody::getBtCollisionObject() const
 {
 	return mBody;

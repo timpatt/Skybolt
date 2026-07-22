@@ -34,12 +34,17 @@ public:
 	void setCollisionGroupMask(int mask);
 	int getCollisionGroupMask() const {return mCollisionGroupMask;}
 
+	void setCollisionFilterMask(int mask);
+	int getCollisionFilterMask() const { return mCollisionFilterMask; }
+
 private:
-	EntityId mOwnerEntityId;
+	void reAddToWorld();
+
+private:
 	btDiscreteDynamicsWorld* mWorld;
 	btCollisionShapePtr mShape;
-	int mCollisionFilterMask;
 	int mCollisionGroupMask;
+	int mCollisionFilterMask;
 	bool mInWorld;
 };
 

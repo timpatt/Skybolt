@@ -7,6 +7,7 @@
 #pragma once
 
 #include "SkyboltSim/Component.h"
+#include "SkyboltSim/Components/CollisionBody.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
 #include "SkyboltSim/SimMath.h"
 #include "SkyboltSim/Spatial/Positionable.h"
@@ -27,7 +28,7 @@ struct AppliedForce
 };
 
 // Emits CollisionEvent upon collision
-class DynamicBodyComponent : public Component
+class DynamicBodyComponent : public Component, public CollisionBody
 {
 public:
 	virtual void setMass(double mass) = 0;
@@ -55,17 +56,15 @@ public:
 	//! Used for visualisation purposes only; this should not affect the simulation.
 	const std::vector<AppliedForce>& getForcesAppliedInLastSubstep() const { return mForcesAppliedInLastSubstep; }
 
-	virtual void setCollisionsEnabled(bool enabled) = 0;
-
 	virtual void setLinearDamping(double damping) = 0;
 
 	virtual void setAngularDamping(double damping) = 0;
 
-	virtual void setCollisionGroupMask(int mask) = 0;
-	virtual int getCollisionGroupMask() const = 0;
-
-	virtual void setCollisionFilterMask(int mask) = 0;
-	virtual int getCollisionFilterMask() const = 0;
+public: // Component interface
+	std::vector<std::type_index> getExposedTypes() const override
+	{
+		return {typeid(DynamicBodyComponent), typeid(CollisionBody)};
+	}
 
 protected:
 	std::vector<AppliedForce> mForcesAppliedInLastSubstep;

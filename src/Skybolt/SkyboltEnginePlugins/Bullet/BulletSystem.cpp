@@ -83,8 +83,6 @@ void BulletSystem::processCollisionEvents()
 				CollisionEvent event;
 				event.entityA = objectA->getUserPointer() ? getEntity(*objectA) : nullEntityId();
 				event.entityB = objectB->getUserPointer() ? getEntity(*objectB) : nullEntityId();
-				event.bodyCategoryA = objectA->getCollisionFlags();
-				event.bodyCategoryB = objectB->getCollisionFlags();
 				event.position = toGlmDvec3(pt.getPositionWorldOnB());
 				event.normalB = toGlmDvec3(pt.m_normalWorldOnB);
 				if (event.entityA != nullEntityId() || event.entityB != nullEntityId())

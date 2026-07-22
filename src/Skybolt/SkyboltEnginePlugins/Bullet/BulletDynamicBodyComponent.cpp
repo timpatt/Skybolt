@@ -233,12 +233,12 @@ int BulletDynamicBodyComponent::getCollisionGroupMask() const
 
 void BulletDynamicBodyComponent::setCollisionFilterMask(int mask)
 {
-	mBody->setCollisionFlags(mask);
+	mBody->setCollisionFilterMask(mask);
 }
 
 int BulletDynamicBodyComponent::getCollisionFilterMask() const
 {
-	return mBody->getCollisionFlags();
+	return mBody->getCollisionFilterMask();
 }
 
 } // namespace sim

@@ -15,6 +15,7 @@ RigidBody::RigidBody(btDiscreteDynamicsWorld* world, const btCollisionShapePtr& 
 		new btDefaultMotionState(btTransform(orientation, position)), shape.get(), inertia)),
 	mWorld(world),
 	mShape(shape),
+	mCollisionGroupMask(collisionGroupMask),
 	mCollisionFilterMask(collisionFilterMask),
 	mInWorld(false)
 {
@@ -23,7 +24,7 @@ RigidBody::RigidBody(btDiscreteDynamicsWorld* world, const btCollisionShapePtr& 
 	setActivationState(DISABLE_DEACTIVATION);
 	setDamping(0, 0);
 	setLinearVelocity(velocity);
-	setCollisionGroupMask(collisionGroupMask);
+	reAddToWorld();
 }
 
 RigidBody::~RigidBody()
@@ -75,15 +76,23 @@ void RigidBody::setOrientation(const btQuaternion& orientation)
 void RigidBody::setCollisionGroupMask(int mask)
 {
 	mCollisionGroupMask = mask;
+	reAddToWorld();
+}
+
+void RigidBody::setCollisionFilterMask(int mask)
+{
+	mCollisionFilterMask = mask;
+	reAddToWorld();
+}
+
+void RigidBody::reAddToWorld()
+{
 	if (mInWorld)
 	{
 		mWorld->removeRigidBody(this);
 		mInWorld = false;
 	}
 
-	if (mask != 0)
-	{
-		mWorld->addRigidBody(this, mask, mCollisionFilterMask);
-		mInWorld = true;
-	}
+	mWorld->addRigidBody(this, mCollisionGroupMask, mCollisionFilterMask);
+	mInWorld = true;
 }
