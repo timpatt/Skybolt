@@ -110,11 +110,12 @@ static OsgTileFactory::TileTextures createSurfaceTileTextures(TileTextureCache& 
 	textures.albedo.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Albedo, images.albedoMapImage.image, createSrgbTexture);
 	textures.albedo.key = images.albedoMapImage.key;
 
-	if (images.attributeMapImage)
+	if (!images.attributeMapImages.empty() && images.attributeMapImages.front())
 	{
+		// Only the first attribute layer is used by the OpenSceneGraph based renderer.
 		TileTexture attribute;
-		attribute.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Attribute, images.attributeMapImage->image, createNonSrgbTextureWithoutMipmaps);
-		attribute.key = images.attributeMapImage->key;
+		attribute.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Attribute, images.attributeMapImages.front()->image, createNonSrgbTextureWithoutMipmaps);
+		attribute.key = images.attributeMapImages.front()->key;
 		textures.attribute = attribute;
 	}
 	return textures;
@@ -125,10 +126,10 @@ static GpuForestTileTextures createGpuForestTileTextures(TileTextureCache& cache
 	GpuForestTileTextures textures;
 	textures.height.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Height, images.heightMapImage.image, createNonSrgbTextureWithoutMipmaps);
 	textures.height.key = images.heightMapImage.key;
-	if (images.attributeMapImage)
+	if (!images.attributeMapImages.empty() && images.attributeMapImages.front())
 	{
-		textures.attribute.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Attribute, images.attributeMapImage->image, createNonSrgbTextureWithoutMipmaps);
-		textures.attribute.key = images.attributeMapImage->key;
+		textures.attribute.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Attribute, images.attributeMapImages.front()->image, createNonSrgbTextureWithoutMipmaps);
+		textures.attribute.key = images.attributeMapImages.front()->key;
 	}
 	return textures;
 }

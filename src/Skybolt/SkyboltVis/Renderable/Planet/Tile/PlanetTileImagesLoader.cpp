@@ -72,6 +72,15 @@ static osg::Image* convertHeightmapToLandMask(const osg::Image& src, const Heigh
 	return dst;
 }
 
+enum class CacheIndex
+{
+	Elevation,
+	LandMask,
+	Albedo,
+	Attribute0,
+	// Attribute1...AttributeN
+};
+
 //! May be called from multiple threads
 TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
@@ -127,6 +136,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 	}
 
 	// Land mask
+	if (landMaskLayer || generateLandMaskFromElevation)
 	{
 		osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
 		images->landMaskImage = getOrCreateImage(images->heightMapImage.key, size_t(CacheIndex::LandMask), [this, heightImage, cancelSupplier](const QuadTreeTileKey& key) {
@@ -184,34 +194,33 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 
 	// Attribute map
 	{
-		if (attributeLayer)
+		std::size_t attributeIndex = 0;
+		images->attributeMapImages.resize(attributeLayers.size());
+		for (const auto& attributeLayer : attributeLayers)
 		{
-			std::optional<QuadTreeTileKey> attributeKey = attributeLayer->getHighestAvailableLevel(key);
+			assert(attributeLayer.source);
+
+			std::optional<QuadTreeTileKey> attributeKey = attributeLayer.source->getHighestAvailableLevel(key);
 			if (attributeKey)
 			{
-				images->attributeMapImage = getOrCreateImage(*attributeKey, size_t(CacheIndex::Attribute), [this, cancelSupplier](const QuadTreeTileKey& key) {
-					osg::ref_ptr<osg::Image> image = attributeLayer->createImage(key, cancelSupplier);
-					if (image && mAttributeMapProcessing == AttributeMapProcessing::ConvertNlcdAttributeColors)
+				TileImage tileImage = getOrCreateImage(*attributeKey, size_t(CacheIndex::Attribute0) + attributeIndex, [this, attributeLayer, cancelSupplier](const QuadTreeTileKey& key) {
+					osg::ref_ptr<osg::Image> image = attributeLayer.source->createImage(key, cancelSupplier);
+					if (image && attributeLayer.processing == AttributeMapProcessing::ConvertNlcdAttributeColors)
 					{
 						image = convertAttributeMap(*image, getNlcdAttributeColors());
 					}
 					return image;
 				});
-				if (!images->attributeMapImage->image)
+				if (tileImage.image)
 				{
-					images->attributeMapImage = std::nullopt;
+					images->attributeMapImages[attributeIndex] = std::move(tileImage);
 				}
 			}
-		}
-		else if (!images->attributeMapImage && false) // Experimental. If enabled, attribute map will be generated from the albedo map, otherwise no attributes will be used.
-		{
-			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::Attribute), [this, cancelSupplier, albedo = images->albedoMapImage.image](const QuadTreeTileKey& key) {
-				return convertToAttributeMap(*albedo);
-			});
+			++attributeIndex;
 		}
 
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
-		std::cout << "Attribute@" << key.level << ": " << timer.count();
+		std::cout << "Attributes@" << key.level << ": " << timer.count();
 		timer.reset();
 		timer.start();
 #endif

@@ -18,12 +18,6 @@ using AttributeColors = std::vector<AttributeColor>;
 
 const AttributeColors& getNlcdAttributeColors();
 
-//! Analyses each pixel of an albedo source image and returns an image
-//! giving pixel's corresponding material ID. E.g a green pixel might be
-//! mapped to an ID representing grass, a brown pixel mapped to an ID representing
-//@ dirt etc.
-osg::ref_ptr<osg::Image> convertToAttributeMap(const osg::Image& albedo);
-
 //! Convert an image of different colored attribute areas to an image of attribute interger IDs
 osg::ref_ptr<osg::Image> convertAttributeMap(const osg::Image& image, const AttributeColors& srcAttributeColors);
 

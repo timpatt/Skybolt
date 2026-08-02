@@ -20,7 +20,9 @@ struct PlanetTileImages : TileImages
 	osg::ref_ptr<osg::Image> landMaskImage; //!< Same tile key as heightMapImage
 
 	TileImage albedoMapImage;
-	std::optional<TileImage> attributeMapImage;
+
+	//! Item indices correspond to PlanetTileImagesLoader::attributeLayers. Item will be nullopt if attribute could not be loaded.
+	std::vector<std::optional<TileImage>> attributeMapImages;
 };
 
 enum AttributeMapProcessing
@@ -33,26 +35,27 @@ class PlanetTileImagesLoader : public TileImagesLoader
 {
 public:
 	TileSourcePtr elevationLayer; //!< never null
-	TileSourcePtr landMaskLayer; //!< if null, land mask is auto generated from elevation
+	TileSourcePtr landMaskLayer; //!< if null and generateLandMaskFromElevation = true, land mask is auto generated from elevation, otherwise attributes are not used
 	TileSourcePtr albedoLayer; //!< never null
-	TileSourcePtr attributeLayer; //!< if null, attributes are not used
 
-	enum class CacheIndex
+	struct AttributeLayer
 	{
-		Elevation,
-		LandMask,
-		Albedo,
-		Attribute
+		TileSourcePtr source; //!< never null
+		AttributeMapProcessing processing = AttributeMapProcessing::None;
 	};
 
-	PlanetTileImagesLoader(double planetRadius, AttributeMapProcessing attributeMapProcessing = AttributeMapProcessing::ConvertNlcdAttributeColors) : TileImagesLoader(4), mPlanetRadius(planetRadius), mAttributeMapProcessing(attributeMapProcessing) {}
+	std::vector<AttributeLayer> attributeLayers; //!< if empty, attributes are not used. Items must be non-null.
+
+	//! If true, land mask is generated from elevation if landMaskLayer is null.
+	bool generateLandMaskFromElevation = true;
+
+	explicit PlanetTileImagesLoader(double planetRadius) : TileImagesLoader(5), mPlanetRadius(planetRadius) {}
 
 	//! May be called from multiple threads
 	TileImagesPtr load(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
 private:
 	const double mPlanetRadius;
-	const AttributeMapProcessing mAttributeMapProcessing;
 };
 
 } // namespace vis

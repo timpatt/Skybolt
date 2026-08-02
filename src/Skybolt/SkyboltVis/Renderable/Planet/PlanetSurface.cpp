@@ -96,8 +96,12 @@ PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
 	auto imageLoader = std::make_shared<PlanetTileImagesLoader>(config.radius);
 	imageLoader->elevationLayer = planetTileSources.elevation;
 	imageLoader->landMaskLayer = planetTileSources.landMask;
-	imageLoader->attributeLayer = planetTileSources.attribute;
 	imageLoader->albedoLayer = planetTileSources.albedo;
+
+	if (planetTileSources.attribute)
+	{
+		imageLoader->attributeLayers.push_back({planetTileSources.attribute, AttributeMapProcessing::ConvertNlcdAttributeColors});
+	}
 
 	AsyncTileLoaderPtr loader(new ConcurrentAsyncTileLoader(imageLoader, config.scheduler));
 

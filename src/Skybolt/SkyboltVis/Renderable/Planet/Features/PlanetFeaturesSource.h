@@ -45,9 +45,12 @@ struct Feature
 	virtual LatLonBounds calcBounds() const = 0;
 };
 
+typedef std::vector<sim::LatLon> LatLonPoints;
+typedef std::vector<sim::LatLonAlt> LatLonAltPoints;
+
 struct PolyFeature : public Feature
 {
-	std::vector<sim::LatLonAlt> points;
+	LatLonAltPoints points;
 
 	void load(std::ifstream& f) override;
 	void save(std::ofstream& f) const override;
@@ -96,10 +99,9 @@ struct Building : public PolyFeature
 struct Water : public PolyFeature
 {
 	FeatureType type() const override { return FeatureWater; }
+	//! Polyline loops that define holes (areas of non-water) in the water region.
+	std::vector<LatLonPoints> holeRegions;
 };
-
-typedef std::vector<sim::LatLon> LatLonPoints;
-typedef std::vector<sim::LatLonAlt> LatLonAltPoints;
 
 struct Airport : public Feature
 {
