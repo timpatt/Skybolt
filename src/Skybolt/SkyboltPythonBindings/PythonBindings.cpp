@@ -30,8 +30,10 @@
 #include <SkyboltSim/Components/AttacherComponent.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
+#include <SkyboltSim/Components/CloudComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
+#include <SkyboltSim/Components/SunComponent.h>
 #include <SkyboltSim/Spatial/Frustum.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
@@ -107,9 +109,9 @@ static void removeNamespaceQualifier(std::string& str)
 	}
 }
 
-static std::string getTypeName(const Component& component)
+static std::string getTypeName(const std::type_index& type)
 {
-	std::string name(typeid(component).name());
+	std::string name(type.name());
 	py::detail::clean_type_id(name);
 	removeNamespaceQualifier(name);
 	return name;
@@ -122,10 +124,14 @@ static std::vector<ComponentPtr> getComponentsOfTypeName(Entity* entity, const s
 	std::vector<ComponentPtr> components = entity->getComponents();
 	for (const ComponentPtr& component : components)
 	{
-		std::string name = getTypeName(*component);
-		if (name == typeName)
+		for (const std::type_index& type : component->getExposedTypes())
 		{
-			result.push_back(component);
+			std::string name = getTypeName(type);
+			if (name == typeName)
+			{
+				result.push_back(component);
+				break;
+			}
 		}
 	}
 	return result;
@@ -139,10 +145,14 @@ static ComponentPtr getFirstComponentOfTypeName(Entity* entity, const std::strin
 
 static std::string getAvailableComponentNamesString(const Entity& entity)
 {
-	std::vector<std::string> names;
+	std::set<std::string> names;
 	for (const ComponentPtr& component : entity.getComponents())
 	{
-		names.push_back(getTypeName(*component));
+		for (const std::type_index& type : component->getExposedTypes())
+		{
+			std::string name = getTypeName(typeid(*component));
+			names.insert(name);
+		}
 	}
 	return "[" + boost::join(names, ", ") + "]";
 }
@@ -426,7 +436,6 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("entityId", &EntityId::entityId);
 
 	py::class_<Component, std::shared_ptr<Component>>(m, "Component", "Base class for components which can be attached to an `Entity`")
-		.def(py::init<>())
 		.def("setSimTime", &Component::setSimTime);
 
 	py::class_<MainRotorComponent, std::shared_ptr<MainRotorComponent>, Component>(m, "MainRotorComponent")
@@ -456,13 +465,33 @@ PYBIND11_MODULE(skybolt, m) {
 
 	py::class_<CameraControllerComponent, std::shared_ptr<CameraControllerComponent>, Component, CameraControllerSelector>(m, "CameraControllerComponent");
 
-	py::class_<AttacherComponent, std::shared_ptr<AttacherComponent>>(m, "AttacherComponent")
+	py::class_<AttacherComponent, std::shared_ptr<AttacherComponent>, Component>(m, "AttacherComponent")
 		.def_readwrite("enabled", &AttacherComponent::enabled)
 		.def_readwrite("parentEntityId", &AttacherComponent::parentEntityId)
 		.def_readwrite("parentEntityAttachmentPoint", &AttacherComponent::parentEntityAttachmentPoint)
 		.def_readwrite("ownEntityAttachmentPoint", &AttacherComponent::ownEntityAttachmentPoint)
 		.def_readwrite("positionOffset", &AttacherComponent::positionOffset)
 		.def_readwrite("orientationOffset", &AttacherComponent::orientationOffset);
+
+	py::class_<AzimuthElevationLatLon>(m, "AzimuthElevationLatLon")
+		.def(py::init<>())
+		.def(py::init<double, double, LatLon>())
+		.def_readwrite("azimuth", &AzimuthElevationLatLon::azimuth)
+		.def_readwrite("elevation", &AzimuthElevationLatLon::elevation)
+		.def_readwrite("observer", &AzimuthElevationLatLon::observer);
+
+	py::class_<CloudLayer>(m, "CloudLayer")
+		.def_readwrite("bottomAltitude", &CloudLayer::bottomAltitude)
+		.def_readwrite("topAltitude", &CloudLayer::topAltitude)
+		.def_readwrite("density", &CloudLayer::density)
+		.def_readwrite("coverageFraction", &CloudLayer::coverageFraction)
+		.def_readwrite("type", &CloudLayer::type);
+
+	py::class_<SunComponent, std::shared_ptr<SunComponent>, Component>(m, "SunComponent")
+		.def_readwrite("directionOverride", &SunComponent::directionOverride);
+
+	py::class_<CloudComponent, std::shared_ptr<CloudComponent>, Component>(m, "CloudComponent")
+		.def_readwrite("layers", &CloudComponent::layers);
 
 	py::class_<EntityTargeter>(m, "EntityTargeter", "Interface for a class which references a target `Entity` by `EntityId`")
 		.def("getTargetId", &EntityTargeter::getTargetId)

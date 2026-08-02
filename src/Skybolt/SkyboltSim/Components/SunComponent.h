@@ -15,6 +15,14 @@ namespace skybolt::sim {
 
 struct AzimuthElevationLatLon
 {
+	AzimuthElevationLatLon() = default;
+	AzimuthElevationLatLon(double azimuth, double elevation, const sim::LatLon& observer) :
+		azimuth(azimuth),
+		elevation(elevation),
+		observer(observer)
+	{
+	}
+
 	double azimuth; //!< in radians, 0 is north, positive is east
 	double elevation; //!< in radians, 0 is on the horizon, positive is up
 	sim::LatLon observer;
