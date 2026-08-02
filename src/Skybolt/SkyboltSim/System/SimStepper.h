@@ -26,10 +26,15 @@ public:
 	void setTime(SecondsD t) override;
 
 	void advanceTime(SecondsD dt) override;
+	void advanceToTime(SecondsD dt) override;
 
+	bool isDynamicsEnabled() const { return mDynamicsEnabled; }
 	void setDynamicsEnabled(bool enabled) { mDynamicsEnabled = enabled; }
 
+	SecondsD getDynamicsStepSize() const { return mDynamicsStepSize; }
 	void setDynamicsStepSize(double stepSize) { mDynamicsStepSize = stepSize; }
+
+	std::optional<int> getMaxDynamicsSubsteps() const { return mMaxDynamicsSubsteps; }
 	void setMaxDynamicsSubsteps(const std::optional<int>& substeps) { mMaxDynamicsSubsteps = substeps; }
 
 private:

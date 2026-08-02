@@ -56,6 +56,19 @@ void SimStepper::advanceTime(SecondsD dt)
 	updateSystem(systems, UpdateStage::Output);
 }
 
+void SimStepper::advanceToTime(sim::SecondsD time)
+{
+	SecondsD dt = time - mTime;
+	if (dt > 0)
+	{
+		// Advance time without limiting the number of dynamics substeps, since this is a "jump" in time and we want to ensure we reach the target time.
+		std::optional<int> oldMaxDynamicsSubsteps = mMaxDynamicsSubsteps;
+		mMaxDynamicsSubsteps = std::nullopt;
+		advanceTime(dt);
+		mMaxDynamicsSubsteps = oldMaxDynamicsSubsteps;
+	}
+}
+
 void SimStepper::advanceTimeByDynamicsSubSteps(const std::vector<SystemPtr>& systems, SecondsD dt)
 {
 	assert(mDynamicsEnabled);
