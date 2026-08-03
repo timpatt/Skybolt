@@ -76,9 +76,9 @@ if (OSG_STATIC_LIBS)
 		${OPENGL_LIBRARIES}
 	)
 
-	// The OSG curl plugin gets statically linked when using OSG static libraries.
-	// For some applications we might not want curl to be compiled into the executable,
-	// so this option allows it to be disabled.
+	# The OSG curl plugin gets statically linked when using OSG static libraries.
+	# For some applications we might not want curl to be compiled into the executable,
+	# so this option allows it to be disabled.
 	OPTION(BUILD_WITH_OSG_CURL_PLUGIN "Build with OSG Curl plugin")
 
 	if (BUILD_WITH_OSG_CURL_PLUGIN)
