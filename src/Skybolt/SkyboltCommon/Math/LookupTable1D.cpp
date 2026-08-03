@@ -70,7 +70,7 @@ std::optional<double> interpolateTableLinear(const LookupTable1D& table, double 
 	return interpolateTableLinear(table.xData, table.yData, x, extrapolate);
 }
 
-static math::LookupTable1D readLookupTable1D(const nlohmann::json& json)
+math::LookupTable1D readLookupTable1D(const nlohmann::json& json)
 {
 	if (!json.is_array())
 	{
