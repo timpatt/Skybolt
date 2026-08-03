@@ -1,0 +1,15 @@
+[settings]
+arch=x86_64
+build_type=Release
+compiler=gcc
+compiler.cppstd=17
+compiler.libcxx=libstdc++11
+compiler.version=13
+os=Linux
+
+# Work around issue https://github.com/conan-io/conan-center-index/issues/27912
+qt/*:compiler.cppstd=gnu20 
+
+[options]
+qt/*:openssl=False
+qt/*:with_pq=False

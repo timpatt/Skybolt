@@ -1,0 +1,52 @@
+{
+	// If running on Windows (via Docker Desktop/WSL2), make sure that you browse to 
+	// Docker Desktop -> Settings -> WSL Integration and enable "Enable integration with my 
+	// default WSL distro" along with the default WSL distro you've selected (From PowerShell:
+	// `wsl --list --all`)
+	// NOTE: The actual devcontainer itself runs under a hidden "docker-desktop" WSL distro,
+	// but access to the UI is borrowed from the default WSL distro (which usually provides
+	// access to the Windows Desktop via WSLg).  It would seem that VSCode attempts to mount the 
+	// WSLg interface regardless of whether it is required...
+	"name": "SkyboltBuild",
+
+	"build": {
+		"dockerfile": "./Dockerfile",
+		"context": "."
+	},
+
+	// Grants the container ptrace capabilities. This allows debugging tools to attach to processes. It enables breakpoints and memory inspection.
+	"capAdd": ["SYS_PTRACE"],
+	// Disable the default Seccomp security profile. Docker normally blocks certain system calls. This removal allows GDB to use essential system calls.
+	"securityOpt": ["seccomp=unconfined"],
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": "false",
+			"username": "vscode",
+			"upgradePackages": "false"
+		},
+		"ghcr.io/devcontainers/features/git:1": {
+			"version": "latest",
+			"ppa": "false"
+		}
+	},
+
+	"customizations": {
+		"vscode": {
+			"settings": {},
+			"extensions": [
+				"ms-vscode.cpptools",
+				"ms-vscode.cmake-tools"
+			]
+		}
+	},
+
+	"mounts": [
+    	// Persists cache directory across container rebuilds
+    	"source=conan-cache,target=/home/vscode/.conan2/p,type=volume"
+  	],
+	"postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/setup.sh",
+
+	"remoteUser": "vscode"
+}
