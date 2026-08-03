@@ -9,6 +9,10 @@ RUN apt-get update  && export DEBIAN_FRONTEND=noninteractive \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /uvx /bin/
 
+# gdb and potentially some other packages might also install python3, but I'd prefer to use a "fixed" and local version of python
+# This ensures that uv ignores global instances of python
+ENV UV_PYTHON_PREFERENCE=only-managed
+
 #USER $USERNAME
 
 # Make sure directory that uv uses to install python and tools to is available on the path

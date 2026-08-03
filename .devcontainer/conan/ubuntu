@@ -13,3 +13,8 @@ qt/*:compiler.cppstd=gnu20
 [options]
 qt/*:openssl=False
 qt/*:with_pq=False
+
+[conf]
+# Force the creation of dotenv files to be loaded by vscode
+# See https://docs.conan.io/2/reference/tools/env/virtualbuildenv.html#generated-files
+tools.env:dotenv=True
