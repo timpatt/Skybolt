@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 # Install build tools
 RUN apt-get update  && export DEBIAN_FRONTEND=noninteractive \
     && apt-get install -y --no-install-recommends \
-    build-essential cmake cppcheck pkg-config valgrind clang lldb llvm gdb \
+    build-essential cmake cppcheck fontconfig pkg-config valgrind clang lldb llvm gdb \
 	&& apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Install uv
