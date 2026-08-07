@@ -30,7 +30,7 @@ Add export DEBUGINFOD_URLS='' into .bashrc
 
 uv run python3 Tools/BuildScripts/build.py --skybolt-source-dir=$(pwd) --output-dir=$(pwd)/package --stage package
 
-# uv run conan build . --lockfile=conan-shared.lock --build=missing
+# uv run conan build . --lockfile=conan-shared.lock --build=missing -s build_type=RelWithDebInfo
 
 # Make it accessible as an editable package (removed CMAKE_INSTALL_PREFIX stuff)
 conan editable add -of /workspaces/Skybolt/packages/Build .
@@ -43,13 +43,17 @@ export SKYBOLT_ASSETS_PATH=/workspaces/Skybolt/Assets
 
 Run ArchonApp
 
-* Tests don't work because build context doesn't contain paths to conan dependencies
-  * Add DISCOVERY_MODE PRE_TEST to catch_discover_tests to run it in host context just before tests are run.
-	* See https://github.com/catchorg/Catch2/issues/2493
-	
 	
 export SKYBOLT_PLUGINS_PATH='/workspaces/Skybolt/package/Build/lib:/workspaces/Archon/package/Package/lib'
 export SKYBOLT_ASSETS_PATH='/workspaces/Skybolt/Assets:/workspaces/Archon/Assets'
 # etc...
 . /workspaces/Archon/package/Build/conanrunenv-relwithdebinfo-x86_64.sh
 
+
+
+# TODO
+* Tests don't work because build context doesn't contain paths to conan dependencies
+  * Add DISCOVERY_MODE PRE_TEST to catch_discover_tests to run it in host context just before tests are run.
+	* See https://github.com/catchorg/Catch2/issues/2493
+* Backup conan dependency sources somewhere (see https://docs.conan.io/2/devops/backup_sources/sources_backup.html)
+* Remove `include_package` functionality from conanfile and replace with https://docs.conan.io/2/devops/devops_local_recipes_index.html (potentially)

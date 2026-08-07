@@ -8,11 +8,11 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/package/Package/bin/FlightSimApp",
+            "program": "${workspaceFolder}/build/${input:buildType}/bin/FlightSimApp",
             "args": [],
             "stopAtEntry": true,
-            "cwd": "${fileDirname}",
-            "envFile": "${workspaceFolder}/package/Build/conanrunenv-Release-x86_64.env",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/build/${input:buildType}/generators/conanrunenv-${input:buildType}-x86_64.env",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -28,6 +28,12 @@
                     "ignoreFailures": true
                 },
                 {
+                    // gdb can appear hung while attempting/failing to download debug symbols on launch 
+                    // Unfortunately, this "fix" below doesn't work and is undone immediately by cpptools.
+                    // See https://github.com/microsoft/MIEngine/issues/1569.
+                    // Fix is here: https://github.com/microsoft/MIEngine/pull/1561 but not available yet?
+                    // The hack solution is to add "export DEBUGINFOD_URLS=''" to the environment.
+                    // See .devcontainer/Dockerfile for more
                     "description": "Disable downloading missing debug symbols for system libraries",
                     "text": "-gdb-set debuginfod enabled off",
                     "ignoreFailures": true
@@ -35,5 +41,14 @@
             ]
         }
 
-    ]
+    ],
+    "inputs": [
+    {
+        "id": "buildType",
+        "type": "pickString",
+        "description": "Select Build Type to Run/Debug:",
+        "options": ["Debug", "Release", "RelWithDebInfo"],
+        "default": "RelWithDebInfo"
+    }
+  ]
 }
