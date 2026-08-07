@@ -42,9 +42,16 @@
 		}
 	},
 
+	"containerEnv": {
+		// Force uv to cache the python installs here; by default it appears installs aren't cached
+		"UV_PYTHON_CACHE_DIR": "/home/vscode/.cache/uv_python"
+	},
+
 	"mounts": [
     	// Persists cache directory across container rebuilds
     	"source=conan-cache,target=/home/vscode/.conan2/p,type=volume",
+    	"source=uv-cache,target=/home/vscode/.cache/uv,type=volume",
+    	"source=uv-python-cache,target=/home/vscode/.cache/uv_python,type=volume",
     	"source=${localWorkspaceFolder}/../Archon,target=/workspaces/Archon,type=bind"
   	],
 	"postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/setup.sh",
