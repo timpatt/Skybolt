@@ -13,6 +13,14 @@ COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /uvx /bin/
 # This ensures that uv ignores global instances of python
 ENV UV_PYTHON_PREFERENCE=only-managed
 
+# Install skybolt dependencies
+RUN apt-get update  && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get install -y --no-install-recommends \
+    libgl-dev `# opengl/system` \
+    xkb-data `# xkeyboard-config/system` \
+    libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxaw7-dev libxcomposite-dev libxcursor-dev libxdamage-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxkbfile-dev libxmu-dev libxmuu-dev libxpm-dev libxrandr-dev libxrender-dev libxres-dev libxss-dev libxt-dev libxtst-dev libxv-dev libxxf86vm-dev libxcb-glx0-dev libxcb-render0-dev libxcb-render-util0-dev libxcb-xkb-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev uuid-dev libxcb-cursor-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev libxcb-util-dev `# xorg/system` \
+	&& apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
 #USER $USERNAME
 
 # Make sure directory that uv uses to install python and tools to is available on the path

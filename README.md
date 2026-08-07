@@ -30,6 +30,8 @@ Add export DEBUGINFOD_URLS='' into .bashrc
 
 uv run python3 Tools/BuildScripts/build.py --skybolt-source-dir=$(pwd) --output-dir=$(pwd)/package --stage package
 
+# uv run conan build . --lockfile=conan-shared.lock --build=missing
+
 # Make it accessible as an editable package (removed CMAKE_INSTALL_PREFIX stuff)
 conan editable add -of /workspaces/Skybolt/packages/Build .
 
