@@ -7,6 +7,8 @@
 #include "ShaderProgramRegistry.h"
 #include "OsgShaderHelpers.h"
 
+#include <osg/Program>
+
 namespace skybolt {
 namespace vis {
 

@@ -13,7 +13,7 @@
 namespace skybolt {
 namespace sim {
 
-class EntitySystem : public System
+class EntitySystem : public SystemT<EntitySystem>
 {
 public:
 	EntitySystem(World* world);

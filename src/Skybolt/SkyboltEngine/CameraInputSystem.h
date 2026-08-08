@@ -27,7 +27,7 @@ using CameraInputAxes = std::map<CameraInputAxisType, LogicalAxisPtr>;
 
 //! This system listens to input events from the InputPlatform and emits a CameraController::Input signal.
 //! This system should be updated after InputPlatform is updated.
-class CameraInputSystem : public sim::System, public skybolt::EventListener
+class CameraInputSystem : public sim::SystemT<CameraInputSystem>, public skybolt::EventListener
 {
 public:
 	CameraInputSystem(const skybolt::InputPlatformPtr& inputPlatform, CameraInputAxes axes = {});

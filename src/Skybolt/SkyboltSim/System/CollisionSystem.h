@@ -18,7 +18,7 @@ namespace skybolt::sim {
 
 using CollisionGroupMask = int;
 
-struct CollisionEvent : public Event
+struct CollisionEvent : public EventT<CollisionEvent>
 {
 	EntityId entityA; //!< First object involved in the collision or nullEntityId() if not an entity
 	EntityId entityB; //!< Second object involved in the collision or nullEntityId() if not an entity
@@ -34,7 +34,7 @@ struct RayIntersectionResult
 	EntityId entity;
 };
 
-class CollisionSystem : public System
+class CollisionSystem : public SystemT<CollisionSystem>
 {
 public:
 	~CollisionSystem() override = default;

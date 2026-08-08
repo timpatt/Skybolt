@@ -398,19 +398,28 @@ static int createAndExecuteApplication(int argc, char** argv)
 		mainLayout->addWidget(osgContainer, 1);
 	}
 
-	// Create user input system
+	// Create create camera input system
 	auto inputPlatform = std::make_shared<InputPlatformQt>();
+	CameraInputAxes axes = createDefaultCameraInputAxes(*inputPlatform);
+	auto cameraInputSystem = std::make_shared<CameraInputSystem>(inputPlatform, axes);
+	engineRoot->systemRegistry->push_back(cameraInputSystem);
+
+	// Create viewport input system to enable/disable the camera input system in response to clicking in the viewport
 	std::shared_ptr<ViewportInputSystem> viewportInputSystem;
 	{
-		CameraInputAxes axes = createDefaultCameraInputAxes(*inputPlatform);
 		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, skybolt::toValuesVector(axes)));
 
-		viewportInputSystem = std::make_shared<ViewportInputSystem>(inputPlatform, axes, engineRoot.get());
+		viewportInputSystem = std::make_shared<ViewportInputSystem>(inputPlatform, cameraInputSystem, engineRoot.get());
 		engineRoot->systemRegistry->push_back(viewportInputSystem);
 #ifdef USE_OSG_WINDOW
 		QObject::connect(osgWindow.get(), &OsgWindow::mousePressed, [viewportInputSystem](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
-			viewportInputSystem->setMouseEnabled(true);
-			viewportInputSystem->setKeyboardEnabled(true);
+			// Convert Qt mouse event to skybolt MouseEvent and forward it to the viewport input system.
+			MouseEvent event{};
+			event.type = MouseEvent::Pressed,
+			event.buttonId = static_cast<MouseEvent::ButtonId>(button),
+			event.absState = glm::vec3(position.x(), position.y(), 0),
+			event.relState = glm::vec3(0, 0, 0);
+			viewportInputSystem->onEvent(event);
 			});
 #endif
 	}
@@ -418,14 +427,14 @@ static int createAndExecuteApplication(int argc, char** argv)
 	auto viewportCamera = std::make_shared<sim::EntityId>();
 
 	// Handle camera selection change event
-	QObject::connect(cameraControllerWidget, &CameraControllerWidget::cameraSelectionChanged, [viewport, engineRoot = engineRoot.get(), viewportInputSystem, viewportCamera](const sim::Entity* camera) {
+	QObject::connect(cameraControllerWidget, &CameraControllerWidget::cameraSelectionChanged, [viewport, engineRoot = engineRoot.get(), cameraInputSystem, viewportCamera](const sim::Entity* camera) {
 		if (camera)
 		{
 			World* world = &engineRoot->scenario->world;
 			viewport->setCamera(getVisCamera(*camera));
 			auto simVisSystem = sim::findRequiredSystem<SimVisSystem>(*engineRoot->systemRegistry);
 			simVisSystem->setSceneOriginProvider(SimVisSystem::sceneOriginFromEntity(world, camera->getId()));
-			connectToCameraExclusivly(*viewportInputSystem, world, camera->getId());
+			connectToCameraExclusivly(*cameraInputSystem, world, camera->getId());
 		}
 		*viewportCamera = camera ? camera->getId() : sim::nullEntityId();
 		});

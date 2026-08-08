@@ -7,18 +7,26 @@
 
 #pragma once
 
+#include "TypeIdentifiable.h"
+
 #include <vector>
 #include <map>
 #include <memory>
 #include <set>
-#include <typeindex>
 
 namespace skybolt {
 
-class Event
+class Event : public TypeIdentifiable
 {
 public:
-	virtual ~Event() {}
+	~Event() override = default;
+};
+
+template <class DerivedT>
+class EventT : public Event // template argument provided to ensure each derived class has its own staticTypeId() implementation
+{
+public:
+	SKYBOLT_TYPE_IDENTIFIABLE
 };
 
 class EventEmitter;
@@ -52,17 +60,16 @@ public:
 	void addEventListener(EventListener* listener)
 	{
 		listener->_addEmitter(this);
-		mListenerMap[typeid(EventT)].insert(listener);
+		mListenerMap[EventT::staticTypeId()].insert(listener);
 	}
 
 	//! Call this to explicitally remove a listener.
 	//! Otherwise listener will be removed automatically when the listener is destroyed.
 	void removeEventListener(EventListener*);
 
-	template <class EventT>
-	void emitEvent(const EventT& event) const
+	void emitEvent(const Event& event) const
 	{
-		auto it = mListenerMap.find(typeid(event));
+		auto it = mListenerMap.find(event.getTypeId());
 		if (it != mListenerMap.end())
 		{
 			// Take copy of listeners before calling onEvent(),
@@ -77,7 +84,7 @@ public:
 
 private:
 	typedef std::set<EventListener*> EventListeners;
-	typedef std::map<std::type_index, EventListeners> ListenerMap;
+	typedef std::map<TypeId, EventListeners> ListenerMap;
 	ListenerMap mListenerMap;
 };
 

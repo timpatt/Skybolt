@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "System.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
 #include <SkyboltCommon/Exception.h>
 #include <vector>
@@ -20,12 +21,11 @@ typedef std::shared_ptr<SystemRegistry> SystemRegistryPtr;
 template <typename T>
 std::shared_ptr<T> findSystem(const SystemRegistry& registry)
 {
-	for (const auto& i : registry)
+	for (const SystemPtr& system : registry)
 	{
-		auto r = std::dynamic_pointer_cast<T>(i);
-		if (r)
+		if (system->is<T>())
 		{
-			return r;
+			return std::static_pointer_cast<T>(system);
 		}
 	}
 	return nullptr;

@@ -19,13 +19,23 @@ struct DummyEventListener : public EventListener
 	const Event* receivedEvent = nullptr;
 };
 
-struct EventTypeA : public Event
+struct EventTypeA : public EventT<EventTypeA>
 {
 };
 
-struct EventTypeB : public Event
+struct EventTypeB : public EventT<EventTypeB>
 {
 };
+
+TEST_CASE("Event type comparison works correctly")
+{
+	EventTypeA eventA;
+	EventTypeB eventB;
+	CHECK(eventA.is<EventTypeA>());
+	CHECK(!eventA.is<EventTypeB>());
+	CHECK(eventB.is<EventTypeB>());
+	CHECK(!eventB.is<EventTypeA>());
+}
 
 TEST_CASE("EventListener receives registered event type")
 {

@@ -16,7 +16,7 @@
 
 namespace skybolt {
 
-class DebugPositionLoaderSystem : public EventListener, public sim::System
+class DebugPositionLoaderSystem : public EventListener, public sim::SystemT<DebugPositionLoaderSystem>
 {
 public:
 	DebugPositionLoaderSystem(InputPlatform* inputPlatform, sim::Node* node);

@@ -17,7 +17,7 @@
 namespace skybolt {
 
 //! Synchronizes the visualization state with the simulation state each update
-class SimVisSystem : public sim::System
+class SimVisSystem : public sim::SystemT<SimVisSystem>
 {
 public:
 	using SceneOriginProvider = std::function<sim::Vector3()>;

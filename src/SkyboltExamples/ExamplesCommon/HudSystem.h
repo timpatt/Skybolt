@@ -21,7 +21,7 @@ class PitchLadderModel;
 class AltitudeBarModel;
 class RollAngleRibbonModel;
 
-class HudSystem : public sim::System, public sim::EntityListener
+class HudSystem : public sim::SystemT<HudSystem>, public sim::EntityListener
 {
 public:
 	HudSystem(const osg::ref_ptr<osg::Camera>& parentCamera, const std::function<double()>& verticalFovProvider);

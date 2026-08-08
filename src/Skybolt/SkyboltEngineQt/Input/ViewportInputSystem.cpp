@@ -10,15 +10,25 @@
 
 using namespace skybolt;
 
-ViewportInputSystem::ViewportInputSystem(const skybolt::InputPlatformPtr& inputPlatform, CameraInputAxes axes, NonNullPtr<EngineRoot> engineRoot) :
-	CameraInputSystem(inputPlatform, std::move(axes)),
+ViewportInputSystem::ViewportInputSystem(const skybolt::InputPlatformPtr& inputPlatform, const skybolt::CameraInputSystemPtr& cameraInputSystem, NonNullPtr<EngineRoot> engineRoot) :
+	mInputPlatform(inputPlatform),
+	mCameraInputSystem(cameraInputSystem),
 	mEngineRoot(engineRoot)
 {
+	assert(mInputPlatform);
+	assert(mCameraInputSystem);
 	assert(mEngineRoot);
 
 	// Start with input disabled. Input will only be enabled on mouse down event in the viewport.
-	setMouseEnabled(false);
-	setKeyboardEnabled(false);
+	mCameraInputSystem->setMouseEnabled(false);
+	mCameraInputSystem->setKeyboardEnabled(false);
+
+	mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
+}
+
+ViewportInputSystem::~ViewportInputSystem()
+{
+	mInputPlatform->getEventEmitter()->removeEventListener(this);
 }
 
 void ViewportInputSystem::onEvent(const Event& event)
@@ -26,17 +36,20 @@ void ViewportInputSystem::onEvent(const Event& event)
 	if (const auto& mouseEvent = dynamic_cast<const MouseEvent*>(&event))
 	{
 		// Disable input when mouse is released.
-		// Note: enable on mouse down even is handled elsewhere. See OsgWindow::mousePressed.
-		if (mouseEvent->type == MouseEvent::Type::Released)
+		if (mouseEvent->type == MouseEvent::Type::Pressed)
 		{
-			setMouseEnabled(false);
-			setKeyboardEnabled(false);
+			mCameraInputSystem->setMouseEnabled(true);
+			mCameraInputSystem->setKeyboardEnabled(true);
+		}
+		else if (mouseEvent->type == MouseEvent::Type::Released)
+		{
+			mCameraInputSystem->setMouseEnabled(false);
+			mCameraInputSystem->setKeyboardEnabled(false);
 		}
 	}
-	CameraInputSystem::onEvent(event);
 }
 
 void ViewportInputSystem::setViewportHeight(int heightPixels)
 {
-	configure(*this, heightPixels, mEngineRoot->engineSettings);
+	configure(*mCameraInputSystem, heightPixels, mEngineRoot->engineSettings);
 }

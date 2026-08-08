@@ -23,7 +23,7 @@ public:
 	virtual void setDynamicsEnabled(bool enabled) {};
 
 	//! @returns types this component will be registered as in the type system, used by TypedItemContainer
-	virtual std::vector<std::type_index> getExposedTypes() const { return { typeid(*this) }; }
+	virtual std::vector<std::type_index> getExposedTypes() const;
 };
 
 } // namespace sim

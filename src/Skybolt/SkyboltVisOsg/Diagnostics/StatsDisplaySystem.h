@@ -21,7 +21,7 @@ namespace osgViewer {
 
 namespace skybolt {
 
-class StatsDisplaySystem : public sim::System
+class StatsDisplaySystem : public sim::SystemT<StatsDisplaySystem>
 {
 public:
 	//! Displays the viewer's stats on the given camera

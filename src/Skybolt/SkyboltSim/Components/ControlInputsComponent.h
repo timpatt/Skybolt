@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include <SkyboltCommon/Range.h>
+#include <SkyboltCommon/TypeIdentifiable.h>
 #include <SkyboltSim/Component.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
-#include <SkyboltCommon/Range.h>
 #include <boost/variant.hpp>
 #include <glm/glm.hpp>
 #include <memory>
@@ -16,7 +17,7 @@
 namespace skybolt {
 namespace sim {
 
-struct ControlInput
+struct ControlInput : public TypeIdentifiable
 {
 	virtual ~ControlInput() {}
 };
@@ -26,6 +27,8 @@ struct ControlInputT : public ControlInput
 {
 	T value;
 	RangeInclusive<T> range;
+
+	SKYBOLT_TYPE_IDENTIFIABLE
 };
 
 template <typename T>
@@ -64,9 +67,10 @@ public:
 		auto i = controls.find(name);
 		if (i != controls.end())
 		{
-			if (auto input = std::dynamic_pointer_cast<ControlInputT<T>>(i->second); input)
+			const ControlInputPtr& input = i->second;
+			if (input->is<ControlInputT<T>>())
 			{
-				return input;
+				return std::static_pointer_cast<ControlInputT<T>>(input);
 			}
 			else
 			{

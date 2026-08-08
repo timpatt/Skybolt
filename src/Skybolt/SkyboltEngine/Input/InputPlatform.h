@@ -170,7 +170,7 @@ enum InputDeviceType
 	InputDeviceTypeJoystick
 };
 
-struct KeyEvent : public Event
+struct KeyEvent : public EventT<KeyEvent>
 {
 	enum Type
 	{
@@ -188,7 +188,7 @@ struct KeyEvent : public Event
 	KeyCode code;
 };
 
-struct MouseEvent : public Event
+struct MouseEvent : public EventT<MouseEvent>
 {
 	enum Type
 	{

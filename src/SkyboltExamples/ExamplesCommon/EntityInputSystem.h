@@ -14,7 +14,7 @@
 
 namespace skybolt {
 
-class EntityInputSystem : public sim::System
+class EntityInputSystem : public sim::SystemT<EntityInputSystem>
 {
 public:
 	EntityInputSystem(const std::vector<LogicalAxisPtr>& axes);

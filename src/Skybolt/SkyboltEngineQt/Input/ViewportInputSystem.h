@@ -6,20 +6,24 @@
 
 #pragma once
 
+#include <SkyboltCommon/Event.h>
 #include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltEngine/CameraInputSystem.h>
 #include <SkyboltEngine/SkyboltEngineFwd.h>
+#include <SkyboltSim/System/System.h>
 
-class ViewportInputSystem : public skybolt::CameraInputSystem
+class ViewportInputSystem : public skybolt::sim::SystemT<ViewportInputSystem>, public skybolt::EventListener
 {
 public:
-	ViewportInputSystem(const skybolt::InputPlatformPtr& inputPlatform, skybolt::CameraInputAxes axes, skybolt::NonNullPtr<skybolt::EngineRoot> engineRoot);
+	ViewportInputSystem(const skybolt::InputPlatformPtr& inputPlatform, const skybolt::CameraInputSystemPtr& cameraInputSystem, skybolt::NonNullPtr<skybolt::EngineRoot> engineRoot);
+	~ViewportInputSystem() override;
 
 	void setViewportHeight(int heightPixels);
 
-protected:
 	void onEvent(const skybolt::Event& event) override;
 
 private:
+	skybolt::InputPlatformPtr mInputPlatform;
+	skybolt::CameraInputSystemPtr mCameraInputSystem;
 	skybolt::NonNullPtr<skybolt::EngineRoot> mEngineRoot;
 };

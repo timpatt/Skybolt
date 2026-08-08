@@ -14,7 +14,7 @@
 
 namespace skybolt {
 
-class InputSystem : public sim::System
+class InputSystem : public sim::SystemT<InputSystem>
 {
 public:
 	InputSystem(const InputPlatformPtr& inputPlatform, const std::vector<LogicalAxisPtr>& axes = {});
