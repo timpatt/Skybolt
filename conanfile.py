@@ -96,10 +96,14 @@ class SkyboltConan(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
+        # FIXME: We shouldn't be configuring flags for dependencies here; that should be done by the dependency itself
         tc.variables["Boost_STATIC_LIBS"] = bool(not self.dependencies["boost"].options.shared)
         tc.variables["OSG_STATIC_LIBS"] = bool(not self.dependencies["openscenegraph-mr"].options.shared)
+
         tc.variables["SKYBOLT_PLUGINS_STATIC_BUILD"] = bool(not self.options.shared_plugins)
         tc.variables["Skybolt_VERSION"] = self.version
+
+        # FIXME: These variables should be prefixed with "SKYBOLT_"
         tc.variables["BUILD_JSBSIM_PLUGIN"] = bool(self.options.enable_jsbsim)
         tc.variables["BUILD_BULLET_PLUGIN"] = bool(self.options.enable_bullet)
         tc.variables["BUILD_FFT_OCEAN_PLUGIN"] = bool(self.options.enable_fft_ocean)
