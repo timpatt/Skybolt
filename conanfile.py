@@ -13,6 +13,7 @@ class SkyboltConan(ConanFile):
         "enable_fft_ocean": [True, False],
         "enable_jsbsim": [True, False],
         "enable_map_features_converter": [True, False],
+        "enable_osg": [True, False],
         "enable_osg_curl_plugin": [True, False], # Whether to link the OSG curl plugin into the static build. Only relavent if shared = False.
         "enable_python": [True, False],
         "enable_qt": [True, False],
@@ -23,6 +24,7 @@ class SkyboltConan(ConanFile):
     default_options = {
         "enable_boost_log": True,
         "enable_bullet": False,
+        "enable_osg": True,
         "enable_osg_curl_plugin": True,
         "enable_fft_ocean": True,
 		"enable_jsbsim": False,
@@ -47,6 +49,9 @@ class SkyboltConan(ConanFile):
     implements = ["auto_shared_fpic"]
 
     def configure(self):
+        if self.options.enable_osg:
+            self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
+        self.options["bullet3"].double_precision = True
         if self.options.get_safe("shared"):
             self.options.rm_safe("fPIC")
 
@@ -54,7 +59,7 @@ class SkyboltConan(ConanFile):
         self.options["bullet3"].double_precision = True
 
     def requirements(self):
-        self.requires("boost/1.84.0", transitive_headers=True)
+        self.requires("boost/1.85.0", transitive_headers=True)
         self.requires("catch2/2.13.8")
         self.requires("cpp-httplib/0.10.1")
         self.requires("earcut/2.2.3")
@@ -64,7 +69,8 @@ class SkyboltConan(ConanFile):
 		
         self.requires("cxxtimer/1.0.0")
         self.requires("px_sched/1.0.0", transitive_headers=True)
-        self.requires("openscenegraph-mr/3.7.0", transitive_headers=True)
+        if self.options.enable_osg:
+            self.requires("openscenegraph-mr/3.7.0", transitive_headers=True)
         self.requires("skybolt-reflect/1.0.0", transitive_headers=True)
 
         if self.options.enable_bullet:
@@ -113,8 +119,8 @@ class SkyboltConan(ConanFile):
         tc = CMakeToolchain(self)
         # FIXME: We shouldn't be configuring flags for dependencies here; that should be done by the dependency itself
         tc.variables["Boost_STATIC_LIBS"] = bool(not self.dependencies["boost"].options.shared)
-        tc.variables["OSG_STATIC_LIBS"] = bool(not self.dependencies["openscenegraph-mr"].options.shared)
-
+        if self.options.enable_osg:
+            tc.variables["OSG_STATIC_LIBS"] = bool(not self.dependencies["openscenegraph-mr"].options.shared)
         tc.variables["SKYBOLT_PLUGINS_STATIC_BUILD"] = bool(not self.options.shared_plugins)
         tc.variables["Skybolt_VERSION"] = self.version
 
@@ -127,6 +133,7 @@ class SkyboltConan(ConanFile):
         tc.variables["BUILD_PYTHON_PLUGIN"] = bool(self.options.enable_python)
         tc.variables["BUILD_WITH_BOOST_LOG"] = bool(self.options.enable_boost_log)
         tc.variables["BUILD_WITH_QT"] = bool(self.options.enable_qt)
+        tc.variables["BUILD_WITH_OSG"] = bool(self.options.enable_osg)
         tc.variables["BUILD_WITH_OSG_CURL_PLUGIN"] = bool(self.options.enable_osg_curl_plugin)
 
         tc.variables["BUILD_TESTING"] = False

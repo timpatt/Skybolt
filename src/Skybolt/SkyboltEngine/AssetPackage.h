@@ -12,6 +12,8 @@
 
 namespace skybolt {
 
+std::vector<std::filesystem::path>& assetPackageSearchPaths();
+
 using AssetPackageName = std::string;
 using AssetPackageFilepaths = std::map<AssetPackageName, file::Path>;
 AssetPackageFilepaths loadAssetPackagesInPath(const file::Path& assetSearchPath);

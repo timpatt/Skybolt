@@ -38,15 +38,6 @@ public:
 class EntityFactory : public EntityFactoryBase
 {
 public:
-	struct VisContext
-	{
-		vis::Scene* scene;
-		vis::VisFactoryRegistryPtr visFactoryRegistry;
-		const vis::ShaderPrograms* programs;
-		vis::ModelFactoryPtr modelFactory;
-		vis::TextureCachePtr textureCache;
-	};
-
 	struct Context
 	{
 		px_sched::Scheduler* scheduler;
@@ -58,7 +49,6 @@ public:
 		file::FileLocator fileLocator;
 		std::vector<std::string> assetPackagePaths;
 		nlohmann::json engineSettings;
-		std::optional<VisContext> visContext; // !< If empty, visual objects will not be created
 		NonNullPtr<FactoryRegistries> factoryRegistries;
 		NonNullPtr<refl::TypeRegistry> typeRegistry;
 	};

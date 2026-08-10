@@ -7,6 +7,7 @@
 #pragma once
 
 #include "TileImagesLoader.h"
+#include "SkyboltVis/SkyboltVisFwd.h"
 
 namespace skybolt {
 namespace vis {
@@ -16,8 +17,8 @@ struct PlanetTileImages : TileImages
 	~PlanetTileImages() override = default;
 
 	TileImage heightMapImage;
-	osg::ref_ptr<osg::Image> normalMapImage; //!< Same tile key as heightMapImage
-	osg::ref_ptr<osg::Image> landMaskImage; //!< Same tile key as heightMapImage
+	ImagePtr normalMapImage; //!< Same tile key as heightMapImage
+	ImagePtr landMaskImage; //!< Same tile key as heightMapImage
 
 	TileImage albedoMapImage;
 
@@ -49,12 +50,12 @@ public:
 	//! If true, land mask is generated from elevation if landMaskLayer is null.
 	bool generateLandMaskFromElevation = true;
 
-	explicit PlanetTileImagesLoader(double planetRadius) : TileImagesLoader(5), mPlanetRadius(planetRadius) {}
-
+	PlanetTileImagesLoader(const ImageFactoryPtr& imageFactory, double planetRadius);
 	//! May be called from multiple threads
 	TileImagesPtr load(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
 private:
+	ImageFactoryPtr mImageFactory;
 	const double mPlanetRadius;
 };
 

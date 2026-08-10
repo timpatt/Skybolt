@@ -11,7 +11,6 @@
 #include "ScenarioWorkspace.h"
 
 #include <SkyboltCommon/MapUtility.h>
-#include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/EngineRoot.h>
@@ -19,13 +18,9 @@
 #include <SkyboltEngine/GetExecutableFilepath.h>
 #include <SkyboltEngine/FindPython.h>
 #include <SkyboltEngine/Input/InputSystem.h>
-#include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltEngine/UpdateLoop/SimUpdater.h>
-#include <SkyboltEngine/WindowUtil.h>
 #include <SkyboltEngine/Scenario/ScenarioSerialization.h>
 #include <SkyboltEngine/Scenario/SimSnapshotRegistry.h>
-#include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
-#include <SkyboltEngine/SimVisBinding/VisNameLabels.h>
 #include <SkyboltEngineQt/OsgWindow.h>
 #include <SkyboltEngineQt/SkyboltQtPropertyReflection.h>
 #include <SkyboltEngineQt/Icon/SkyboltIcons.h>
@@ -44,14 +39,18 @@
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/LatLon.h>
-#include <SkyboltVis/Scene.h>
-#include <SkyboltVis/VisRoot.h>
-#include <SkyboltVis/Window/Window.h>
-#include <SkyboltVis/Window/StandaloneWindow.h>
-#include <SkyboltVis/RenderOperation/RenderCameraViewport.h>
-#include <SkyboltVis/RenderOperation/RenderOperationUtil.h>
-#include <SkyboltVis/RenderOperation/RenderTarget.h>
-#include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
+#include <SkyboltVisOsg/Scene.h>
+#include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/Diagnostics/StatsDisplaySystem.h>
+#include <SkyboltVisOsg/SimVisBinding/SimVisSystem.h>
+#include <SkyboltVisOsg/SimVisBinding/CameraSimVisBinding.h>
+#include <SkyboltVisOsg/SimVisBinding/VisNameLabels.h>
+#include <SkyboltVisOsg/Window/Window.h>
+#include <SkyboltVisOsg/Window/WindowUtil.h>
+#include <SkyboltVisOsg/RenderOperation/RenderCameraViewport.h>
+#include <SkyboltVisOsg/RenderOperation/RenderOperationUtil.h>
+#include <SkyboltVisOsg/RenderOperation/RenderTarget.h>
+#include <SkyboltVisOsg/Shader/ShaderSourceFileChangeMonitor.h>
 #include <SkyboltWidgets/CollapsiblePanel/CollapsiblePanelWidget.h>
 #include <SkyboltWidgets/List/ListEditorWidget.h>
 #include <SkyboltWidgets/ErrorLog/ErrorLogModel.h>
@@ -388,19 +387,11 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Create 3D viewport
 	auto visRoot = std::make_shared<skybolt::vis::VisRoot>();
 
-	// TODO: This might need work:
-#define USE_OSG_WINDOW
-#ifdef USE_OSG_WINDOW
 	std::unique_ptr<OsgWindow> osgWindow = std::make_unique<OsgWindow>(visRoot);
 	auto window = osgWindow->getWindow();
-	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
+	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindow(*window, createVisContext(*visRoot, *engineRoot));
 	waitForOsgWindowToInitializeVisWindow(*osgWindow);
-#else
-	auto window = std::make_shared<skybolt::vis::StandaloneWindow>(skybolt::vis::RectI(0, 0, 800, 600));
-	visRoot->addWindow(window);
-	QPointer<QWindow> osgWindow = QWindow::fromWinId(std::stoi(window->getHandle()));
-	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
-#endif
+
 	{
 
 		QWidget* osgContainer = QWidget::createWindowContainer(osgWindow.get(), &mainWindow);
@@ -523,8 +514,8 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Create entity name labels
 	std::shared_ptr<VisNameLabels> visNameLabels;
 	{
-		auto hudGroup = engineRoot->scene->getBucketGroup(vis::Scene::Bucket::Hud);
-		visNameLabels = std::make_shared<VisNameLabels>(&engineRoot->scenario->world, hudGroup, engineRoot->programs);
+		auto hudGroup = visRoot->getScene()->getBucketGroup(vis::Scene::Bucket::Hud);
+		visNameLabels = std::make_shared<VisNameLabels>(&engineRoot->scenario->world, hudGroup, visRoot->getShaderPrograms());
 		auto simVisSystem = sim::findSystem<SimVisSystem>(*engineRoot->systemRegistry);
 		simVisSystem->addBinding(visNameLabels);
 	}
@@ -577,7 +568,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 				});
 
 			QObject::connect(openAction, &QAction::triggered, &mainWindow, [&mainWindow, recentFileMenuPopulator, &scenarioWorkspace]() {
-				QString filename = QFileDialog::getOpenFileName(&mainWindow, "Open Scenario", QString(), "Scenario Files (*.scenario.json);;Scenario Files (*.scn);;All Files (*)"); // NOTE: separator in Qt filter list must be `;;`, not `;`
+				QString filename = QFileDialog::getOpenFileName(&mainWindow, "Open Scenario", QString(), "Scenario Files (*.scn);;All Files (*)"); // NOTE: separator in Qt filter list must be `;;`, not `;`
 				if (!filename.isEmpty())
 				{
 					if (auto error = scenarioWorkspace.loadScenario(filename); error)
@@ -594,7 +585,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 		// Save
 		{
 			auto saveAsFn = [&mainWindow, recentFileMenuPopulator, &scenarioWorkspace]() {
-				QString filename = QFileDialog::getSaveFileName(&mainWindow, "Save Scenario", QString(), "Scenario Files (*.scenario.json)");
+				QString filename = QFileDialog::getSaveFileName(&mainWindow, "Save Scenario", QString(), "Scenario Files (*.scn)");
 				if (!filename.isEmpty())
 				{
 					if (auto error = scenarioWorkspace.saveScenario(filename); error)
@@ -675,7 +666,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 			QObject::connect(action, &QAction::toggled, &mainWindow, [
 				renderOperationVisualization = osg::ref_ptr<skybolt::vis::RenderOperation>(),
-				engineRoot = engineRoot.get(), viewport,
+				visRoot = visRoot.get(), viewport,
 				osgWindow = osgWindow.get()
 			] (bool checked) mutable {
 				vis::Window* window = osgWindow->getWindow();
@@ -688,7 +679,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 				{
 					if (!renderOperationVisualization)
 					{
-						renderOperationVisualization = vis::createRenderOperationVisualization(viewport, engineRoot->programs);
+						renderOperationVisualization = vis::createRenderOperationVisualization(viewport, visRoot->getShaderPrograms());
 					}
 					window->getRenderOperationSequence().addOperation(renderOperationVisualization);
 				}
@@ -706,11 +697,11 @@ static int createAndExecuteApplication(int argc, char** argv)
 			action->setChecked(false);
 			viewMenu->addAction(action);
 
-			QObject::connect(action, &QAction::toggled, &mainWindow, [shaderSourceFileChangeMonitor = std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor>(), engineRoot = engineRoot.get()] (bool checked) mutable {
+			QObject::connect(action, &QAction::toggled, &mainWindow, [shaderSourceFileChangeMonitor = std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor>(), visRoot = visRoot.get()] (bool checked) mutable {
 				shaderSourceFileChangeMonitor.reset();
 				if (checked)
 				{
-					shaderSourceFileChangeMonitor = std::make_unique<vis::ShaderSourceFileChangeMonitor>(engineRoot->programs);
+					shaderSourceFileChangeMonitor = std::make_unique<vis::ShaderSourceFileChangeMonitor>(visRoot->getShaderPrograms());
 				}
 			});
 		}

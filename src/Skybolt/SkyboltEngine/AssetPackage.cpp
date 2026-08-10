@@ -9,9 +9,16 @@
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
 
-#include <osgDB/Registry>
+#include <set>
 
 namespace skybolt {
+
+std::vector<std::filesystem::path>& assetPackageSearchPaths()
+{
+	// FIXME: This should be part of EngineRoot, not a global!
+	static std::vector<std::filesystem::path> paths;
+	return paths;
+}
 
 struct AssetPackageDefinition
 {
@@ -32,7 +39,7 @@ static AssetPackageDefinition readAssetPackageDefinition(const nlohmann::json& j
 
 static void registerAssetPackage(const AssetPackageDefinition& definition)
 {
-	osgDB::Registry::instance()->getDataFilePathList().push_back(definition.filepath.string() + "/");
+	assetPackageSearchPaths().push_back(definition.filepath.string() + "/");
 	SKYBOLT_LOG(info) << "Registered asset package: " << definition.name;
 }
 

@@ -16,13 +16,8 @@
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EntityFactory.h>
-#include <SkyboltEngine/WindowUtil.h>
-#include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
-#include <SkyboltEngine/Input/InputPlatformOsg.h>
 #include <SkyboltEngine/Input/InputSystem.h>
 #include <SkyboltEngine/Input/LogicalAxis.h>
-#include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
-#include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltEngine/UpdateLoop/UpdateLoopUtility.h>
 
 #include <SkyboltSim/World.h>
@@ -35,13 +30,18 @@
 #include <SkyboltSim/Spatial/Position.h>
 #include <SkyboltSim/System/System.h>
 
-#include <SkyboltVis/Camera.h>
-#include <SkyboltVis/VisRoot.h>
-#include <SkyboltVis/Scene.h>
-#include <SkyboltVis/RenderOperation/RenderCameraViewport.h>
-#include <SkyboltVis/RenderOperation/RenderOperationOrder.h>
-#include <SkyboltVis/RenderOperation/RenderTarget.h>
-#include <SkyboltVis/Window/StandaloneWindow.h>
+#include <SkyboltVisOsg/Camera.h>
+#include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/Scene.h>
+#include <SkyboltVisOsg/Diagnostics/StatsDisplaySystem.h>
+#include <SkyboltVisOsg/Input/InputPlatformOsg.h>
+#include <SkyboltVisOsg/SimVisBinding/CameraSimVisBinding.h>
+#include <SkyboltVisOsg/SimVisBinding/SimVisSystem.h>
+#include <SkyboltVisOsg/RenderOperation/RenderCameraViewport.h>
+#include <SkyboltVisOsg/RenderOperation/RenderOperationOrder.h>
+#include <SkyboltVisOsg/RenderOperation/RenderTarget.h>
+#include <SkyboltVisOsg/Window/StandaloneWindow.h>
+#include <SkyboltVisOsg/Window/WindowUtil.h>
 
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 		// Attach camera to window
 		vis::WindowPtr window = createExampleWindow();
 
-		osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
+		osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindow(*window, createVisContext(*visRoot, *engineRoot));
 		viewport->setCamera(getVisCamera(*simCamera));
 		visRoot->addWindow(window);
 
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 			cameraControllerComponent2->selectController("Follow");
 
 			vis::WindowPtr window2 = std::make_unique<vis::StandaloneWindow>(vis::RectI(1080, 0, 1080, 720));
-			osg::ref_ptr<vis::RenderCameraViewport> viewport2 = createAndAddViewportToWindowWithEngine(*window2, *engineRoot);
+			osg::ref_ptr<vis::RenderCameraViewport> viewport2 = createAndAddViewportToWindow(*window, createVisContext(*visRoot, *engineRoot));
 			viewport2->setCamera(getVisCamera(*simCamera2));
 			visRoot->addWindow(window2);
 		}
@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
 		engineRoot->scenario->startJulianDate = sim::calcJulianDate(/* year */ 2030, /* month */ 4, /* day */ 6, /* hour */ 20);
 
 		// Run loop
-		runMainLoop(*visRoot, *engineRoot, UpdateLoop::neverExit);
+		runMainLoop(*engineRoot, [&] (...) { return visRoot->render(); }, UpdateLoop::neverExit);
 	}
 	catch (const std::exception& e)
 	{

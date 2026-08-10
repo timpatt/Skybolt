@@ -11,10 +11,6 @@
 #include "FactoryRegistries.h"
 #include "Scenario/Scenario.h"
 #include "Plugin/Plugin.h"
-#include <SkyboltReflect/SkyboltReflectFwd.h>
-#include <SkyboltSim/SkyboltSimFwd.h>
-#include <SkyboltSim/System/SystemRegistry.h>
-#include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltCommon/File/FileUtility.h>
 
@@ -28,7 +24,7 @@ struct EngineRootConfig
 {
 	nlohmann::json engineSettings;
 	std::vector<std::string> assetSearchPaths;
-	bool enableVis = true; //!< True if the visual subsystem is enabled
+	vis::ImageFactoryPtr imageFactory; //!< Never null
 };
 
 std::vector<std::string> getDefaultAssetSearchPaths();
@@ -49,17 +45,15 @@ public:
 
 	const std::vector<std::string>& getAssetPackagePaths() const { return mAssetPackagePaths; }
 
-	std::unique_ptr<px_sched::Scheduler> scheduler;
-	vis::ShaderPrograms programs;
-	vis::ScenePtr scene;
+	std::unique_ptr<px_sched::Scheduler> scheduler; //!< Never null
 	file::FileLocator fileLocator;
-	std::unique_ptr<EntityFactory> entityFactory;
-	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
+	std::unique_ptr<EntityFactory> entityFactory; //!< Never null
+	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry; //!< Never null
 	EngineStats stats;
-	std::unique_ptr<Scenario> scenario;
-	sim::SystemRegistryPtr systemRegistry;
-	std::unique_ptr<refl::TypeRegistry> typeRegistry;
-	std::unique_ptr<FactoryRegistries> factoryRegistries;
+	std::unique_ptr<Scenario> scenario; //!< Never null
+	sim::SystemRegistryPtr systemRegistry; //!< Never null
+	std::unique_ptr<refl::TypeRegistry> typeRegistry; //!< Never null
+	std::unique_ptr<FactoryRegistries> factoryRegistries; //!< Never null
 	nlohmann::json engineSettings;
 };
 
