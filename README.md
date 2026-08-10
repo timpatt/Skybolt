@@ -57,3 +57,9 @@ export SKYBOLT_ASSETS_PATH='/workspaces/Skybolt/Assets:/workspaces/Archon/Assets
 	* See https://github.com/catchorg/Catch2/issues/2493
 * Backup conan dependency sources somewhere (see https://docs.conan.io/2/devops/backup_sources/sources_backup.html)
 * Remove `include_package` functionality from conanfile and replace with https://docs.conan.io/2/devops/devops_local_recipes_index.html (potentially)
+* Add top-level submodule to capture child packages
+* Allow assets to sit in sibling directories
+* .gitattributes in SkyboltUnreal is broken.  Need to update and rewrite history
+* *.ttf files checked into skybolt need to be added to lfs.  Also remove fonts that we don't have a license for
+* "package" now fails in Skybolt; fix it up
+* Build UnrealEngine and SkyboltUnrealEngine (with RTTI enabled) and fix any issues
