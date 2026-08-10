@@ -3,7 +3,6 @@ from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 import os
 
 class SkyboltConan(ConanFile):
-    implements = ["auto_shared_fpic"]
     name = "skybolt"
     version = "1.8.0"
     settings = "os", "compiler", "arch", "build_type"
@@ -33,10 +32,11 @@ class SkyboltConan(ConanFile):
         "shared_plugins": True,
         "fPIC": True
     }
-    generators = ["VirtualRunEnv"]
     exports = "Conan/*"
     exports_sources = "*"
     no_copy_source = True
+
+    implements = ["auto_shared_fpic"]
 
     def include_package(self, name, version, subfolder=None, transitive_headers=False):
         currentDir = os.path.dirname(os.path.abspath(__file__))
@@ -48,10 +48,11 @@ class SkyboltConan(ConanFile):
         self.requires(f"{name}/{version}", transitive_headers=transitive_headers)
 
     def configure(self):
-        self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
-        self.options["bullet3"].double_precision = True
         if self.options.get_safe("shared"):
             self.options.rm_safe("fPIC")
+
+        self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
+        self.options["bullet3"].double_precision = True
 
     def requirements(self):
         self.requires("boost/1.84.0", transitive_headers=True)
@@ -89,7 +90,6 @@ class SkyboltConan(ConanFile):
             
     def layout(self):
         cmake_layout(self)
-        self.folders.build = ""
         self.cpp.source.includedirs = ["src"]
         self.cpp.source.builddirs = ["CMake"]
         self.cpp.build.libdirs = ["lib", f"lib/{self.settings.build_type}/plugins"]
@@ -129,9 +129,9 @@ class SkyboltConan(ConanFile):
         self.cpp_info.libs = ["AircraftHud", "SkyboltEngine"]
         if self.options.enable_qt:
             self.cpp_info.libs.append("SkyboltEngineQt")
+
         # When building static libraries, the order of the libs matters; SkyboltEngineQt depends on SkyboltVis
         # The linker walks left to right, and collates items that are required and expects them to be satisfied later on
-        # ... or something like that?? TODO
         self.cpp_info.libs.extend(["SkyboltVis", "SkyboltSim", "SkyboltCommon"])
         self.cpp_info.builddirs = ["CMake"]
 		
