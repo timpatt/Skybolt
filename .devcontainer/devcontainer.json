@@ -52,7 +52,8 @@
     	"source=conan-cache,target=/home/vscode/.conan2/p,type=volume",
     	"source=uv-cache,target=/home/vscode/.cache/uv,type=volume",
     	"source=uv-python-cache,target=/home/vscode/.cache/uv_python,type=volume",
-    	"source=${localWorkspaceFolder}/../Archon,target=/workspaces/Archon,type=bind"
+    	"source=${localWorkspaceFolder}/../Archon,target=/workspaces/Archon,type=bind",
+    	"source=${localWorkspaceFolder}/../SkyboltUnreal,target=/workspaces/SkyboltUnreal,type=bind"
   	],
 	"postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/setup.sh",
 
