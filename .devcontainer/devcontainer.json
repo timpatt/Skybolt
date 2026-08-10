@@ -44,7 +44,8 @@
 
 	"mounts": [
     	// Persists cache directory across container rebuilds
-    	"source=conan-cache,target=/home/vscode/.conan2/p,type=volume"
+    	"source=conan-cache,target=/home/vscode/.conan2/p,type=volume",
+    	"source=${localWorkspaceFolder}/../Archon,target=/workspaces/Archon,type=bind"
   	],
 	"postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/setup.sh",
 

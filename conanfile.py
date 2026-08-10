@@ -1,5 +1,5 @@
 from conan import ConanFile
-from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
+from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 import os
 
 class SkyboltConan(ConanFile):
@@ -86,6 +86,13 @@ class SkyboltConan(ConanFile):
         if self.options.enable_qt:
             self.requires("qt/6.10.1", transitive_headers=True)
             self.include_package("skybolt-widgets", "1.0.0", transitive_headers=True)
+            
+    def layout(self):
+        cmake_layout(self)
+        self.folders.build = ""
+        self.cpp.source.includedirs = ["src"]
+        self.cpp.source.builddirs = ["CMake"]
+        self.cpp.build.libdirs = ["lib", f"lib/{self.settings.build_type}/plugins"]
 
     def generate(self):
         tc = CMakeToolchain(self)
@@ -110,7 +117,7 @@ class SkyboltConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure(variables={"CMAKE_INSTALL_PREFIX": f"{self.build_folder}/Install"})
+        cmake.configure()
         cmake.build()
 		
     def package(self):
@@ -119,11 +126,15 @@ class SkyboltConan(ConanFile):
 		
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
-        self.cpp_info.libs = ["AircraftHud", "SkyboltEngine", "SkyboltVis", "SkyboltSim", "SkyboltCommon"]
+        self.cpp_info.libs = ["AircraftHud", "SkyboltEngine"]
+        if self.options.enable_qt:
+            self.cpp_info.libs.append("SkyboltEngineQt")
+        # When building static libraries, the order of the libs matters; SkyboltEngineQt depends on SkyboltVis
+        # The linker walks left to right, and collates items that are required and expects them to be satisfied later on
+        # ... or something like that?? TODO
+        self.cpp_info.libs.extend(["SkyboltVis", "SkyboltSim", "SkyboltCommon"])
         self.cpp_info.builddirs = ["CMake"]
 		
         if self.options.enable_fft_ocean:
             self.cpp_info.libs.append("FftOcean")
 
-        if self.options.enable_qt:
-            self.cpp_info.libs.append("SkyboltEngineQt")
