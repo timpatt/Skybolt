@@ -25,10 +25,6 @@
 			"installZsh": "false",
 			"username": "vscode",
 			"upgradePackages": "false"
-		},
-		"ghcr.io/devcontainers/features/git:1": {
-			"version": "latest",
-			"ppa": "true"
 		}
 	},
 
@@ -37,7 +33,8 @@
 			"settings": {},
 			"extensions": [
 				"ms-vscode.cpptools",
-				"ms-vscode.cmake-tools"
+				"ms-vscode.cmake-tools",
+				"mhutchie.git-graph"
 			]
 		}
 	},
