@@ -11,15 +11,7 @@ os=Linux
 qt/*:compiler.cppstd=gnu20 
 
 [options]
-qt/*:shared=True
-qt/*:openssl=False
-qt/*:with_pq=False
-openscenegraph-mr/*:shared=True 
-skybolt/*:enable_python=True
-skybolt/*:enable_bullet=True
-skybolt/*:enable_jsbsim=True
 # -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True --lockfile={skybolt_source_dir}/conan-shared.lock --lockfile-partial
-
 
 [conf]
 # Force the creation of dotenv files to be loaded by vscode
