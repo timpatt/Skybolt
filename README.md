@@ -28,6 +28,9 @@ This project is licensed under the Mozilla Public License Version 2.0 - see the 
 Tim's notes:
 Add export DEBUGINFOD_URLS='' into .bashrc
 
+# Add local repositories
+conan remote add skybolt-conan ./Conan
+
 uv run python3 Tools/BuildScripts/build.py --skybolt-source-dir=$(pwd) --output-dir=$(pwd)/package --stage package
 
 # uv run conan build . --lockfile=conan-shared.lock --build=missing -s build_type=RelWithDebInfo
@@ -36,7 +39,7 @@ uv run python3 Tools/BuildScripts/build.py --skybolt-source-dir=$(pwd) --output-
 conan editable add -of /workspaces/Skybolt/packages/Build .
 
 # Build Archon from archon directory
-uv run python3 Tools/BuildScripts/build.py --skybolt-source-dir=/workspaces/Skybolt --archon-source-dir=/workspaces/Archon --output-dir=/workspaces/Archon/package --stage package
+uv run python3 Tools/BuildScripts/build.py --skybolt-source-dir=$(pwd)/../Skybolt --archon-source-dir=$(pwd) --output-dir=$(pwd)/package --stage package
 
 
 export SKYBOLT_ASSETS_PATH=/workspaces/Skybolt/Assets

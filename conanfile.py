@@ -38,15 +38,6 @@ class SkyboltConan(ConanFile):
 
     implements = ["auto_shared_fpic"]
 
-    def include_package(self, name, version, subfolder=None, transitive_headers=False):
-        currentDir = os.path.dirname(os.path.abspath(__file__))
-        recipes_path = os.path.join(currentDir, "Conan/Recipes", name)
-        if (subfolder):
-            recipes_path = os.path.join(recipes_path, subfolder)
-            
-        self.run(f"conan export --version {version} .", cwd=recipes_path)
-        self.requires(f"{name}/{version}", transitive_headers=transitive_headers)
-
     def configure(self):
         if self.options.get_safe("shared"):
             self.options.rm_safe("fPIC")
@@ -63,17 +54,17 @@ class SkyboltConan(ConanFile):
         self.requires("nlohmann_json/3.10.5", transitive_headers=True)
         self.requires("fontconfig/2.17.1", override=True) # Transitive dependency to resolve conflict between qt and openscenegraph
 		
-        self.include_package("cxxtimer", "1.0.0")
-        self.include_package("px_sched", "1.0.0", transitive_headers=True)
-        self.include_package("openscenegraph-mr", "3.7.0", subfolder="all", transitive_headers=True)
-        self.include_package("skybolt-reflect", "1.0.0", transitive_headers=True)
+        self.requires("cxxtimer/1.0.0")
+        self.requires("px_sched/1.0.0", transitive_headers=True)
+        self.requires("openscenegraph-mr/3.7.0", transitive_headers=True)
+        self.requires("skybolt-reflect/1.0.0", transitive_headers=True)
 
         if self.options.enable_bullet:
             self.requires("bullet3/3.22a")
 
         if self.options.enable_fft_ocean:
-            self.include_package("mufft", "1.0.0")
-            self.include_package("xsimd", "7.4.10", transitive_headers=True)
+            self.requires("mufft/1.0.0")
+            self.requires("xsimd/7.4.10", transitive_headers=True)
 
         if self.options.enable_jsbsim:
             self.requires("jsbsim/1.1.13")
@@ -86,7 +77,7 @@ class SkyboltConan(ConanFile):
             
         if self.options.enable_qt:
             self.requires("qt/6.10.1", transitive_headers=True)
-            self.include_package("skybolt-widgets", "1.0.0", transitive_headers=True)
+            self.requires("skybolt-widgets/1.0.0", transitive_headers=True)
             
     def layout(self):
         cmake_layout(self)
