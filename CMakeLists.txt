@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.26.0)
 
 project(Skybolt)
 
-enable_testing()
+include(CTest)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -90,17 +90,13 @@ include(Catch)
 include(SkyboltInstall)
 
 add_subdirectory(src/Skybolt)
+
+option(SKYBOLT_BUILD_EXAMPLES "Build Skybolt Examples" ON)
 add_subdirectory(src/SkyboltExamples)
 
 #-------------------------------------------------------------
 # Installation
 #-------------------------------------------------------------
-# Install conan files (required by 'conan editable' feature. See https://docs.conan.io/en/latest/developing_packages/editable_packages.html)
-if (EXISTS ${CMAKE_SOURCE_DIR}/conanfile.py) # File might not exist during conan build. See https://github.com/conan-io/conan/issues/5415.
-	install(FILES ${CMAKE_SOURCE_DIR}/conanfile.py DESTINATION .)
-endif()
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/Conan	DESTINATION .)
-
 # Install CMake scripts
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/CMake	DESTINATION .)
 
@@ -113,14 +109,17 @@ install(
 )
 
 # Install runtime dependencies
-install(RUNTIME_DEPENDENCY_SET SkyboltDependencies
-	PRE_EXCLUDE_REGEXES
-		[=[api-ms-]=] # VC Redistibutable DLLs
-		[=[ext-ms-]=] # Windows extension DLLs
-		[[kernel32\.dll]]
-		[[libc\.so\..*]] [[libgcc_s\.so\..*]] [[libm\.so\..*]] [[libstdc\+\+\.so\..*]]
-	POST_EXCLUDE_REGEXES
-		[=[.*system32\/.*\.dll]=] # Windows system DLLs
-		[=[^\/(lib|usr\/lib|usr\/local\/lib)]=] # Unix system libraries
-	DIRECTORIES ${CONAN_RUNTIME_LIB_DIRS}
-)
+option(SKYBOLT_INSTALL_DEPENDENCIES "Install Skybolt runtime dependencies" ON)
+if (SKYBOLT_INSTALL_DEPENDENCIES)
+	install(RUNTIME_DEPENDENCY_SET SkyboltDependencies
+		PRE_EXCLUDE_REGEXES
+			[=[api-ms-]=] # VC Redistibutable DLLs
+			[=[ext-ms-]=] # Windows extension DLLs
+			[[kernel32\.dll]]
+			[[libc\.so\..*]] [[libgcc_s\.so\..*]] [[libm\.so\..*]] [[libstdc\+\+\.so\..*]]
+		POST_EXCLUDE_REGEXES
+			[=[.*system32\/.*\.dll]=] # Windows system DLLs
+			[=[^\/(lib|usr\/lib|usr\/local\/lib)]=] # Unix system libraries
+		DIRECTORIES ${CONAN_RUNTIME_LIB_DIRS}
+	)
+endif()

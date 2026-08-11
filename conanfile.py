@@ -32,8 +32,15 @@ class SkyboltConan(ConanFile):
         "shared_plugins": True,
         "fPIC": True
     }
-    exports = "Conan/*"
-    exports_sources = "*"
+    exports_sources = (
+        "CMake/*",
+        "src/*",
+        ".python-version",
+        "CMakeLists.txt",
+        "conanfile.py",
+        "pyproject.toml",
+        "uv.lock"
+    )
     no_copy_source = True
 
     implements = ["auto_shared_fpic"]
@@ -104,6 +111,11 @@ class SkyboltConan(ConanFile):
         tc.variables["BUILD_WITH_BOOST_LOG"] = bool(self.options.enable_boost_log)
         tc.variables["BUILD_WITH_QT"] = bool(self.options.enable_qt)
         tc.variables["BUILD_WITH_OSG_CURL_PLUGIN"] = bool(self.options.enable_osg_curl_plugin)
+
+        tc.variables["BUILD_TESTING"] = False
+
+        tc.variables["SKYBOLT_BUILD_EXAMPLES"] = False
+        tc.variables["SKYBOLT_INSTALL_DEPENDENCIES"] = False
 
         tc.generate()
 

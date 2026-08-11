@@ -29,7 +29,9 @@ Tim's notes:
 Add export DEBUGINFOD_URLS='' into .bashrc
 
 # Add local repositories
-conan remote add skybolt-conan ./Conan
+conan remote add skybolt-conan ./Conan # In Skybolt directory
+conan remote add archon-conan ./Conan # In Archon directory
+uv run conan create . # First in skybolt directory, then in Archon directory
 
 uv run python3 Tools/BuildScripts/build.py --skybolt-source-dir=$(pwd) --output-dir=$(pwd)/package --stage package
 
@@ -66,3 +68,4 @@ export SKYBOLT_ASSETS_PATH='/workspaces/Skybolt/Assets:/workspaces/Archon/Assets
 * *.ttf files checked into skybolt need to be added to lfs.  Also remove fonts that we don't have a license for
 * "package" now fails in Skybolt; fix it up
 * Build UnrealEngine and SkyboltUnrealEngine (with RTTI enabled) and fix any issues
+* Assets/Core/Shaders are referred to from SkyboltVisTests/PrincipledBrdfTests.cpp.  Anything required for build should be in the source (?)
