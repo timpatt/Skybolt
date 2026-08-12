@@ -41,10 +41,11 @@ cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/ins
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component OsgPlugins
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component SkyboltDependencies
 
-# To run installed app from "bin"
-export LD_LIBRARY_PATH=$(pwd):$(pwd)/qtPlugins:$(pwd)/../lib
-export SKYBOLT_PLUGINS_PATH="$(pwd)/../lib"
+# To run installed Skybolt app from "bin"
+export LD_LIBRARY_PATH=$(pwd):$(pwd)/../lib:$LD_LIBRARY_PATH
 export SKYBOLT_ASSETS_PATH="$(pwd)/../../Assets"
+
+export SKYBOLT_PLUGINS_PATH="$(pwd)/../lib"
 
 NOTE: To run Archon (and qt), you need to have install the following (if it isn't already there):
 `sudo apt install libxcb-cursor0`

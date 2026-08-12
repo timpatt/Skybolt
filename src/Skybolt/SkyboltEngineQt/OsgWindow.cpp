@@ -8,19 +8,45 @@
 #include <SkyboltVis/VisRoot.h>
 #include <SkyboltVis/Window/EmbeddedWindow.h>
 
+// This must be included before GraphicsWindowX11
+#include <QKeyEvent>
+
 #include <osgViewer/ViewerBase>
 
-#ifdef WIN32
-#include <osgViewer/api/win32/GraphicsWindowWin32>
+#ifdef Q_OS_WIN
+#	include <osgViewer/api/win32/GraphicsWindowWin32>
+#else
+#	include <osgViewer/api/X11/GraphicsWindowX11>
 #endif
-
-#include <QKeyEvent>
 
 using namespace skybolt;
 using namespace skybolt::vis;
 
-static osg::ref_ptr<osgViewer::View> createView(int width, int height, std::size_t hwnd, bool vsync)
+static osg::ref_ptr<osg::Referenced> createWindowData(WId hwnd)
 {
+#ifdef Q_OS_WIN
+	return new osgViewer::GraphicsWindowWin32::WindowData(HWND(hwnd));
+#else
+	// FIXME: Clean up.  This should be "Linux"?
+	auto platform = QGuiApplication::platformName();
+	if (platform == "xcb")
+	{
+		return new osgViewer::GraphicsWindowX11::WindowData(hwnd);
+	}
+	else
+	{
+		qFatal("SkyboltWEngineQt::OsgWindow - unsupported platform: '%s'", qPrintable(platform));
+	}
+	return {};
+#endif
+}
+
+static osg::ref_ptr<osgViewer::View> createView(int width, int height, osg::ref_ptr<osg::Referenced> windowData, bool vsync)
+{
+	if (!windowData)
+	{
+		qFatal() << "Invalid windowData provided";
+	}
 	osg::ref_ptr<osg::GraphicsContext::Traits> traits(new osg::GraphicsContext::Traits);
 	traits->x = 0;
 	traits->y = 0;
@@ -33,15 +59,20 @@ static osg::ref_ptr<osgViewer::View> createView(int width, int height, std::size
 	traits->depth = 24;
 	traits->windowDecoration = false;
 	traits->doubleBuffer = true;
-	traits->sharedContext = 0x0;
-#ifdef WIN32
-	traits->inheritedWindowData = new osgViewer::GraphicsWindowWin32::WindowData(HWND(hwnd));
-#endif
+	traits->inheritedWindowData = windowData;
+
 	// FIXME: There's a bug in OSG where vsync is left at OS default when vsync=false, not actually set to false.
 	// See https://github.com/openscenegraph/OpenSceneGraph/blob/master/src/osgViewer/GraphicsWindowWin32.cpp#L1978
 	traits->vsync = vsync;
 
+	traits->readDISPLAY();
+	traits->setUndefinedScreenDetailsToDefaultScreen();
+
 	osg::ref_ptr<osg::GraphicsContext> context = osg::GraphicsContext::createGraphicsContext(traits.get());
+	if (!context) 
+	{
+		qFatal() << "Failed to initialise osg::GraphicsContext";
+	}
 	configureGraphicsState(*context);
 
 	osg::ref_ptr<osgViewer::View> view = new osgViewer::View;
@@ -50,11 +81,11 @@ static osg::ref_ptr<osgViewer::View> createView(int width, int height, std::size
 	return view;
 }
 
-class OsgViewWindow : public Window
+class OsgViewWindow : public skybolt::vis::Window
 {
 public:
 	OsgViewWindow(const osg::ref_ptr<osgViewer::View>& view) :
-		Window(view)
+		skybolt::vis::Window(view)
 	{
 	}
 
@@ -86,8 +117,8 @@ OsgWindow::OsgWindow(const VisRootPtr& visRoot) :
 	setFlags(Qt::FramelessWindowHint);
 
 	// TODO: we should take the devicePixelRatio() into account
-
-	mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), std::size_t(winId()), visRoot->getDisplaySettings().vsync));
+	
+	mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), createWindowData(winId()), visRoot->getDisplaySettings().vsync));
 	mVisRoot->addWindow(mWindow);
 
 	mWindow->getGraphicsWindow().useCursor(true);
