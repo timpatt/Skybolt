@@ -46,6 +46,15 @@ export LD_LIBRARY_PATH=$(pwd):$(pwd)/qtPlugins:$(pwd)/../lib
 export SKYBOLT_PLUGINS_PATH="$(pwd)/../lib"
 export SKYBOLT_ASSETS_PATH="$(pwd)/../../Assets"
 
+NOTE: To run Archon (and qt), you need to have install the following (if it isn't already there):
+`sudo apt install libxcb-cursor0`
+
+Qt tells you this is required during launch with the error `From 6.5.0, xcb-cursor0 or libxcb-cursor0 is needed to load the Qt xcb platform plugin.`
+
+# Archon 
+prograda@PROG4-Ubuntu:~/Documents/dev/arkeus/Archon/install/bin$ export LD_LIBRARY_PATH=$(pwd):$(pwd)/qtPlugins:$(pwd)/../lib
+prograda@PROG4-Ubuntu:~/Documents/dev/arkeus/Archon/install/bin$ export SKYBOLT_PLUGINS_PATH="$(pwd)/../lib"
+prograda@PROG4-Ubuntu:~/Documents/dev/arkeus/Archon/install/bin$ export SKYBOLT_ASSETS_PATH="$(pwd)/../../../Skybolt/Assets:$(pwd)/../../../ArchonAssets"
 
 
 uv run conan install . --deployer=runtime_deploy --deployer-folder=deploy -of=deploy/build --envs-generation=false
@@ -94,3 +103,4 @@ export SKYBOLT_ASSETS_PATH='/workspaces/Skybolt/Assets:/workspaces/Archon/Assets
 * Assets/Core/Shaders are referred to from SkyboltVisTests/PrincipledBrdfTests.cpp.  Anything required for build should be in the source (?)
 * The `MinimalApp` example is way too large!!  It even requires an extra library "ExamplesCommon" to build!?!?
   * I want to be able to do "MinimalApp myApp"; it should be configured with sane defaults, and still be able to configure it as required
+* libFftOcean.so can't be loaded in Archon for some reason

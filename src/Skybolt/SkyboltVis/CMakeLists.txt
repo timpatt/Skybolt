@@ -104,11 +104,21 @@ endif()
 file(GLOB OSG_PLUGINS_DIR "${PACKAGE_FOLDER}/${_runtime_lib_path}/osgPlugins*")
 
 if(OSG_PLUGINS_DIR)
+	# TODO: Check OSG_PLUGINS_DIR holds a single path (not multiple!?)
+	file(GLOB_RECURSE _plugins "${OSG_PLUGINS_DIR}/*${CMAKE_SHARED_LIBRARY_SUFFIX}")
 	install(
-		DIRECTORY ${OSG_PLUGINS_DIR}
+		FILES ${_plugins}
+#		CONFIGURATIONS RelWithDebInfo TODO???
 		DESTINATION ${_runtime_lib_path}
 		COMPONENT OsgPlugins
 		EXCLUDE_FROM_ALL
-		FILES_MATCHING PATTERN "*"
+	)
+
+	# Not really the plugins; but the dependencies of the plugins!
+	skybolt_install_deps(
+		LIBRARIES "${_plugins}" 
+		COMPONENT OsgPlugins 
+		DESTINATION ${_runtime_lib_path}
+		EXCLUDE_FROM_ALL
 	)
 endif()

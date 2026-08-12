@@ -129,7 +129,10 @@ class SkyboltConan(ConanFile):
 		
     def package(self):
         cmake = CMake(self)
+        # Install Skybolt binaries (excluding dependencies)
         cmake.install()
+        # Install development files (headers, etc)
+        cmake.install(component="Development")
 		
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
