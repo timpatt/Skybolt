@@ -93,13 +93,22 @@ target_link_libraries(${LIB_NAME} ${LIBRARIES})
 skybolt_install(${LIB_NAME})
 
 # Install OSG plugins, which are not tracked by CMake runtime dependency system
-cmake_path(GET OpenSceneGraph_INCLUDE_DIR PARENT_PATH PACKAGE_FOLDER) # Get OSG packgae /lib folder
-file(GLOB OSG_PLUGINS_DIR "${PACKAGE_FOLDER}/bin/osgPlugins*")
+cmake_path(GET OpenSceneGraph_INCLUDE_DIR PARENT_PATH PACKAGE_FOLDER) # Get OSG package folder
+
+# TODO: Move this up?
+include(GNUInstallDirs)
+set(_runtime_lib_path ${CMAKE_INSTALL_LIBDIR})
+if (WIN32)
+	set(_runtime_lib_path ${CMAKE_INSTALL_BINDIR})
+endif()
+file(GLOB OSG_PLUGINS_DIR "${PACKAGE_FOLDER}/${_runtime_lib_path}/osgPlugins*")
 
 if(OSG_PLUGINS_DIR)
 	install(
 		DIRECTORY ${OSG_PLUGINS_DIR}
-		DESTINATION bin
+		DESTINATION ${_runtime_lib_path}
+		COMPONENT OsgPlugins
+		EXCLUDE_FROM_ALL
 		FILES_MATCHING PATTERN "*"
 	)
 endif()

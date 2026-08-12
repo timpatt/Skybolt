@@ -98,28 +98,36 @@ add_subdirectory(src/SkyboltExamples)
 # Installation
 #-------------------------------------------------------------
 # Install CMake scripts
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/CMake	DESTINATION .)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/CMake	
+	DESTINATION .
+	COMPONENT Development
+	EXCLUDE_FROM_ALL
+)
 
 # Install headers
 install(
 	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt
 	DESTINATION include
-	FILES_MATCHING
-	PATTERN "*.h*"
+	COMPONENT Development
+	EXCLUDE_FROM_ALL
+	FILES_MATCHING PATTERN "*.h*"
 )
 
 # Install runtime dependencies
-option(SKYBOLT_INSTALL_DEPENDENCIES "Install Skybolt runtime dependencies" ON)
-if (SKYBOLT_INSTALL_DEPENDENCIES)
-	install(RUNTIME_DEPENDENCY_SET SkyboltDependencies
-		PRE_EXCLUDE_REGEXES
-			[=[api-ms-]=] # VC Redistibutable DLLs
-			[=[ext-ms-]=] # Windows extension DLLs
-			[[kernel32\.dll]]
-			[[libc\.so\..*]] [[libgcc_s\.so\..*]] [[libm\.so\..*]] [[libstdc\+\+\.so\..*]]
-		POST_EXCLUDE_REGEXES
-			[=[.*system32\/.*\.dll]=] # Windows system DLLs
-			[=[^\/(lib|usr\/lib|usr\/local\/lib)]=] # Unix system libraries
-		DIRECTORIES ${CONAN_RUNTIME_LIB_DIRS}
-	)
-endif()
+install(RUNTIME_DEPENDENCY_SET SkyboltDependencies
+	PRE_EXCLUDE_REGEXES
+		[=[api-ms-]=] # VC Redistibutable DLLs
+		[=[ext-ms-]=] # Windows extension DLLs
+		[[kernel32\.dll]]
+		[[libc\.so\..*]] [[libgcc_s\.so\..*]] [[libm\.so\..*]] [[libstdc\+\+\.so\..*]]
+	POST_EXCLUDE_REGEXES
+		[=[.*system32\/.*\.dll]=] # Windows system DLLs
+		[=[^\/(lib|usr\/lib|usr\/local\/lib)]=] # Unix system libraries
+	DIRECTORIES ${CONAN_RUNTIME_LIB_DIRS}
+	RUNTIME 
+		COMPONENT SkyboltDependencies
+		EXCLUDE_FROM_ALL
+	LIBRARY
+		COMPONENT SkyboltDependencies
+		EXCLUDE_FROM_ALL
+)

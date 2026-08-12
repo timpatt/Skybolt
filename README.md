@@ -31,7 +31,30 @@ Add export DEBUGINFOD_URLS='' into .bashrc
 # Add local repositories
 conan remote add skybolt-conan ./Conan # In Skybolt directory
 conan remote add archon-conan ./Conan # In Archon directory
-uv run conan create . # First in skybolt directory, then in Archon directory
+uv run conan create . -s build_type=RelWithDebInfo # First in skybolt directory, then in Archon directory
+# or
+uv run conan build . -s build_type=RelWithDebInfo --build=missing # First in skybolt directory, then in Archon directory
+
+# Install runtime deps
+cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install
+cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component QtPlugins
+cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component OsgPlugins
+cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component SkyboltDependencies
+
+# To run installed app from "bin"
+export LD_LIBRARY_PATH=$(pwd):$(pwd)/qtPlugins:$(pwd)/../lib
+export SKYBOLT_PLUGINS_PATH="$(pwd)/../lib"
+export SKYBOLT_ASSETS_PATH="$(pwd)/../../Assets"
+
+
+
+uv run conan install . --deployer=runtime_deploy --deployer-folder=deploy -of=deploy/build --envs-generation=false
+
+
+
+## Build unreal plugin on Linux
+cd UnrealEngine/Engine/Build/BatchFiles
+/RunUAT.sh BuildPlugin -plugin=/workspaces/arkeus/SkyboltUnreal/Plugins/SkyboltUnreal/SkyboltUnreal.uplugin -package=~/SkyboltUnrealPlugin
 
 uv run python3 Tools/BuildScripts/build.py --skybolt-source-dir=$(pwd) --output-dir=$(pwd)/package --stage package
 
@@ -69,3 +92,5 @@ export SKYBOLT_ASSETS_PATH='/workspaces/Skybolt/Assets:/workspaces/Archon/Assets
 * "package" now fails in Skybolt; fix it up
 * Build UnrealEngine and SkyboltUnrealEngine (with RTTI enabled) and fix any issues
 * Assets/Core/Shaders are referred to from SkyboltVisTests/PrincipledBrdfTests.cpp.  Anything required for build should be in the source (?)
+* The `MinimalApp` example is way too large!!  It even requires an extra library "ExamplesCommon" to build!?!?
+  * I want to be able to do "MinimalApp myApp"; it should be configured with sane defaults, and still be able to configure it as required
