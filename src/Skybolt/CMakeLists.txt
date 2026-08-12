@@ -3,6 +3,8 @@ add_subdirectory (AircraftHud)
 OPTION(BUILD_MAP_FEATURES_CONVERTER "Build MapFeaturesConverter")
 if (BUILD_MAP_FEATURES_CONVERTER)
 	add_subdirectory (MapFeaturesConverter)
+	add_subdirectory (MapFeaturesConverterApp)
+	add_subdirectory (MapFeaturesConverterTests)
 endif()
 
 add_subdirectory (SkyboltApp)

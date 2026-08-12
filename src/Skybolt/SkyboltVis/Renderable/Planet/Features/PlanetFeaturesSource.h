@@ -198,7 +198,10 @@ struct WorldFeatures
 
 struct TreeCreatorParams
 {
-	double minFeatureSizeFraction; //!< Max size of a feature in a tile as a fraction of the tile size
+	//! Min size of a feature in a tile as a fraction of the tile size.
+	//! Features smaller than this will be placed in a child tile instead.
+	double minFeatureSizeFraction;
+
 	int maxLodLevel;
 };
 

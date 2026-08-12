@@ -530,7 +530,7 @@ static bool addToTile(WorldFeatures::QuadTree& tree, FeatureTile& tile, const Tr
 		double minAllowedSize = maxSize(tile.bounds) * params.minFeatureSizeFraction;
 
 		// If feature is too small to put in this tile, try children
-		if (tile.key.level <= params.maxLodLevel && maxSize(feature.bounds) < minAllowedSize)
+		if (tile.key.level < params.maxLodLevel && maxSize(feature.bounds) < minAllowedSize)
 		{
 			if (!tile.hasChildren())
 			{

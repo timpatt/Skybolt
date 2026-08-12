@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "FeaturesConverter.h"
+#include <MapFeaturesConverter/FeaturesConverter.h>
 #include <iostream>
 
 //#define PERFORM_HEIGHTMAP_LEVELING_UNDER_FEATURES
@@ -20,39 +20,68 @@
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/MapboxElevationTileSource.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/SphericalMercatorToPlateCarreeTileSource.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/XyzTileSource.h>
+#include <SkyboltVis/Image/SimpleImageFactory.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltCommon/ShaUtility.h>
 
+#include <boost/program_options.hpp>
+
 using namespace skybolt;
 using namespace mapfeatures;
 using namespace vis;
 
-int maxFeatureTileLod = 10;
-int maxHeightmapTileLod = 12;
-std::string outputDirectory = "Output";
-std::string tileCacheDirectory = "cache";
-std::string heightmapSourceDirectory = "DEM/CombinedElevation";
-std::string heightmapDestinationDirectory = "SkyboltAssets/Assets/SeattleElevation/Tiles/Earth/Elevation";
+namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
 {
 	try
 	{
-		auto params = EngineCommandLineParser::parse(argc, argv);
+		// Default values
+		int maxFeatureTileLod = 13;
+		int maxHeightmapTileLod = 12;
+		float minFeatureSizeFraction = 0.01;
+		std::string outputDirectory = "Output";
+		std::string tileCacheDirectory = "cache";
+		std::string heightmapSourceDirectory = "SkyboltAssets/Seattle/Tiles/Earth/DEM";
+		std::string heightmapDestinationDirectory = "SkyboltAssets/Assets/SeattleElevation/Tiles/Earth/Elevation";
+		std::string inputPbfFilename = "washington-latest.osm.pbf";
+
+		po::options_description desc;
+		EngineCommandLineParser::addOptions(desc);
+		desc.add_options()
+			("inputPbfFile", po::value<std::string>(&inputPbfFilename)->default_value(inputPbfFilename), "input OSM PBF file")
+			("maxFeatureTileLod", po::value<int>(&maxFeatureTileLod)->default_value(maxFeatureTileLod), "maximum feature tile level of detail")
+			("maxHeightmapTileLod", po::value<int>(&maxHeightmapTileLod)->default_value(maxHeightmapTileLod), "maximum heightmap tile level of detail")
+			("outputDirectory", po::value<std::string>(&outputDirectory)->default_value(outputDirectory), "output directory")
+			("tileCacheDirectory", po::value<std::string>(&tileCacheDirectory)->default_value(tileCacheDirectory), "tile cache directory")
+			("heightmapSourceDirectory", po::value<std::string>(&heightmapSourceDirectory)->default_value(heightmapSourceDirectory), "heightmap source directory")
+			("heightmapDestinationDirectory", po::value<std::string>(&heightmapDestinationDirectory)->default_value(heightmapDestinationDirectory), "heightmap destination directory");
+
+		auto params = EngineCommandLineParser::parse(argc, argv, desc);
+
+		if (params.count("help"))
+		{
+			std::cout << desc << std::endl;
+			return EXIT_SUCCESS;
+		}
+
 		nlohmann::json settings = readEngineSettings(params);
 		auto tileApiKeys = readNameMap<std::string>(settings, "tileApiKeys");
 
 #define USE_DEM
 #ifdef USE_DEM
 		XyzTileSourceConfig config;
-		config.urlTemplate = "DEM/{z}/{x}/{y}.png";
+		config.urlTemplate = heightmapSourceDirectory + "/{z}/{x}/{y}.png";
 		config.elevationRerange = rerangeElevationFromUInt16WithElevationBounds(-32768, 32767);
 		config.levelRange = {0, 10};
+		config.imageFactory = std::make_shared<SimpleImageFactory>();
 
 		auto tileSource = std::make_shared<XyzTileSource>(config);
+		tileSource->validate();
+
 #else // use mapbox
 		auto mapboxKey = findOptional<std::string>(tileApiKeys, "mapbox");
 		if (!mapboxKey)
@@ -69,12 +98,12 @@ int main(int argc, char *argv[])
 		auto tileSource = std::make_shared<CachedTileSource>(uncachedTileSource, tileSourceCacheDirectory);
 #endif
 		BlockingTilePlanetAltitudeProvider altitudeProvider(tileSource, maxHeightmapTileLod);
-		ReadPbfResult result = mapfeatures::readPbf("washington-latest.osm.pbf", altitudeProvider);
+		ReadPbfResult result = mapfeatures::readPbf(inputPbfFilename, altitudeProvider);
 		{
 			printf("Feature Conversion Stats:\n%s\n", mapfeatures::statsToString(result.features).c_str());
 
 			mapfeatures::TreeCreatorParams treeCreatorParams;
-			treeCreatorParams.minFeatureSizeFraction = 0.1;
+			treeCreatorParams.minFeatureSizeFraction = minFeatureSizeFraction;
 			treeCreatorParams.maxLodLevel = maxFeatureTileLod;
 			mapfeatures::WorldFeatures worldFeatures = mapfeatures::createWorldFeatures(treeCreatorParams, result.features);
 

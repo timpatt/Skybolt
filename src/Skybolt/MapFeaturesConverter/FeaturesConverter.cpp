@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "FeaturesConverter.h"
+#include "BuildingColinearEdgeDetector.h"
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesHelpers.h>
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h>
@@ -702,6 +703,8 @@ ReadPbfResult readPbf(const std::string& filename, const sim::PlanetAltitudeProv
 		throw skybolt::Exception("Error converting " + filename + ". Reason: " + e.what());
 	}
 	readosm_close(osm_handle);
+
+	removeSmallerBuildingsWithColinearEdges(data.features);
 
 	printf("Connecting roads at %zu connection points\n", data.nodeRoadJunctions.size());
 	joinRoadsAtJunctions(data);
