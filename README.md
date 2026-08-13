@@ -31,11 +31,13 @@ Add export DEBUGINFOD_URLS='' into .bashrc
 # Add local repositories
 conan remote add skybolt-conan ./Conan # In Skybolt directory
 conan remote add archon-conan ./Conan # In Archon directory
+
+# Don't do this for now - this builds and installs the package into the conan cache; too slow for development work
 uv run conan create . -s build_type=RelWithDebInfo # First in skybolt directory, then in Archon directory
-# or
+# Use this one instead - this builds the package into the 'build' directory
 uv run conan build . -s build_type=RelWithDebInfo --build=missing # First in skybolt directory, then in Archon directory
 
-# Install application
+# Install application from Archon (or Skybolt if you're only using Skybolt)
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component QtPlugins
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component OsgPlugins
@@ -44,12 +46,15 @@ cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/ins
 
 # For Archon build install SkyboltPlugins
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component SkyboltPlugins
+# cp Skybolt/Assets into Archon/install/Assets directory 
+
 
 # To run installed Skybolt app from "bin"
 export LD_LIBRARY_PATH=$(pwd):$(pwd)/../lib:$(pwd)/../lib/plugins:$LD_LIBRARY_PATH
 export SKYBOLT_ASSETS_PATH="$(pwd)/../Assets:$(pwd)/../ArchonAssets"
-
 export SKYBOLT_PLUGINS_PATH="$(pwd)/../lib/plugins"
+
+# That's it... Ignore the rest.
 
 NOTE: To run Archon (and qt), you need to have install the following (if it isn't already there):
 `sudo apt install libxcb-cursor0`
