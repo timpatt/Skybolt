@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.26.0)
 project(Skybolt)
 
 include(CTest)
+include(GNUInstallDirs)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -130,4 +131,11 @@ install(RUNTIME_DEPENDENCY_SET SkyboltDependencies
 	LIBRARY
 		COMPONENT SkyboltDependencies
 		EXCLUDE_FROM_ALL
+)
+
+# Install assets
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/Assets	
+	DESTINATION .
+	COMPONENT Assets
+	EXCLUDE_FROM_ALL
 )

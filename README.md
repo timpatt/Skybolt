@@ -35,15 +35,16 @@ uv run conan create . -s build_type=RelWithDebInfo # First in skybolt directory,
 # or
 uv run conan build . -s build_type=RelWithDebInfo --build=missing # First in skybolt directory, then in Archon directory
 
-# Install runtime deps
+# Install application
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component QtPlugins
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component OsgPlugins
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component SkyboltDependencies
+cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component Assets
 
 # To run installed Skybolt app from "bin"
 export LD_LIBRARY_PATH=$(pwd):$(pwd)/../lib:$LD_LIBRARY_PATH
-export SKYBOLT_ASSETS_PATH="$(pwd)/../../Assets"
+export SKYBOLT_ASSETS_PATH="$(pwd)/../Assets"
 
 export SKYBOLT_PLUGINS_PATH="$(pwd)/../lib"
 
