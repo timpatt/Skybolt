@@ -47,6 +47,7 @@
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/VisRoot.h>
 #include <SkyboltVis/Window/Window.h>
+#include <SkyboltVis/Window/StandaloneWindow.h>
 #include <SkyboltVis/RenderOperation/RenderCameraViewport.h>
 #include <SkyboltVis/RenderOperation/RenderOperationUtil.h>
 #include <SkyboltVis/RenderOperation/RenderTarget.h>
@@ -348,9 +349,19 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 	// Create 3D viewport
 	auto visRoot = std::make_shared<skybolt::vis::VisRoot>();
+
+#define USE_OSG_WINDOW
+#ifdef USE_OSG_WINDOW
 	std::unique_ptr<OsgWindow> osgWindow = std::make_unique<OsgWindow>(visRoot);
-	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*osgWindow->getWindow(), *engineRoot);
+	auto window = osgWindow->getWindow();
+#else
+	auto window = std::make_shared<skybolt::vis::StandaloneWindow>(skybolt::vis::RectI(0, 0, 800, 600));
+	visRoot->addWindow(window);
+	QPointer<QWindow> osgWindow = QWindow::fromWinId(std::stoi(window->getHandle()));
+#endif
+	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
 	{
+
 		QWidget* osgContainer = QWidget::createWindowContainer(osgWindow.get(), &mainWindow);
 		mainLayout->addWidget(osgContainer, 1);
 	}
@@ -364,11 +375,12 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 		viewportInputSystem = std::make_shared<ViewportInputSystem>(inputPlatform, axes, engineRoot.get());
 		engineRoot->systemRegistry->push_back(viewportInputSystem);
-
+#ifdef USE_OSG_WINDOW
 		QObject::connect(osgWindow.get(), &OsgWindow::mousePressed, [viewportInputSystem](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
 			viewportInputSystem->setMouseEnabled(true);
 			viewportInputSystem->setKeyboardEnabled(true);
 			});
+#endif
 	}
 
 	auto viewportCamera = std::make_shared<sim::EntityId>();
@@ -479,7 +491,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Create stats display system
 	std::shared_ptr<skybolt::StatsDisplaySystem> statsDisplaySystem;
 	{
-		vis::Window* window = osgWindow->getWindow();
+		//vis::Window* window = osgWindow->getWindow();
 		statsDisplaySystem = std::make_shared<StatsDisplaySystem>(&visRoot->getViewer(), window->getView(), viewport->getFinalRenderTarget()->getOsgCamera());
 		statsDisplaySystem->setVisible(false);
 		engineRoot->systemRegistry->push_back(statsDisplaySystem);
@@ -623,7 +635,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 			QObject::connect(action, &QAction::toggled, &mainWindow, [
 				renderOperationVisualization = osg::ref_ptr<skybolt::vis::RenderOperation>(),
 				engineRoot = engineRoot.get(), viewport,
-				window = osgWindow->getWindow()
+				window
 			] (bool checked) mutable {
 				if (checked)
 				{
