@@ -105,3 +105,8 @@ export SKYBOLT_ASSETS_PATH='/workspaces/Skybolt/Assets:/workspaces/Archon/Assets
 * The `MinimalApp` example is way too large!!  It even requires an extra library "ExamplesCommon" to build!?!?
   * I want to be able to do "MinimalApp myApp"; it should be configured with sane defaults, and still be able to configure it as required
 * libFftOcean.so can't be loaded in Archon for some reason
+* Need to fix this code; it results in a message "std::exception" rather than e.what(): ```
+	// Catch and re-throw a copy of the exception to avoid issues with exceptions crossing shared library boundaries
+		throw std::exception(e);
+```
+*
