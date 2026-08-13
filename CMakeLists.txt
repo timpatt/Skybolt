@@ -95,6 +95,32 @@ add_subdirectory(src/Skybolt)
 option(SKYBOLT_BUILD_EXAMPLES "Build Skybolt Examples" ON)
 add_subdirectory(src/SkyboltExamples)
 
+function(_skybolt_configure_conan_init_script)
+	# TODO: Document this
+	set(_runtime_lib_path ${CMAKE_INSTALL_LIBDIR})
+	if (WIN32)
+		set(_runtime_lib_path ${CMAKE_INSTALL_BINDIR})
+	endif()
+
+	# FIXME: This'll probably fail on Windows with a multi-generator
+	set(Skybolt_PLUGIN_DIRS "\"${CMAKE_BINARY_DIR}/${_runtime_lib_path}/plugins\"")
+	configure_file(
+		"CMake/conan-skybolt-init.cmake.in" 
+		"${CMAKE_BINARY_DIR}/conan-skybolt-init-buildtree.cmake"
+		@ONLY
+	)	
+
+	set(Skybolt_PLUGIN_DIRS "\"\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_lib_path}/plugins\"")
+	configure_file("CMake/conan-skybolt-init.cmake.in" "${CMAKE_BINARY_DIR}/conan-skybolt-init-installtree.cmake" @ONLY)
+	install(FILES ${CMAKE_BINARY_DIR}/cmake-conan-skybolt-init-installtree.cmake
+		DESTINATION CMake
+		COMPONENT Development
+		EXCLUDE_FROM_ALL
+	)
+endfunction()
+
+_skybolt_configure_conan_init_script()
+
 #-------------------------------------------------------------
 # Installation
 #-------------------------------------------------------------

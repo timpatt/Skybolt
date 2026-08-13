@@ -38,5 +38,5 @@ target_link_libraries (${TARGET_NAME} ${LIBS})
 
 skybolt_install(${TARGET_NAME})
 
-skybolt_install_qt_plugins()
+skybolt_install_qt_plugins(COMPONENT QtPlugins EXCLUDE_FROM_ALL)
 

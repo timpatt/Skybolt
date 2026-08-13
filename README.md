@@ -42,11 +42,14 @@ cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/ins
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component SkyboltDependencies
 cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component Assets
 
-# To run installed Skybolt app from "bin"
-export LD_LIBRARY_PATH=$(pwd):$(pwd)/../lib:$LD_LIBRARY_PATH
-export SKYBOLT_ASSETS_PATH="$(pwd)/../Assets"
+# For Archon build install SkyboltPlugins
+cmake --install build/RelWithDebInfo --config RelWithDebInfo --prefix=$(pwd)/install --component SkyboltPlugins
 
-export SKYBOLT_PLUGINS_PATH="$(pwd)/../lib"
+# To run installed Skybolt app from "bin"
+export LD_LIBRARY_PATH=$(pwd):$(pwd)/../lib:$(pwd)/../lib/plugins:$LD_LIBRARY_PATH
+export SKYBOLT_ASSETS_PATH="$(pwd)/../Assets:$(pwd)/../ArchonAssets"
+
+export SKYBOLT_PLUGINS_PATH="$(pwd)/../lib/plugins"
 
 NOTE: To run Archon (and qt), you need to have install the following (if it isn't already there):
 `sudo apt install libxcb-cursor0`
@@ -108,6 +111,6 @@ export SKYBOLT_ASSETS_PATH='/workspaces/Skybolt/Assets:/workspaces/Archon/Assets
 * libFftOcean.so can't be loaded in Archon for some reason
 * Need to fix this code; it results in a message "std::exception" rather than e.what(): ```
 	// Catch and re-throw a copy of the exception to avoid issues with exceptions crossing shared library boundaries
-		throw std::exception(e);
-```
-*
+		throw std::exception(e);```
+* On Linux, plugins are in the lib/plugins directory, not bin/plugins... EngineRootFactory::getDefaultPluginDirs needs to be updated
+* In EngineRoot::EngineRoot, the children of each asset path are registered as asset packages; which means `<AssetPath/Icon>` is added as a path, leading to a bunch of errors like `Could not locate file: Icons/google/settings.svg`; Icons has already been sucked up into the search path...

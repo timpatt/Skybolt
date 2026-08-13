@@ -1,6 +1,7 @@
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 import os
+from pathlib import Path
 
 class SkyboltConan(ConanFile):
     name = "skybolt"
@@ -85,12 +86,28 @@ class SkyboltConan(ConanFile):
         if self.options.enable_qt:
             self.requires("qt/6.10.1", transitive_headers=True)
             self.requires("skybolt-widgets/1.0.0", transitive_headers=True)
-            
+
+    def _is_cmake_multi_generator(self) -> bool:
+        gen = self.conf.get("tools.cmake.cmaketoolchain:generator")
+        if gen:
+            return "Visual" in gen or "Xcode" in gen or "Multi-Config" in gen
+        else:
+            compiler = self.settings.get_safe("compiler")
+            if compiler == "msvc":
+                return True
+            else:
+                return False
+
+    def _build_type_path_if_multi_generator(self) -> bool:
+        return "{self.build_type}/" if self._is_cmake_multi_generator() else ""
+
     def layout(self):
         cmake_layout(self)
         self.cpp.source.includedirs = ["src"]
         self.cpp.source.builddirs = ["CMake"]
-        self.cpp.build.libdirs = ["lib", f"lib/{self.settings.build_type}/plugins"]
+
+        self.cpp.build.libdirs = ["lib", f"lib{self._build_type_path_if_multi_generator()}/plugins"]
+        self.cpp.build.set_property("cmake_build_modules", [f"conan-skybolt-init-buildtree.cmake"])
 
     def generate(self):
         tc = CMakeToolchain(self)
@@ -133,7 +150,7 @@ class SkyboltConan(ConanFile):
         cmake.install()
         # Install development files (headers, etc)
         cmake.install(component="Development")
-		
+
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.libs = ["AircraftHud", "SkyboltEngine"]
@@ -144,7 +161,8 @@ class SkyboltConan(ConanFile):
         # The linker walks left to right, and collates items that are required and expects them to be satisfied later on
         self.cpp_info.libs.extend(["SkyboltVis", "SkyboltSim", "SkyboltCommon"])
         self.cpp_info.builddirs = ["CMake"]
-		
+        self.cpp_info.set_property("cmake_build_modules", ["CMake/conan-skybolt-init-installtree.cmake"])
+
         if self.options.enable_fft_ocean:
             self.cpp_info.libs.append("FftOcean")
 

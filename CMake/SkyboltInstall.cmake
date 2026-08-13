@@ -151,9 +151,12 @@ function(skybolt_install_qt_plugins)
 		list(APPEND _install_args EXCLUDE_FROM_ALL)
 	endif()
 
+	# TODO: We should probably just install whatever packages exist
 	_skybolt_install_qt_plugin_folder(generic DESTINATION "${ARG_DESTINATION}" ${_install_args})
 	_skybolt_install_qt_plugin_folder(imageformats DESTINATION "${ARG_DESTINATION}" ${_install_args})
 	_skybolt_install_qt_plugin_folder(platforms DESTINATION "${ARG_DESTINATION}" ${_install_args})
+	_skybolt_install_qt_plugin_folder(platforminputcontexts DESTINATION "${ARG_DESTINATION}" ${_install_args})
+	_skybolt_install_qt_plugin_folder(xcbglintegrations DESTINATION "${ARG_DESTINATION}" ${_install_args})
 
 	# dlls go into 'bin', whereas sos go into 'lib' by default
 	set(_runtime_lib_path ${CMAKE_INSTALL_LIBDIR})
