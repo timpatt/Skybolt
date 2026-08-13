@@ -60,8 +60,6 @@ static osg::ref_ptr<osgViewer::View> createView(int width, int height, osg::ref_
 	traits->windowDecoration = false;
 	traits->doubleBuffer = true;
 	traits->inheritedWindowData = windowData;
-	traits->setInheritedWindowPixelFormat = true;
-	traits->glContextVersion = "3.0";
 
 	// FIXME: There's a bug in OSG where vsync is left at OS default when vsync=false, not actually set to false.
 	// See https://github.com/openscenegraph/OpenSceneGraph/blob/master/src/osgViewer/GraphicsWindowWin32.cpp#L1978
@@ -117,34 +115,19 @@ public:
 OsgWindow::OsgWindow(const VisRootPtr& visRoot) :
 	mVisRoot(visRoot)
 {
-//	setAttribute(Qt::WA_NativeWindow, true);
 	setFlags(Qt::FramelessWindowHint);
-
-	setSurfaceType(QSurface::OpenGLSurface);
-	create(); // Forces X11 window creation under-the-hood. Probably not necessary because it's called by winId() anyway.
-
-	// TODO: we should take the devicePixelRatio() into account
-	// XWindowAttributes attrs;
-	// XGetWindowAttributes(display, window, &attrs);
-
-	// qInfo()
-	// 	<< "window" << Qt::hex << window
-	// 	<< "visual" << attrs.visual
-	// 	<< "depth" << attrs.depth;
 	
-#define EMBED_OSG_WINDOW 
-#ifdef EMBED_OSG_WINDOW
-	// Doesn't work
-	mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), createWindowData(winId()), visRoot->getDisplaySettings().vsync));
-//		mWindow->getGraphicsWindow().useCursor(true);
-//		mWindow->getGraphicsWindow().setCursor(osgViewer::GraphicsWindow::MouseCursor::InheritCursor); // Inherit the Qt cursor
-	mVisRoot->addWindow(mWindow);
-#else
-	//WORKS:
+#ifdef SKYBOLT_QT_OSG_WINDOW_HACK
+	// Works on X11-based Qt
 	mWindow = std::make_shared<skybolt::vis::StandaloneWindow>(RectI(0, 0, 800, 600));
-	mVisRoot->addWindow(mWindow);
+#else
+	// Works on Windows, but doesn't work with X11-based Qt
+	auto window = std::make_shared<OsgViewWindow>(createView(width(), height(), createWindowData(winId()), visRoot->getDisplaySettings().vsync));
+	window->getGraphicsWindow().useCursor(true);
+	window->getGraphicsWindow().setCursor(osgViewer::GraphicsWindow::MouseCursor::InheritCursor); // Inherit the Qt cursor
+	mWindow = window;
 #endif
-
+	mVisRoot->addWindow(mWindow);
 }
 
 OsgWindow::~OsgWindow() = default;
