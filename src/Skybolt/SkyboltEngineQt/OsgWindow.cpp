@@ -130,7 +130,14 @@ OsgWindow::OsgWindow(const VisRootPtr& visRoot) :
 	mVisRoot->addWindow(mWindow);
 }
 
-OsgWindow::~OsgWindow() = default;
+OsgWindow::~OsgWindow()
+{
+	// Qt might destroy OsgWindow without sending a SurfaceAboutToBeDestroyed event, so we need to remove the OSG window here as well.
+	if (mWindow)
+	{
+		mVisRoot->removeWindow(mWindow);
+	}
+}
 
 skybolt::vis::Window* OsgWindow::getWindow() const
 {
@@ -166,7 +173,19 @@ bool OsgWindow::event(QEvent* event)
     {
     case QEvent::PlatformSurface: {
         auto surfaceEvent = dynamic_cast<QPlatformSurfaceEvent*>(event);
-        if (surfaceEvent->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed)
+
+		if (surfaceEvent->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated && !mWindow)
+		{
+			// TODO: we should take the devicePixelRatio() into account
+			mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), std::size_t(winId()), mVisRoot->getDisplaySettings().vsync));
+			mVisRoot->addWindow(mWindow);
+
+			mWindow->getGraphicsWindow().useCursor(true);
+			mWindow->getGraphicsWindow().setCursor(osgViewer::GraphicsWindow::MouseCursor::InheritCursor);
+
+			emit windowCreated();
+		}
+        else if (surfaceEvent->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed && mWindow)
         {
 			// Destroy OSG window since its surface is about to be destroyed
 			mVisRoot->removeWindow(mWindow);

@@ -230,6 +230,16 @@ public:
 
 	bool notify(QObject* receiver, QEvent* event) override
     {
+		// Shield notify from event pumps occurring mid-unwind.
+		// FIXME: This is a workaround for a Qt design limitation where Qt objects that have been deleted by going out of scope in a stack unwind
+		// are still referred to by the event queue, causing a crash. We could avoid this by not managing the lifetime of any Qt objects in a stack scope,
+		// but the alternative for top level windows (e.g QMainWindow) is to memory leak on exception, which is arguably worse.
+		if (std::uncaught_exceptions() > 0)
+		{
+			return false;
+		}
+
+		// Prevent event dispatch if the application or object is shutting down
 		try
 		{
 			return QApplication::notify(receiver, event);
@@ -308,6 +318,19 @@ static void ensureSanSerifsFont(QApplication& app)
     }
 }
 
+static void waitForOsgWindowToInitializeVisWindow(OsgWindow& osgWindow)
+{
+	osgWindow.show();
+
+	// Wait until window is initialized
+	if (!osgWindow.getWindow()) {
+		QEventLoop loop;
+		QObject::connect(&osgWindow, &OsgWindow::windowCreated, &loop, &QEventLoop::quit);
+		loop.exec();
+		assert(osgWindow.getWindow());
+	}
+}
+
 static int createAndExecuteApplication(int argc, char** argv)
 {
 	// Create application
@@ -365,16 +388,19 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Create 3D viewport
 	auto visRoot = std::make_shared<skybolt::vis::VisRoot>();
 
+	// TODO: This might need work:
 #define USE_OSG_WINDOW
 #ifdef USE_OSG_WINDOW
 	std::unique_ptr<OsgWindow> osgWindow = std::make_unique<OsgWindow>(visRoot);
 	auto window = osgWindow->getWindow();
+	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
+	waitForOsgWindowToInitializeVisWindow(*osgWindow);
 #else
 	auto window = std::make_shared<skybolt::vis::StandaloneWindow>(skybolt::vis::RectI(0, 0, 800, 600));
 	visRoot->addWindow(window);
 	QPointer<QWindow> osgWindow = QWindow::fromWinId(std::stoi(window->getHandle()));
-#endif
 	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
+#endif
 	{
 
 		QWidget* osgContainer = QWidget::createWindowContainer(osgWindow.get(), &mainWindow);
@@ -650,8 +676,14 @@ static int createAndExecuteApplication(int argc, char** argv)
 			QObject::connect(action, &QAction::toggled, &mainWindow, [
 				renderOperationVisualization = osg::ref_ptr<skybolt::vis::RenderOperation>(),
 				engineRoot = engineRoot.get(), viewport,
-				window
+				osgWindow = osgWindow.get()
 			] (bool checked) mutable {
+				vis::Window* window = osgWindow->getWindow();
+				if (!window)
+				{
+					return;
+				}
+
 				if (checked)
 				{
 					if (!renderOperationVisualization)

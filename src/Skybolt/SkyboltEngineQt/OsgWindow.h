@@ -19,12 +19,16 @@ public:
 	OsgWindow(const skybolt::vis::VisRootPtr& visRoot);
 	~OsgWindow() override;
 
+	//! @returns null if the window has not initialized yet. Typically there is a delay from the constructor to when the window is fully initialized and ready to be used.
+	//! The window can be destroyed at any time. Therefore the returned pointer should not be stored by the caller.
 	skybolt::vis::Window* getWindow() const;
 
 signals:
 	void mousePressed(const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers);
 	void mouseReleased(const QPointF& position, Qt::MouseButton button);
 	void mouseMoved(const QPointF& position, Qt::MouseButtons buttons);
+
+	void windowCreated();
 
 protected:
 	void mousePressEvent(QMouseEvent* event) override;
