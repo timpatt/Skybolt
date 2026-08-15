@@ -295,11 +295,26 @@ static QString getStatusBarText(const EngineRoot& engineRoot)
 	return status.join(",");
 }
 
+static void ensureSanSerifsFont(QApplication& app)
+{
+	// Get whatever font the OS default theme prefers
+    QFont sysFont = QApplication::font();
+
+    // If Fontconfig failed to return a valid family, enforce SansSerif
+    if (sysFont.family().isEmpty())
+	{
+        sysFont.setStyleHint(QFont::SansSerif);
+        app.setFont(sysFont);
+    }
+}
+
 static int createAndExecuteApplication(int argc, char** argv)
 {
 	// Create application
 	ApplicationWithErrorHandling app(argc, argv);
 	app.setStyle(new DarkStyle);
+
+	ensureSanSerifsFont(app);
 
 	// Create splash screen
 	std::unique_ptr<QSplashScreen> splashScreen = createSplashScreen();
