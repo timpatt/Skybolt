@@ -5,37 +5,29 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "LlaToNedConverter.h"
-#include "GreatCircle.h"
+#include "SkyboltSim/Spatial/GreatCircle.h"
+#include "SkyboltSim/Spatial/Geocentric.h"
 
 namespace skybolt {
 namespace vis {
 
-glm::dvec2 LlaToNedConverter::latLonToCartesianNe(const sim::LatLon& position) const
+LlaToNedConverter::LlaToNedConverter(const sim::LatLon& origin, double& planetRadius) :
+	mPlanetRadius(planetRadius)
 {
-	return sim::latLonToCartesianNe(mOrigin, position);
+	setOrigin(origin);
 }
 
-glm::dvec3 LlaToNedConverter::latLonAltToCartesianNed(const sim::LatLonAlt& position) const
+void LlaToNedConverter::setOrigin(const sim::LatLon& origin)
 {
-	glm::dvec2 ne = sim::latLonToCartesianNe(mOrigin, toLatLon(position));
-	double d = -position.alt;
-
-	if (mPlanetRadiusForSurfaceDrop)
-	{
-		d += calcPlanetSurfaceDrop(glm::length(ne));
-	}
-
-	return glm::dvec3(ne.x, ne.y, d);
+	mOrigin = sim::llaToGeocentric(sim::toLatLonAlt(origin, 0), sim::earthRadius());
+	sim::Matrix3 mat = sim::geocentricToLtpOrientation(mOrigin);
+	mGeocentricToLtpOrientation = glm::inverse(mat);
 }
 
-sim::LatLon LlaToNedConverter::cartesianNeToLatLon(const glm::dvec2& position) const
+sim::Vector3 LlaToNedConverter::latLonAltToCartesianNed(const sim::LatLonAlt& position) const
 {
-	return sim::cartesianNeToLatLon(mOrigin, position);
-}
-
-float LlaToNedConverter::calcPlanetSurfaceDrop(float distance) const
-{
-	return distance * distance / (2 * *mPlanetRadiusForSurfaceDrop);
+	sim::Vector3 positionGeocentric = sim::llaToGeocentric(position, sim::earthRadius());
+	return mGeocentricToLtpOrientation * (positionGeocentric - mOrigin);
 }
 
 } // namespace vis

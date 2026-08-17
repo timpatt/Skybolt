@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <SkyboltSim/SimMath.h>
 #include <SkyboltSim/Spatial/LatLon.h>
 #include <SkyboltSim/Spatial/LatLonAlt.h>
 #include <glm/glm.hpp>
@@ -17,30 +18,17 @@ namespace vis {
 class LlaToNedConverter
 {
 public:
-	LlaToNedConverter(const sim::LatLon& origin, const std::optional<double>& planetRadiusForSurfaceDrop) :
-		mOrigin(origin),
-		mPlanetRadiusForSurfaceDrop(planetRadiusForSurfaceDrop)
-	{
-	}
-
-	//! +x is north, +y is east
-	glm::dvec2 latLonToCartesianNe(const sim::LatLon& position) const;
+	LlaToNedConverter(const sim::LatLon& origin, double planetRadius);
 
 	//! +x is north, +y is east, +z is down
-	glm::dvec3 latLonAltToCartesianNed(const sim::LatLonAlt& position) const;
+	skybolt::sim::Vector3 latLonAltToCartesianNed(const sim::LatLonAlt& position) const;
 
-	sim::LatLon cartesianNeToLatLon(const glm::dvec2& position) const;
-
-	void setOrigin(const sim::LatLon& origin)
-	{
-		mOrigin = origin;
-	}
-
-	float calcPlanetSurfaceDrop(float distance) const;
+	void setOrigin(const sim::LatLon& origin);
 
 private:
-	sim::LatLon mOrigin;
-	std::optional<double> mPlanetRadiusForSurfaceDrop;
+	skybolt::sim::Vector3 mOrigin;
+	skybolt::sim::Matrix3 mGeocentricToLtpOrientation;
+	std::optional<double> mPlanetRadius;
 };
 
 } // namespace vis
