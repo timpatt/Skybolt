@@ -388,9 +388,8 @@ static int createAndExecuteApplication(int argc, char** argv)
 	auto visRoot = std::make_shared<skybolt::vis::VisRoot>();
 
 	std::unique_ptr<OsgWindow> osgWindow = std::make_unique<OsgWindow>(visRoot);
-	auto window = osgWindow->getWindow();
-	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindow(*window, createVisContext(*visRoot, *engineRoot));
 	waitForOsgWindowToInitializeVisWindow(*osgWindow);
+	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindow(*osgWindow->getWindow(), createVisContext(*visRoot, *engineRoot));
 
 	{
 
@@ -411,7 +410,8 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 		viewportInputSystem = std::make_shared<ViewportInputSystem>(inputPlatform, cameraInputSystem, engineRoot.get());
 		engineRoot->systemRegistry->push_back(viewportInputSystem);
-#ifdef USE_OSG_WINDOW
+		// TODO
+//#ifdef USE_OSG_WINDOW
 		QObject::connect(osgWindow.get(), &OsgWindow::mousePressed, [viewportInputSystem](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
 			// Convert Qt mouse event to skybolt MouseEvent and forward it to the viewport input system.
 			MouseEvent event{};
@@ -421,7 +421,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 			event.relState = glm::vec3(0, 0, 0);
 			viewportInputSystem->onEvent(event);
 			});
-#endif
+//#endif
 	}
 
 	auto viewportCamera = std::make_shared<sim::EntityId>();
@@ -532,7 +532,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Create stats display system
 	std::shared_ptr<skybolt::StatsDisplaySystem> statsDisplaySystem;
 	{
-		//vis::Window* window = osgWindow->getWindow();
+		vis::Window* window = osgWindow->getWindow();
 		statsDisplaySystem = std::make_shared<StatsDisplaySystem>(&visRoot->getViewer(), window->getView(), viewport->getFinalRenderTarget()->getOsgCamera());
 		statsDisplaySystem->setVisible(false);
 		engineRoot->systemRegistry->push_back(statsDisplaySystem);
