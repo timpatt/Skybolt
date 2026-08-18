@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "ParticlesVisBinding.h"
-#include <SkyboltEngine/GeocentricToNedConverter.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltSim/Particles/ParticleSystem.h>
 #include <SkyboltVisOsg/OsgMathHelpers.h>
 #include <SkyboltVisOsg/Renderable/Particles.h>

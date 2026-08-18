@@ -6,7 +6,7 @@
 
 #include "VisNameLabels.h"
 #include <SkyboltEngine/Components/TemplateNameComponent.h>
-#include <SkyboltEngine/GeocentricToNedConverter.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltVisOsg/OsgGeometryHelpers.h>
 #include <SkyboltVisOsg/OsgMathHelpers.h>

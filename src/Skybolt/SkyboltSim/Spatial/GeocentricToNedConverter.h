@@ -7,9 +7,8 @@
 
 #pragma once
 
-#include "SkyboltEngine/SkyboltEngineFwd.h"
-#include <SkyboltSim/SkyboltSimFwd.h>
-#include <SkyboltSim/Component.h>
+#include "SkyboltSim/SkyboltSimFwd.h"
+#include "SkyboltSim/SimMath.h"
 
 #include <optional>
 

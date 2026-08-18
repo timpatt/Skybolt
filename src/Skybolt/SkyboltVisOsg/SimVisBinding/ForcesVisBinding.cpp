@@ -6,7 +6,7 @@
 
 #include "ForcesVisBinding.h"
 
-#include <SkyboltEngine/GeocentricToNedConverter.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltSim/Components/DynamicBodyComponent.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Spatial/Geocentric.h>

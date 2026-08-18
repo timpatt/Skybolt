@@ -7,7 +7,7 @@
 
 #include "CameraSimVisBinding.h"
 #include <SkyboltVisOsg/OsgMathHelpers.h>
-#include <SkyboltEngine/GeocentricToNedConverter.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltVisOsg/Camera.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/Components/CameraComponent.h>

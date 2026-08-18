@@ -6,7 +6,7 @@
 
 #include "CelestialObjectVisBinding.h"
 #include <SkyboltCommon/Math/MathUtility.h>
-#include <SkyboltEngine/GeocentricToNedConverter.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltVisOsg/OsgMathHelpers.h>
