@@ -8,6 +8,7 @@
 
 #include "DefaultRootNode.h"
 #include "Shadow/ShadowHelpers.h"
+#include <SkyboltVis/SkyboltVisFwd.h>
 
 namespace skybolt {
 namespace vis {
