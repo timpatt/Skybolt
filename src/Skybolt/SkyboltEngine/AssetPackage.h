@@ -7,6 +7,7 @@
 #pragma once
 
 #include <SkyboltCommon/File/FileUtility.h>
+#include <optional>
 #include <map>
 #include <vector>
 
