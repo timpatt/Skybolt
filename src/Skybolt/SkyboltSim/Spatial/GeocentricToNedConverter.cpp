@@ -6,9 +6,7 @@
 
 
 #include "GeocentricToNedConverter.h"
-#include <SkyboltSim/Entity.h>
-#include <SkyboltSim/World.h>
-#include <SkyboltSim/Spatial/Geocentric.h>
+#include "Geocentric.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace skybolt {

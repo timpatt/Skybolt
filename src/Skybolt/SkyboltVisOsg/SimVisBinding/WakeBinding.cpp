@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "WakeBinding.h"
-#include <SkyboltEngine/GeocentricToNedConverter.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/Components/DynamicBodyComponent.h>

@@ -41,6 +41,7 @@ list(TRANSFORM OSG_STATIC_LINK_PLUGIN_TARGET_NAMES PREPEND "openscenegraph-mr::"
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(LIBRARIES
 	SkyboltCommon
+	SkyboltVis
 	SkyboltSim
 	openscenegraph-mr::osg
 	openscenegraph-mr::osgDB

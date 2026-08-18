@@ -8,7 +8,7 @@
 #include "SimVisBinding/SimVisBinding.h"
 #include <SkyboltCommon/VectorUtility.h>
 #include <SkyboltEngine/EngineRoot.h>
-#include <SkyboltEngine/GeocentricToNedConverter.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Components/PlanetComponent.h>

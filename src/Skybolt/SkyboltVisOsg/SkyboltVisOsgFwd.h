@@ -42,7 +42,7 @@ class PagedForest;
 class PlanetFeatures;
 struct PlanetSubdivisionPredicate;
 struct PlanetTileSources;
-class QuadTreeTileLoader;
+//class QuadTreeTileLoader; TODO
 class Ocean;
 class Particles;
 class Planet;
@@ -108,7 +108,7 @@ typedef shared_ptr<PagedForest> PagedForestPtr;
 typedef shared_ptr<Particles> ParticlesPtr;
 typedef shared_ptr<Planet> PlanetPtr;
 typedef shared_ptr<Polyline> PolylinePtr;
-typedef shared_ptr<QuadTreeTileLoader> QuadTreeTileLoaderPtr;
+//typedef shared_ptr<QuadTreeTileLoader> QuadTreeTileLoaderPtr;
 typedef shared_ptr<RenderOperationSequence> RenderOperationSequencePtr;
 typedef shared_ptr<RenderTexture> RenderTexturePtr;
 typedef shared_ptr<RoadsBatch> RoadsBatchPtr;

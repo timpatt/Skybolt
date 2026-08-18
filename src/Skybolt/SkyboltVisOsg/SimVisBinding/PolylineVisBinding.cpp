@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PolylineVisBinding.h"
-#include <SkyboltEngine/GeocentricToNedConverter.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltSim/Spatial/Position.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltVisOsg/OsgMathHelpers.h>
