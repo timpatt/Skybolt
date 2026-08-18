@@ -13,7 +13,8 @@
 #include <SkyboltCommon/Random.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
-#include <SkyboltEngine/GeocentricToNedConverter.h>
+#include <SkyboltEngine/AssetPackage.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/EngineStats.h>

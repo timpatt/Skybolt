@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "OsgWindow.h"
-#include <SkyboltVis/VisRoot.h>
-#include <SkyboltVis/Window/StandaloneWindow.h>
+#include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/Window/StandaloneWindow.h>
 
 // This must be included before GraphicsWindowX11
 #include <QKeyEvent>
@@ -116,18 +116,6 @@ OsgWindow::OsgWindow(const VisRootPtr& visRoot) :
 	mVisRoot(visRoot)
 {
 	setFlags(Qt::FramelessWindowHint);
-	
-#ifdef SKYBOLT_QT_OSG_WINDOW_HACK
-	// Works on X11-based Qt
-	mWindow = std::make_shared<skybolt::vis::StandaloneWindow>(RectI(0, 0, 800, 600));
-#else
-	// Works on Windows, but doesn't work with X11-based Qt
-	auto window = std::make_shared<OsgViewWindow>(createView(width(), height(), createWindowData(winId()), visRoot->getDisplaySettings().vsync));
-	window->getGraphicsWindow().useCursor(true);
-	window->getGraphicsWindow().setCursor(osgViewer::GraphicsWindow::MouseCursor::InheritCursor); // Inherit the Qt cursor
-	mWindow = window;
-#endif
-	mVisRoot->addWindow(mWindow);
 }
 
 OsgWindow::~OsgWindow()
@@ -177,11 +165,12 @@ bool OsgWindow::event(QEvent* event)
 		if (surfaceEvent->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated && !mWindow)
 		{
 			// TODO: we should take the devicePixelRatio() into account
-			mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), std::size_t(winId()), mVisRoot->getDisplaySettings().vsync));
+			auto window = std::make_shared<OsgViewWindow>(createView(width(), height(), createWindowData(winId()), mVisRoot->getDisplaySettings().vsync));
+			mWindow = window;
 			mVisRoot->addWindow(mWindow);
 
-			mWindow->getGraphicsWindow().useCursor(true);
-			mWindow->getGraphicsWindow().setCursor(osgViewer::GraphicsWindow::MouseCursor::InheritCursor);
+			window->getGraphicsWindow().useCursor(true);
+			window->getGraphicsWindow().setCursor(osgViewer::GraphicsWindow::MouseCursor::InheritCursor); // Inherit the Qt cursor
 
 			emit windowCreated();
 		}
