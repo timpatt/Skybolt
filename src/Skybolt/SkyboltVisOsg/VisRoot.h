@@ -25,10 +25,17 @@ namespace vis {
 
 class VisObjectFactory;
 
+struct VisRootConfig
+{
+	DisplaySettings displaySettings;
+	const std::vector<std::string>& assetPackagePaths;
+	ComponentFactoryRegistryPtr componentFactoryRegistry; //!< Never null
+};
+
 class VisRoot
 {
 public:
-	VisRoot(const DisplaySettings& config = DisplaySettings());
+	VisRoot(VisRootConfig config);
 	~VisRoot();
 
 	//! @returns false if window has been closed

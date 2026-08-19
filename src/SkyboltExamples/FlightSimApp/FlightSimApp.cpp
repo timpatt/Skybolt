@@ -8,7 +8,6 @@
 #include <ExamplesCommon/HudSystem.h>
 #include <ExamplesCommon/HelpDisplayRenderOperation.h>
 #include <ExamplesCommon/HelpDisplayToggleEventListener.h>
-#include <ExamplesCommon/VisRootUtil.h>
 #include <ExamplesCommon/WindowUtil.h>
 
 #include <SkyboltEngine/CameraInputSystem.h>
@@ -32,6 +31,7 @@
 
 #include <SkyboltVisOsg/Camera.h>
 #include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/VisRootUtil.h>
 #include <SkyboltVisOsg/Scene.h>
 #include <SkyboltVisOsg/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltVisOsg/Input/InputPlatformOsg.h>
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 		orbitController->targetPositionOffset = sim::Vector3(0, 0, -3);
 		orbitController->setDollyFactor(0.8);
 
-		auto visRoot = createExampleVisRoot();
+		auto visRoot = createVisRoot(*engineRoot);
 
 		// Attach camera to window
 		vis::WindowPtr window = createExampleWindow();

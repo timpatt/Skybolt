@@ -6,7 +6,6 @@
 
 #include <ExamplesCommon/HelpDisplayRenderOperation.h>
 #include <ExamplesCommon/HelpDisplayToggleEventListener.h>
-#include <ExamplesCommon/VisRootUtil.h>
 #include <ExamplesCommon/WindowUtil.h>
 
 #include <SkyboltEngine/CameraInputSystem.h>
@@ -27,6 +26,7 @@
 #include <SkyboltVisOsg/Camera.h>
 #include <SkyboltVisOsg/Scene.h>
 #include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/VisRootUtil.h>
 #include <SkyboltVisOsg/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltVisOsg/Input/InputPlatformOsg.h>
 #include <SkyboltVisOsg/RenderOperation/RenderCameraViewport.h>
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 		EntityPtr simCamera = engineRoot->entityFactory->createEntity("Camera");
 		engineRoot->scenario->world.addEntity(simCamera);
 		
-		auto visRoot = createExampleVisRoot();
+		auto visRoot = createVisRoot(*engineRoot);
 
 		// Attach camera to window
 		vis::WindowPtr window = createExampleWindow();

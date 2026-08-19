@@ -6,10 +6,11 @@
 
 #pragma once
 
+#include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
 
 namespace skybolt {
 
-std::unique_ptr<vis::VisRoot> createExampleVisRoot();
+std::unique_ptr<vis::VisRoot> createVisRoot(const EngineRoot& engineRoot);
 
 } // namespace skybolt

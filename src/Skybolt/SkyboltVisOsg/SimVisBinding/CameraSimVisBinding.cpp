@@ -41,7 +41,9 @@ void CameraSimVisBinding::syncVis(const GeocentricToNedConverter& converter)
 
 vis::CameraPtr getVisCamera(const sim::Entity& camera)
 {
-	return static_cast<const CameraSimVisBinding&>(*camera.getFirstComponent<SimVisBindingsComponent>()->bindings.front()).getCamera();
+	auto component = camera.getFirstComponent<SimVisBindingsComponent>();
+	if (!component || component->bindings.empty()) { return nullptr; }
+	return dynamic_cast<const CameraSimVisBinding&>(*component->bindings.front()).getCamera();
 }
 
 } // namespace skybolt

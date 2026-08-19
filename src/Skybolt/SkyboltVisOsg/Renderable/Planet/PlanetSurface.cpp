@@ -7,7 +7,6 @@
 #include "PlanetSurface.h"
 #include "PlanetTileGeometry.h"
 #include "TextureCompiler.h"
-#include <SkyboltSim/Spatial/LlaToNedConverter.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include "SkyboltVis/Renderable/Planet/Tile/ConcurrentAsyncTileLoader.h"
 #include "SkyboltVis/Renderable/Planet/Tile/PlanetSubdivisionPredicate.h"
@@ -209,7 +208,6 @@ void PlanetSurface::updatePreRender(const CameraRenderContext& context)
 	}
 
 
-	LlaToNedConverter converter(sim::LatLon(mPredicate->observerLatLon.x, mPredicate->observerLatLon.y), std::nullopt);
 	for (const auto& node : mTileNodes)
 	{
 		const OsgTile& tile = node.second;

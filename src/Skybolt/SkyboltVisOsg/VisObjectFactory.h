@@ -16,7 +16,7 @@ namespace vis {
 
 struct VisObjectFactoryConfig
 {
-	NonNullPtr<vis::Scene> scene;
+	vis::ScenePtr scene;
 	NonNullPtr<vis::VisFactoryRegistry> visFactoryRegistry;
 	ComponentFactoryRegistryPtr componentFactoryRegistry;
 	const vis::ShaderPrograms* programs;
@@ -28,7 +28,7 @@ public:
 	VisObjectFactory(const VisObjectFactoryConfig& config);
 
 private:
-	NonNullPtr<vis::Scene> mScene;
+	vis::ScenePtr mScene;
 	NonNullPtr<vis::VisFactoryRegistry> mVisFactoryRegistry;
 	const ComponentFactoryRegistryPtr mComponentFactoryRegistry;
 	NonNullPtr<const vis::ShaderPrograms> mPrograms;

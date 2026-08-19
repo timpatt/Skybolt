@@ -37,6 +37,7 @@
 #include <SkyboltVis/Renderable/Planet/Features/BuildingTypes.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltVisOsg/Camera.h>
+#include <SkyboltVisOsg/Components/VisObjectsComponent.h>
 #include <SkyboltVisOsg/Light.h>
 #include <SkyboltVisOsg/OsgImageHelpers.h>
 #include <SkyboltVisOsg/OsgMathHelpers.h>
@@ -233,14 +234,14 @@ static vis::ModelPtr createVisualModel(const nlohmann::json& json, vis::ModelFac
 
 struct VisObjectFactoryContext
 {
-	NonNullPtr<vis::Scene> scene;
+	vis::ScenePtr scene;
 	NonNullPtr<vis::VisFactoryRegistry> visFactoryRegistry;
 	NonNullPtr<const vis::ShaderPrograms> programs;
 	vis::ModelFactory* modelFactory;
 	vis::TextureCache* textureCache;
 };
 
-static void loadVisualModel(Entity* entity, const EntityFactory::Context& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static void loadVisualModel(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	vis::ModelPtr model = createVisualModel(json, *VisObjectFactoryContext.modelFactory);
 	visObjectsComponent->addObject(model);
@@ -252,7 +253,7 @@ static void loadVisualModel(Entity* entity, const EntityFactory::Context& contex
 	simVisBindingComponent->bindings.push_back(simVis);
 }
 
-static void loadVisualMainRotor(Entity* entity, const EntityFactory::Context& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static void loadVisualMainRotor(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	vis::ModelPtr model = createVisualModel(json, *VisObjectFactoryContext.modelFactory);
 	visObjectsComponent->addObject(model);
@@ -264,7 +265,7 @@ static void loadVisualMainRotor(Entity* entity, const EntityFactory::Context& co
 	simVisBindingComponent->bindings.push_back(simVis);
 }
 
-static void loadVisualTailRotor(Entity* entity, const EntityFactory::Context& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static void loadVisualTailRotor(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	vis::ModelPtr model = createVisualModel(json, *VisObjectFactoryContext.modelFactory);
 	visObjectsComponent->addObject(model);
@@ -276,14 +277,14 @@ static void loadVisualTailRotor(Entity* entity, const EntityFactory::Context& co
 	simVisBindingComponent->bindings.push_back(simVis);
 }
 
-static void loadVisualCamera(Entity* entity, const EntityFactory::Context& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static void loadVisualCamera(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	vis::CameraPtr visCamera(new vis::Camera(1.0f));
 	SimVisBindingPtr cameraSimVisBinding(new CameraSimVisBinding(entity, visCamera));
 	simVisBindingComponent->bindings.push_back(cameraSimVisBinding);
 }
 
-static void loadParticleSystem(Entity* entity, const EntityFactory::Context& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static void loadParticleSystem(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	NearestPlanetProvider nearestPlanetProvider = [world = context.simWorld] (const Vector3& position) {
 		return findNearestEntityWithComponent<sim::PlanetComponent>(world->getEntities(), position).get();
@@ -418,7 +419,7 @@ static osg::ref_ptr<osg::Texture2D> readTilingNonSrgbTexture(const std::string& 
 	return texture;
 }
 
-static void loadVisualPlanet(Entity* entity, const EntityFactory::Context& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static void loadVisualPlanet(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	auto planetComponent = entity->getFirstComponentRequired<PlanetComponent>();
 	auto atmosphereComponent = entity->getFirstComponent<AtmosphereComponent>();
@@ -427,7 +428,7 @@ static void loadVisualPlanet(Entity* entity, const EntityFactory::Context& conte
 	vis::PlanetConfig config;
 	config.scheduler = context.scheduler;
 	config.programs = VisObjectFactoryContext.programs;
-	config.scene = VisObjectFactoryContext.scene;
+	config.scene = VisObjectFactoryContext.scene.get();
 	config.innerRadius = planetComponent->radius;
 	config.visFactoryRegistry = VisObjectFactoryContext.visFactoryRegistry.get();
 	config.waterEnabled = (oceanComponent != nullptr);
@@ -591,7 +592,7 @@ static osg::ref_ptr<osg::StateSet> createCelestialBodyStateSet(const osg::ref_pt
 	return ss;
 }
 
-static void loadVisualSun(Entity* entity, const EntityFactory::Context& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static void loadVisualSun(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	auto sunComponent = entity->getFirstComponentRequired<SunComponent>();
 
@@ -623,7 +624,7 @@ static void loadVisualSun(Entity* entity, const EntityFactory::Context& context,
 	}
 }
 
-static void loadVisualMoon(Entity* entity, const EntityFactory::Context& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static void loadVisualMoon(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	osg::ref_ptr<osg::StateSet> ss = createCelestialBodyStateSet(
 		VisObjectFactoryContext.programs->getRequiredProgram("moon"),
@@ -640,7 +641,7 @@ static void loadVisualMoon(Entity* entity, const EntityFactory::Context& context
 	visObjectsComponent->addObject(node);
 }
 
-static void loadVisualStars(Entity* entity, const EntityFactory::Context& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static void loadVisualStars(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	vis::StarfieldConfig config;
 	config.program = VisObjectFactoryContext.programs->getRequiredProgram("starfield");
@@ -686,7 +687,7 @@ VisObjectFactory::VisObjectFactory(const VisObjectFactoryConfig& config) :
 {
 	assert(mComponentFactoryRegistry);
 
-	using VisComponentLoader = std::function<void(Entity*, const EntityFactory::Context&, const VisObjectFactoryContext&, VisObjectsComponentPtr&, const SimVisBindingsComponentPtr&, const nlohmann::json&)>;
+	using VisComponentLoader = std::function<void(Entity*, const ComponentFactoryContext&, const VisObjectFactoryContext&, VisObjectsComponentPtr&, const SimVisBindingsComponentPtr&, const nlohmann::json&)>;
 	static std::map<std::string, VisComponentLoader> visComponentLoaders =
 	{
 		{ "camera", loadVisualCamera },
@@ -707,17 +708,12 @@ VisObjectFactory::VisObjectFactory(const VisObjectFactoryConfig& config) :
 		.modelFactory = mModelFactory.get(),
 		.textureCache = mTextureCache.get()
 	};
-	/* MTODO 
+
 	for (const auto& [key, loader] : visComponentLoaders)
 	{
-		(*mComponentFactoryRegistry)[key] = std::make_shared<ComponentFactoryFunctionAdapter>([loader, this, &visObjectFactoryContext](Entity* entity, const EntityFactory::Context& context, const nlohmann::json& json) {
+		ComponentFactoryFunctionAdapter::Function func = [loader, this, visObjectFactoryContext](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) -> sim::ComponentPtr {
 			
-			auto visObjectsComponent = entity->getFirstComponent<VisObjectsComponent>(); // MTODO: just have one object per component
-			if (!visObjectsComponent)
-			{
-				visObjectsComponent = std::make_shared<VisObjectsComponent>(mScene);
-				entity->addComponent(visObjectsComponent);
-			}
+			auto visObjectsComponent = std::make_shared<VisObjectsComponent>(mScene); // MTODO: change to store single object? We probably shouldn't have more than one of these on the entity.
 
 			auto simVisBindingComponent = entity->getFirstComponent<SimVisBindingsComponent>();
 			if (!simVisBindingComponent)
@@ -728,9 +724,10 @@ VisObjectFactory::VisObjectFactory(const VisObjectFactoryConfig& config) :
 
 			loader(entity, context, visObjectFactoryContext, visObjectsComponent, simVisBindingComponent, json);
 			return visObjectsComponent;
-		});
+		};
+		(*mComponentFactoryRegistry)[key] = std::make_shared<ComponentFactoryFunctionAdapter>(func);
 	}
-	*/
+
 }
 
 } // namespace vis

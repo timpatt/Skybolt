@@ -180,7 +180,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 		return getCurrentJulianDate(*scenario);
 	};
 
-	auto componentFactoryRegistry = std::make_shared<ComponentFactoryRegistry>();
+	componentFactoryRegistry = std::make_shared<ComponentFactoryRegistry>();
 	addDefaultFactories(*componentFactoryRegistry);
 	factoryRegistries->addItem(componentFactoryRegistry);
 

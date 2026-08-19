@@ -47,6 +47,7 @@ public:
 
 	std::unique_ptr<px_sched::Scheduler> scheduler; //!< Never null
 	file::FileLocator fileLocator;
+	ComponentFactoryRegistryPtr componentFactoryRegistry; //!< Never null
 	std::unique_ptr<EntityFactory> entityFactory; //!< Never null
 	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry; //!< Never null
 	EngineStats stats;

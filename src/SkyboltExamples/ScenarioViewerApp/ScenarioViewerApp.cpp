@@ -41,6 +41,7 @@
 #include <SkyboltSim/Spatial/LatLon.h>
 #include <SkyboltVisOsg/Scene.h>
 #include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/VisRootUtil.h>
 #include <SkyboltVisOsg/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltVisOsg/SimVisBinding/SimVisSystem.h>
 #include <SkyboltVisOsg/SimVisBinding/CameraSimVisBinding.h>
@@ -385,7 +386,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 	mainLayout->addWidget(cameraControllerWidget);
 
 	// Create 3D viewport
-	auto visRoot = std::make_shared<skybolt::vis::VisRoot>();
+	vis::VisRootPtr visRoot = createVisRoot(*engineRoot);
 
 	std::unique_ptr<OsgWindow> osgWindow = std::make_unique<OsgWindow>(visRoot);
 	waitForOsgWindowToInitializeVisWindow(*osgWindow);

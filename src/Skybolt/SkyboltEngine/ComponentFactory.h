@@ -29,6 +29,8 @@ struct ComponentFactoryContext
 	EngineStats* stats;
 	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 	file::FileLocator fileLocator;
+	std::vector<std::string> assetPackagePaths;
+	nlohmann::json engineSettings;
 	NonNullPtr<FactoryRegistries> factoryRegistries;
 	NonNullPtr<refl::TypeRegistry> typeRegistry;
 };

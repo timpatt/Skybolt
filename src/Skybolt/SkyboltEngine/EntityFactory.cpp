@@ -69,6 +69,8 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 	.stats = mContext.stats,
 	.tileSourceFactoryRegistry = mContext.tileSourceFactoryRegistry,
 	.fileLocator = mContext.fileLocator,
+	.assetPackagePaths = mContext.assetPackagePaths,
+	.engineSettings = mContext.engineSettings,
 	.factoryRegistries = mContext.factoryRegistries,
 	.typeRegistry = mContext.typeRegistry
 	};

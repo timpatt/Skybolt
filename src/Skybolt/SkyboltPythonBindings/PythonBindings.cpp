@@ -39,6 +39,7 @@
 
 #include <SkyboltVisOsg/Rect.h>
 #include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/VisRootUtil.h>
 #include <SkyboltVisOsg/Components/VisObjectsComponent.h>
 #include <SkyboltVisOsg/SimVisBinding/CameraSimVisBinding.h>
 #include <SkyboltVisOsg/SimVisBinding/SimVisSystem.h>
@@ -586,7 +587,6 @@ PYBIND11_MODULE(skybolt, m) {
     .export_values();
 
 	py::class_<vis::VisRoot>(m, "VisRoot")
-		//.def(py::init()) // MTODO
 		.def("addWindow", &vis::VisRoot::addWindow)
 		.def("removeWindow", &vis::VisRoot::removeWindow)
 		.def("setLoadTimingPolicy", &vis::VisRoot::setLoadTimingPolicy);
@@ -595,6 +595,7 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("setGlobalEngineRoot", &setGlobalEngineRoot, "Set global EngineRoot");
 	m.def("createEngineRootWithDefaults", &createEngineRootWithDefaults, "Create an EngineRoot with default values"); //@deprecated
 	m.def("createEngineRoot", &createEngineRoot, py::arg("loadPlugins"), "Create an EngineRoot");
+	m.def("createVisRoot", &createVisRoot, "Create a VisRoot");
 	m.def("attachCameraToWindowWithEngine", &attachCameraToWindowWithEngine);
 	m.def("registerComponent", &registerComponent);
 	m.def("advanceSimTime", &advanceSimTime);

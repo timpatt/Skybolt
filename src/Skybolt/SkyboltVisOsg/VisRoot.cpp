@@ -21,30 +21,42 @@
 #include <SkyboltVisOsg/Shader/ShaderProgramRegistry.h>
 #include <SkyboltCommon/VectorUtility.h>
 
+#include <osgDB/FileUtils>
 #include <osgViewer/CompositeViewer>
 #include <format>
 
 namespace skybolt {
 namespace vis {
 
-VisRoot::VisRoot(const DisplaySettings& settings) :
-	mDisplaySettings(settings),
+static void addOsgFileSearchPaths(const std::vector<std::string>& assetPackagePaths)
+{
+	for (const std::string& path : assetPackagePaths)
+	{
+		osgDB::FilePathList& filePathList = osgDB::getDataFilePathList();
+		filePathList.push_back(path);
+	}
+}
+
+VisRoot::VisRoot(VisRootConfig config) :
+	mDisplaySettings(std::move(config.displaySettings)),
 	mViewer(std::make_unique<osgViewer::CompositeViewer>()),
 	mLoadTimingPolicy(LoadTimingPolicy::LoadAcrossMultipleFrames)
 {
 	assert(mViewer);
 
+	addOsgFileSearchPaths(config.assetPackagePaths);
+
 	ensureStaticOsgPluginsUsed();
 
 	forwardOsgLogToBoost();
 
-	osg::DisplaySettings::instance()->setNumMultiSamples(settings.multiSampleCount);
+	osg::DisplaySettings::instance()->setNumMultiSamples(mDisplaySettings.multiSampleCount);
 
-	if (settings.texturePoolSizeBytes > std::numeric_limits<unsigned int>::max())
+	if (mDisplaySettings.texturePoolSizeBytes > std::numeric_limits<unsigned int>::max())
 	{
-		SKYBOLT_LOG(warning) << std::format("Texture pool size '{}' is too large for Open Scene Graph. Up to 4GB is supported.", settings.texturePoolSizeBytes);
+		SKYBOLT_LOG(warning) << std::format("Texture pool size '{}' is too large for Open Scene Graph. Up to 4GB is supported.", mDisplaySettings.texturePoolSizeBytes);
 	}
-	unsigned int texturePoolSizeBytesUnsignedInt = (unsigned int)(std::min(settings.texturePoolSizeBytes, std::size_t(std::numeric_limits<unsigned int>::max())));
+	unsigned int texturePoolSizeBytesUnsignedInt = (unsigned int)(std::min(mDisplaySettings.texturePoolSizeBytes, std::size_t(std::numeric_limits<unsigned int>::max())));
 	osg::DisplaySettings::instance()->setMaxTexturePoolSize(texturePoolSizeBytesUnsignedInt);
 
 //	osg::setNotifyLevel(osg::WARN);
@@ -56,14 +68,13 @@ VisRoot::VisRoot(const DisplaySettings& settings) :
 
 	mVisFactoryRegistry = std::make_unique<vis::VisFactoryRegistry>();
 	mVisFactoryRegistry->addItem(std::make_shared<vis::SimpleWaveHeightTextureGeneratorFactory>());
-	/* MTODO
+
 	mVisObjectFactory = std::make_unique<VisObjectFactory>(VisObjectFactoryConfig{
-		.scene = mScene.get(),
+		.scene = mScene,
 		.visFactoryRegistry = mVisFactoryRegistry.get(),
-		.componentFactoryRegistry = componentFactoryRegistry,
+		.componentFactoryRegistry = config.componentFactoryRegistry,
 		.programs = mPrograms.get()
 		});
-		*/
 }
 
 VisRoot::~VisRoot() = default;

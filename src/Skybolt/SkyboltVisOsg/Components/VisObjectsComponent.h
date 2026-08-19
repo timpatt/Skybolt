@@ -17,7 +17,7 @@ namespace skybolt {
 class VisObjectsComponent : public sim::Component
 {
 public:
-	VisObjectsComponent(vis::Scene* scene) : scene(scene) {}
+	VisObjectsComponent(vis::ScenePtr scene) : scene(scene) {}
 	~VisObjectsComponent();
 
 	void addObject(const vis::VisObjectPtr& object, bool addToScene = true);
@@ -26,7 +26,7 @@ public:
 
 private:
 	std::vector<vis::VisObjectPtr> objects;
-	vis::Scene* scene;
+	vis::ScenePtr scene;
 };
 
 template <class T>

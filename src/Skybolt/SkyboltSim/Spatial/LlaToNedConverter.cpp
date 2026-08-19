@@ -11,7 +11,7 @@
 namespace skybolt {
 namespace vis {
 
-LlaToNedConverter::LlaToNedConverter(const sim::LatLon& origin, double& planetRadius) :
+LlaToNedConverter::LlaToNedConverter(const sim::LatLon& origin, double planetRadius) :
 	mPlanetRadius(planetRadius)
 {
 	setOrigin(origin);
