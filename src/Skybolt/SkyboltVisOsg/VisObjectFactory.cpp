@@ -713,21 +713,16 @@ VisObjectFactory::VisObjectFactory(const VisObjectFactoryConfig& config) :
 	{
 		ComponentFactoryFunctionAdapter::Function func = [loader, this, visObjectFactoryContext](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) -> sim::ComponentPtr {
 			
-			auto visObjectsComponent = std::make_shared<VisObjectsComponent>(mScene); // MTODO: change to store single object? We probably shouldn't have more than one of these on the entity.
-
-			auto simVisBindingComponent = entity->getFirstComponent<SimVisBindingsComponent>();
-			if (!simVisBindingComponent)
-			{
-				simVisBindingComponent = std::make_shared<SimVisBindingsComponent>();
-				entity->addComponent(simVisBindingComponent);
-			}
+			auto visObjectsComponent = entity->getOrCreateComponent<VisObjectsComponent>(mScene);
+			auto simVisBindingComponent = entity->getOrCreateComponent<SimVisBindingsComponent>();
 
 			loader(entity, context, visObjectFactoryContext, visObjectsComponent, simVisBindingComponent, json);
-			return visObjectsComponent;
+			// FIXME: this component factory adds components as side effects rather than returning a single
+			// new component. This should be refactored to remove side effects.
+			return nullptr;
 		};
 		(*mComponentFactoryRegistry)[key] = std::make_shared<ComponentFactoryFunctionAdapter>(func);
 	}
-
 }
 
 } // namespace vis

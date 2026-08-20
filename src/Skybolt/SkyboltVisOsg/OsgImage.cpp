@@ -9,8 +9,6 @@
 
 #include <SkyboltCommon/Exception.h>
 
-#include <osgDB/Registry>
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>

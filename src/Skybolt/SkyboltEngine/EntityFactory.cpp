@@ -98,6 +98,13 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 					{
 						entity->addComponent(newComponent);
 					}
+					else
+					{
+						// TODO: some of the component factories re-use existing components that
+						// are already on the entity and return nullptr. Therefore if a factory
+						// returns nullptr it should not be regarded as an error.
+						// This is a confusing design and should be improved.
+					}
 				}
 			}
 

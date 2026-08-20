@@ -50,7 +50,7 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFa
 	EngineRootConfig config;
 	config.engineSettings = settings;
 	config.assetSearchPaths = getDefaultAssetSearchPaths();
-	config.imageFactory = std::make_shared<vis::SimpleImageFactory>(); // MTODO: potentially should pass in OsgImageFactory here
+	config.imageFactory = std::make_shared<vis::SimpleImageFactory>();
 	auto engineRoot = std::make_unique<EngineRoot>(config);
 	engineRoot->loadPlugins(pluginFactories);
 	return engineRoot;

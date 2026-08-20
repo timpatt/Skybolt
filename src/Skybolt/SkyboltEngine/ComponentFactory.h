@@ -40,7 +40,7 @@ class ComponentFactory
 public:
 	virtual ~ComponentFactory() {}
 
-	//! @return nullptr if component could not be created
+	//! @return nullptr if component was not be created.
 	virtual sim::ComponentPtr create(sim::Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) = 0;
 };
 
