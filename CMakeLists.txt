@@ -119,7 +119,7 @@ function(_skybolt_configure_conan_init_script)
 
 	set(Skybolt_PLUGIN_DIRS "\"\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_lib_path}/plugins\"")
 	configure_file("CMake/conan-skybolt-init.cmake.in" "${CMAKE_BINARY_DIR}/conan-skybolt-init-installtree.cmake" @ONLY)
-	install(FILES ${CMAKE_BINARY_DIR}/cmake-conan-skybolt-init-installtree.cmake
+	install(FILES ${CMAKE_BINARY_DIR}/conan-skybolt-init-installtree.cmake
 		DESTINATION CMake
 		COMPONENT Development
 		EXCLUDE_FROM_ALL
@@ -140,7 +140,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/CMake
 
 # Install headers
 install(
-	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt
+	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt/
 	DESTINATION include
 	COMPONENT Development
 	EXCLUDE_FROM_ALL
