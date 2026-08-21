@@ -175,3 +175,6 @@ class SkyboltConan(ConanFile):
         if self.options.enable_fft_ocean:
             self.cpp_info.libs.append("FftOcean")
 
+        if self.options.enable_bullet:
+            self.cpp_info.libs.append("SkyboltBullet")
+
