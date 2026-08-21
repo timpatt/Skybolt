@@ -140,7 +140,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/CMake
 
 # Install headers
 install(
-	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt
+	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt/
 	DESTINATION include
 	COMPONENT Development
 	EXCLUDE_FROM_ALL

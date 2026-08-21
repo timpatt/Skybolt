@@ -7,6 +7,8 @@ class SkyboltConan(ConanFile):
     name = "skybolt"
     version = "1.8.0"
     settings = "os", "compiler", "arch", "build_type"
+    package_type = "library"
+
     options = {
         "enable_boost_log": [True, False],
         "enable_bullet": [True, False],
