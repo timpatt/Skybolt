@@ -11,8 +11,10 @@
 #include "SkyboltVisOsgFwd.h"
 #include "VisObject.h"
 
+#include <SkyboltSim/SimMath.h>
 #include <osg/ClipNode>
 #include <osg/Group>
+#include <optional>
 
 namespace skybolt {
 namespace vis {
@@ -48,6 +50,10 @@ public:
 	osg::Vec3f getAmbientLightColor() const;
 	void setAmbientLightColor(const osg::Vec3f& color);
 
+	//! @returns the geocentric position of the scene origin, or std::nullopt if not set.
+	std::optional<sim::Vector3> getSceneOriginGeocentric() const { return mSceneOriginGeocentric; }
+	void setSceneOriginGeocentric(const sim::Vector3& sceneOriginGeocentric) { mSceneOriginGeocentric = sceneOriginGeocentric; }
+
 	const osg::Vec3& getWrappedNoiseOrigin() const {return mWrappedNoiseOrigin;}
 
 	osg::Group* getBucketGroup(Bucket bucket) const;
@@ -69,6 +75,8 @@ private:
 	osg::Uniform* mAmbientLightColorUniform;
 	osg::Uniform* mWrappedNoiseOriginUniform;
 	osg::Uniform* mGroundIrradianceMultiplierUniform;
+
+	std::optional<sim::Vector3> mSceneOriginGeocentric;
 	osg::Vec3f mWrappedNoiseOrigin;
 	float mWrappedNoisePeriod;
 };

@@ -421,7 +421,7 @@ void addDefaultFactories(ComponentFactoryRegistry& registry)
 	registry["mainRotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadMainRotor);
 	registry["motion"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadMotion);
 	registry["node"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadNode);
-	registry["ocean"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadOcean);
+	registry["ocean"] = getSimDefaultOceanComponentFactory();
 	registry["planet"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadPlanet);
 	registry["planetElevationTileSource"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadPlanetElevationTileSource);
 	registry["propeller"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadPropeller);
@@ -430,6 +430,12 @@ void addDefaultFactories(ComponentFactoryRegistry& registry)
 	registry["scenarioMetadata"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadScenarioMetadata);
 	registry["sun"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadSun);
 	registry["tailRotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadTailRotor);
+}
+
+ComponentFactoryPtr getSimDefaultOceanComponentFactory()
+{
+	static auto factory = std::make_shared<ComponentFactoryFunctionAdapter>(loadOcean);
+	return factory;
 }
 
 } // namespace skybolt

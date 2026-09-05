@@ -4,9 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include <SkyboltVisOsg/Renderable/Water/WaveHeightTextureGenerator.h>
+#include <SkyboltVisOsg/Renderable/Water/OceanHeightfieldTextureGenerator.h>
 #include "WaveSpectrumWindow.h"
 #include "FftOceanGenerator.h"
+
+#include <SkyboltSim/Spatial/Geocentric.h>
 
 #include <osg/Image>
 #include <atomic>
@@ -17,19 +19,32 @@
 namespace skybolt {
 namespace vis {
 
-struct FftOceanWaveHeightTextureGeneratorConfig
+struct FftOceanHeightfieldTextureGeneratorConfig
 {
 	float textureWorldSize;
 	int textureSizePixels;
 	WaveSpectrumWindow waveSpectrumWindow;
+	int seed = 0;
 };
 
-class FftOceanWaveHeightTextureGenerator : public WaveHeightTextureGenerator
+static glm::dvec2 calcTextureOriginNorthEast(const sim::Vector3& sceneOriginGeocentric, const sim::Vector3& textureOriginGeocentric)
+{
+	// Calculate north-east displacement of the texture origin relative to the scene origin.
+	sim::Vector3 displacementGeocentric = textureOriginGeocentric - sceneOriginGeocentric;
+
+	sim::Matrix3 ltpOrientation = sim::geocentricToLtpOrientation(sceneOriginGeocentric);
+	sim::Vector3 displacementNed = glm::inverse(ltpOrientation) * displacementGeocentric;
+
+	return glm::dvec2(displacementNed.x, displacementNed.y);
+}
+
+class FftOceanHeightfieldTextureGenerator : public OceanHeightfieldTextureGenerator
 {
 public:
-	FftOceanWaveHeightTextureGenerator(const FftOceanWaveHeightTextureGeneratorConfig& config) :
+	FftOceanHeightfieldTextureGenerator(const FftOceanHeightfieldTextureGeneratorConfig& config) :
 		mWorldSize(config.textureWorldSize),
-		mWaveHeight(0.5)
+		mWaveHeight(0.5),
+		mSeed(config.seed)
 	{
 		mWindVelocity = calcWindVelocity();
 
@@ -38,7 +53,7 @@ public:
 		mGenerator.reset(new FftOceanGenerator([&] {
 			FftOceanGeneratorConfig c;
 			c.gravity = mGravity;
-			c.seed = 0;
+			c.seed = config.seed;
 			c.textureSizePixels = config.textureSizePixels;
 			c.textureWorldSize = config.textureWorldSize;
 			c.windVelocity = mWindVelocity;
@@ -65,20 +80,17 @@ public:
 		generate(0);
 	}
 
-	~FftOceanWaveHeightTextureGenerator()
+	~FftOceanHeightfieldTextureGenerator()
 	{
 		mTerminateGeneratorThread = true;
 		mGeneratorRequestCV.notify_one();
 		mGeneratorThread.join();
 	}
 
-	bool generate(double time) override
+	bool generate(sim::SecondsD time) override
 	{
-		if (time == mResultTime)
-		{
-			return false;
-		}
-
+		bool textureUpdated = false;
+		// If there's a result from the previous request, copy it to the texture
 		if (mGeneratorHasResult)
 		{
 			osg::Image* image = mTexture->getImage();
@@ -86,17 +98,31 @@ public:
 				// Copy image from generator thread to texture
 				std::lock_guard<std::mutex> lock(mGeneratorResultMutex);
 				memcpy(image->data(), mGeneratorResult.data(), mGeneratorResult.size() * sizeof(float) * 3);
-				mResultTime = mRequestTime;
-
-				// Request a new image to be generated
-				mGeneratorRequest = true;
-				mRequestTime = time;
+				mGeneratorHasResult = false;
+				++mGenerationCount;
 			}
-			mGeneratorRequestCV.notify_one();
 			image->dirty();
-			return true;
+			textureUpdated = true;
 		}
-		return false;
+
+		// If input state has changed, request a new texture to be generated
+		bool timeChanged = !mRequestTime || (time != *mRequestTime);
+		if (timeChanged || mWindVelocityChanged || mSeedChanged)
+		{
+			mRequestTime = time;
+			{
+				// Request a new image to be generated
+				std::lock_guard<std::mutex> lock(mGeneratorRequestMutex);
+				mGeneratorRequest = true;
+			}
+			mGeneratorRequestCV.notify_one(); // Safe to call notify_one outside the mGeneratorRequestMutex lock
+		}
+		return textureUpdated;
+	}
+
+	std::size_t getGenerationCount() const override
+	{
+		return mGenerationCount;
 	}
 
 	void runGeneratorThread()
@@ -105,7 +131,7 @@ public:
 		{
 			// Wait for generation request
 			{
-				std::unique_lock<std::mutex> lock(mGeneratorRequestMutex);
+				std::unique_lock<std::mutex> lock(mGeneratorRequestMutex); // Must lock before calling wait()
 				mGeneratorRequestCV.wait(lock, [this] {return mGeneratorRequest || mTerminateGeneratorThread; });
 			}
 
@@ -123,7 +149,13 @@ public:
 					mWindVelocityChanged = false;
 				}
 
-				mGenerator->calculate(mRequestTime, std::span<glm::vec3>{mGeneratorResult.data(), mGeneratorResult.size()});
+				if (mSeedChanged)
+				{
+					mGenerator->setSeed(mSeed);
+					mSeedChanged = false;
+				}
+
+				mGenerator->calculate(mRequestTime.value_or(0), std::span<glm::vec3>{mGeneratorResult.data(), mGeneratorResult.size()});
 				mGeneratorHasResult = true;
 				mGeneratorRequest = false;
 			}
@@ -159,7 +191,7 @@ public:
 		}
 	}
 
-	int getTextureCount() const { return 1; }
+	int getTextureCount() const override { return 1; }
 
 	osg::ref_ptr<osg::Texture2D> getTexture(int index) const
 	{
@@ -167,7 +199,66 @@ public:
 		return mTexture;
 	}
 
-	float getTextureWorldSize(int index) const { return mWorldSize; }
+	float getTextureWorldSize(int index) const override { return mWorldSize; }
+
+	int getSeed() const override
+	{
+		return mSeed;
+	}
+
+	void setSeed(int seed) override
+	{
+		if (mSeed != seed)
+		{
+			mSeed = seed;
+			mSeedChanged = true;
+		}
+	}
+
+	const sim::Vector3& getTextureOriginGeocentric() const override
+	{
+		return mTextureOriginGeocentric;
+	}
+
+	const glm::dvec2& getTextureOriginNorthEast() const override
+	{
+		return mTextureOriginNorthEast;
+	}
+
+	void updateSceneOriginGeocentric(const sim::Vector3& sceneOriginGeocentric)
+	{
+		double originDistance = glm::distance(mTextureOriginGeocentric, sceneOriginGeocentric);
+
+		const double teleportDistance = 100 * mWorldSize;
+		if (originDistance > teleportDistance)
+		{
+			// Teleport the texture origin if the scene origin has moved a long way the texture origin.
+			mTextureOriginGeocentric = sceneOriginGeocentric;
+			mTextureOriginNorthEast = {};
+			return;
+		}
+		else if (originDistance < mWorldSize)
+		{
+			// No need to update the geocentric texture origin if the scene origin is already close to the texture origin
+			mTextureOriginNorthEast = calcTextureOriginNorthEast(sceneOriginGeocentric, mTextureOriginGeocentric);
+			return;
+		}
+
+		// Move the texture origin in increments of mWorldSize to be close to scene origin.
+		sim::Vector3 displacementGeocentric = mTextureOriginGeocentric - sceneOriginGeocentric;
+
+		sim::Matrix3 ltpOrientation = sim::geocentricToLtpOrientation(sceneOriginGeocentric);
+		sim::Vector3 displacementNed = glm::inverse(ltpOrientation) * displacementGeocentric;
+
+		// Find the remainder of the displacement relative to the texture world size.
+		// Apply remainder as an offset to the texture coordinates.
+		displacementNed.x = std::fmod(displacementNed.x, (double)mWorldSize);
+		displacementNed.y = std::fmod(displacementNed.y, (double)mWorldSize);
+		displacementNed.z = 0; // Don't offset the texture in the vertical direction
+
+		mTextureOriginGeocentric = sceneOriginGeocentric + ltpOrientation * displacementNed;
+		mTextureOriginNorthEast = displacementNed;
+	}
 
 private:
 	glm::vec2 calcWindVelocity() const {
@@ -182,6 +273,10 @@ private:
 	float mWorldSize;
 	float mWaveHeight;
 	float mWindVelocityHeading = 0;
+	int mSeed = 0;
+
+	sim::Vector3 mTextureOriginGeocentric = {};
+	glm::dvec2 mTextureOriginNorthEast = {};
 
 	std::thread mGeneratorThread;
 	std::atomic_bool mTerminateGeneratorThread = false;
@@ -189,15 +284,16 @@ private:
 	std::vector<glm::vec3> mGeneratorResult;
 	std::mutex mGeneratorResultMutex;
 	std::atomic_bool mGeneratorHasResult = false;
-	double mResultTime = std::numeric_limits<double>::infinity();
+	std::size_t mGenerationCount;
 
 	std::mutex mGeneratorRequestMutex;
 	std::condition_variable mGeneratorRequestCV;
-	double mRequestTime = 0;
+	std::optional<sim::SecondsD> mRequestTime;
 	bool mGeneratorRequest = false;
 
 	std::atomic<glm::vec2> mWindVelocity;
 	std::atomic_bool mWindVelocityChanged = false;
+	std::atomic_bool mSeedChanged = false;
 };
 
 } // namespace vis

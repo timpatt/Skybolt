@@ -7,10 +7,6 @@
 #pragma once
 
 #include <SkyboltEngine/Plugin/Plugin.h>
-#include <SkyboltVis/VisFactory.h>
-#ifdef BUILD_WITH_OSG
-#include <SkyboltVisOsg/Renderable/Water/WaveHeightTextureGenerator.h>
-#endif
 
 namespace skybolt {
 
@@ -21,11 +17,7 @@ public:
 
 	~FftOceanPlugin() override;
 
-private:
-	vis::VisFactoryRegistryPtr mVisFactoryRegistry;
-#ifdef BUILD_WITH_OSG
-	std::shared_ptr<vis::WaveHeightTextureGeneratorFactory> mFactory;
-#endif
+	static ComponentFactoryPtr getOceanComponentFactory();
 };
 
 namespace plugins {

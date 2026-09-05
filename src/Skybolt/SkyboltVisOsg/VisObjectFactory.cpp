@@ -59,6 +59,7 @@
 #include <SkyboltVisOsg/Renderable/Stars/Starfield.h>
 #include <SkyboltVisOsg/Renderable/Model/Model.h>
 #include <SkyboltVisOsg/Renderable/Model/ModelFactory.h>
+#include <SkyboltVisOsg/Renderable/Water/OceanHeightfieldTextureGenerator.h>
 #include <SkyboltVisOsg/Renderable/Water/WaterMaterial.h>
 #include <SkyboltVisOsg/Shader/ShaderProgramRegistry.h>
 
@@ -440,8 +441,7 @@ static void loadVisualPlanet(Entity* entity, const ComponentFactoryContext& cont
 	config.imageFactory = context.imageFactory;
 	config.scene = visObjectFactoryContext.scene.get();
 	config.innerRadius = planetComponent->radius;
-	config.visFactoryRegistry = visObjectFactoryContext.visFactoryRegistry.get();
-	config.waterEnabled = (oceanComponent != nullptr);
+	config.oceanHeightfieldTextureGenerator = oceanComponent ? dynamic_pointer_cast<OceanHeightfieldTextureGenerator>(oceanComponent->heightfieldGenerator) : nullptr;
 	config.fileLocator = context.fileLocator;
 	
 	{
@@ -562,16 +562,13 @@ static void loadVisualPlanet(Entity* entity, const ComponentFactoryContext& cont
 	vis::PlanetPtr visObject(new vis::Planet(config));
 	visObjectsComponent->addObject(visObject);
 
-	SimVisBindingPtr simVis(std::make_shared<PlanetVisBinding>(context.julianDateProvider, entity, visObject));
+	SimVisBindingPtr simVis(std::make_shared<PlanetVisBinding>(context.julianDateProvider, context.simTimeProvider, entity, visObject));
 	simVisBindingComponent->bindings.push_back(simVis);
 
 	if (const osg::ref_ptr<vis::WaterMaterial>& waterMaterial = visObject->getWaterMaterial(); waterMaterial)
 	{
 		auto binding = std::make_shared<WakeBinding>(context.simWorld, waterMaterial);
 		simVisBindingComponent->bindings.push_back(binding);
-
-		// Allow the sim ocean component to sample the ocean height from the water material
-		oceanComponent->surfaceSampler = waterMaterial->getSurfaceSampler();
 	}
 
 	std::shared_ptr<PlanetStatsUpdater> statsUpdater = std::make_shared<PlanetStatsUpdater>(context.stats, static_cast<vis::Planet*>(visObject.get()));

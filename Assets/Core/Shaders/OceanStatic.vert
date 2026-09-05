@@ -15,7 +15,7 @@ in vec4 osg_Vertex;
 out vec3 positionRelCameraWS;
 out vec3 positionWS;
 out float logZ;
-out vec2 wrappedNoiseCoord;
+out vec2 undisplacedPositionRelTexCoordOrigin;
 out AtmosphericScattering scattering;
 
 uniform sampler2D heightSamplers[OCEAN_CASCADE_COUNT];
@@ -28,12 +28,13 @@ uniform sampler2D heightSampler;
 uniform vec2 heightMapTexCoordScale;
 uniform float displacementHeight;
 uniform vec2 heightMapTexCoordScales[OCEAN_CASCADE_COUNT];
+uniform vec2 heightMapTexCoordOriginWorldSpace;
 
 void main()
 {
 	positionWS = vec3(modelMatrix * osg_Vertex).xyz;
 	
-	wrappedNoiseCoord = calcWrappedNoiseCoord(positionWS).xy;
+	undisplacedPositionRelTexCoordOrigin = positionWS.xy - heightMapTexCoordOriginWorldSpace;
 	// Surface drop is disabled because it drops lakes too far compared with terrain. TODO: investigate.
 	//positionWS.z += planetSurfaceDrop(length(vec2(positionWS.x, positionWS.y)));
 	
@@ -42,7 +43,7 @@ void main()
 	vec3 offset = vec3(0);
 	for (int i = 0; i < OCEAN_CASCADE_COUNT; ++i)
 	{
-		vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[i];
+		vec2 texCoord = undisplacedPositionRelTexCoordOrigin * heightMapTexCoordScales[i];
 		offset += textureLod(heightSamplers[i], texCoord, lod).xyz;
 	}
 	

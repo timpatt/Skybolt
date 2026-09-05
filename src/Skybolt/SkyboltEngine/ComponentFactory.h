@@ -16,6 +16,7 @@
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
 #include <nlohmann/json.hpp>
+#include <functional>
 #include <px_sched/px_sched.h>
 
 namespace skybolt {
@@ -27,6 +28,7 @@ struct ComponentFactoryContext
 	EntityFactory const* entityFactory;
 	vis::ImageFactoryPtr imageFactory;
 	JulianDateProvider julianDateProvider;
+	SimTimeProvider simTimeProvider;
 	EngineStats* stats;
 	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 	file::FileLocator fileLocator;
@@ -62,5 +64,7 @@ typedef RegistryT<std::string, ComponentFactoryPtr> ComponentFactoryRegistry;
 typedef std::shared_ptr<ComponentFactoryRegistry> ComponentFactoryRegistryPtr;
 
 void addDefaultFactories(ComponentFactoryRegistry& registry);
+
+ComponentFactoryPtr getSimDefaultOceanComponentFactory();
 
 } // namespace skybolt

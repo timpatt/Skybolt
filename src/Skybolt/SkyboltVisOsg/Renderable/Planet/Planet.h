@@ -50,8 +50,7 @@ struct PlanetConfig
 	bool skyVisible = true;
 
 	// Ocean
-	VisFactoryRegistry* visFactoryRegistry; //!< Not null if waterEnabled = true
-	bool waterEnabled = true;
+	OceanHeightfieldTextureGeneratorPtr oceanHeightfieldTextureGenerator; //!< Water is disabled if null
 
 	// Features (buildings etc)
 	BuildingTypesPtr buildingTypes; //!< optional
@@ -90,6 +89,11 @@ public:
 	void setJulianDate(double date)
 	{
 		mJulianDate = date;
+	}
+
+	void setSimTime(double simTime)
+	{
+		mSimTime = simTime;
 	}
 
 	void setCloudsVisible(bool visible);
@@ -142,6 +146,7 @@ private:
 	osg::ref_ptr<osg::Group> mShadowSceneGroup;
 	std::unique_ptr<MyPlanetSurfaceListener> mPlanetSurfaceListener;
 	double mJulianDate = 0;
+	double mSimTime = 0;
 	osg::Uniform* mCloudDisplacementMetersUniform;
 	osg::Uniform* mCloudCoverageFractionUniform;
 	std::optional<float> mCloudCoverageFraction;

@@ -43,6 +43,7 @@ public:
 		sim::World* simWorld;
 		vis::ImageFactoryPtr imageFactory;
 		JulianDateProvider julianDateProvider;
+		SimTimeProvider simTimeProvider;
 		ComponentFactoryRegistryPtr componentFactoryRegistry;
 		vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry; //!< Never null
 		EngineStats* stats;

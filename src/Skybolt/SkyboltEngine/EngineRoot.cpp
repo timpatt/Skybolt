@@ -7,6 +7,7 @@
 #include "EngineRoot.h"
 #include "AssetPackage.h"
 #include "ComponentFactory.h"
+#include "GetExecutableFilepath.h"
 #include <SkyboltSim/CameraController/CameraModifierStack.h>
 #include <SkyboltSim/System/EntitySystem.h>
 #include <SkyboltSim/System/SimStepper.h>
@@ -118,9 +119,10 @@ static file::Path getCacheDir()
 
 std::vector<std::string> getDefaultAssetSearchPaths()
 {
+	file::Path executableDir = getExecutableFilepath().parent_path();
 	std::vector<std::string> assetSearchPaths = {
-		"Assets/",
-		"../Assets/"
+		(executableDir / "Assets").string(),
+		(executableDir.parent_path() / "Assets").string()
 	};
 
 	if (const char* path = std::getenv("SKYBOLT_ASSETS_PATH"); path)
@@ -212,6 +214,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	.simWorld = &scenario->world,
 	.imageFactory = config.imageFactory,
 	.julianDateProvider = julianDateProvider,
+	.simTimeProvider = [scenario = scenario.get()] { return scenario->timeSource->getTime(); },
 	.componentFactoryRegistry = componentFactoryRegistry,
 	.tileSourceFactoryRegistry = tileSourceFactoryRegistry,
 	.stats = &stats,

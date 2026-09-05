@@ -15,7 +15,7 @@
 #include "SkyboltVisOsg/RenderContext.h"
 #include "SkyboltVisOsg/Scene.h"
 #include "SkyboltVisOsg/SimVisBinding/SimVisSystem.h"
-#include "SkyboltVisOsg/Renderable/Water/SimpleWaveHeightTextureGenerator.h"
+#include "SkyboltVisOsg/Renderable/Water/SimpleOceanHeightfieldTextureGenerator.h"
 #include "SkyboltVisOsg/RenderOperation/RenderTarget.h"
 #include "SkyboltVisOsg/Window/Window.h"
 #include <SkyboltVisOsg/Shader/ShaderProgramRegistry.h>
@@ -35,6 +35,18 @@ static void addOsgFileSearchPaths(const std::vector<std::string>& assetPackagePa
 		osgDB::FilePathList& filePathList = osgDB::getDataFilePathList();
 		filePathList.push_back(path);
 	}
+}
+
+static sim::ComponentPtr loadOcean(sim::Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	auto generator = std::make_shared<SimpleOceanHeightfieldTextureGenerator>();
+	return std::make_shared<sim::OceanComponent>(generator);
+}
+
+ComponentFactoryPtr getVisDefaultOceanComponentFactory()
+{
+	auto factory = std::make_shared<ComponentFactoryFunctionAdapter>(loadOcean);
+	return factory;
 }
 
 VisRoot::VisRoot(VisRootConfig config) :
@@ -75,10 +87,11 @@ VisRoot::VisRoot(VisRootConfig config) :
 
 	config.systemRegistry->push_back(std::make_shared<SimVisSystem>(config.world, mScene));
 
-	if (!config.visFactoryRegistry->getFirstItemOfType<WaveHeightTextureGeneratorFactory>())
+	// Override the basic sim ocean component factory with a vis-enabled component
+	ComponentFactoryPtr& oceanComponentFactory = (*config.componentFactoryRegistry)["ocean"];
+	if (oceanComponentFactory == getSimDefaultOceanComponentFactory())
 	{
-		// Register default factory if a WaveHeightTextureGeneratorFactory has not been registred yet
-		config.visFactoryRegistry->addItem(std::make_shared<vis::SimpleWaveHeightTextureGeneratorFactory>());
+		oceanComponentFactory = getVisDefaultOceanComponentFactory();
 	}
 
 	mVisObjectFactory = std::make_unique<VisObjectFactory>(VisObjectFactoryConfig{

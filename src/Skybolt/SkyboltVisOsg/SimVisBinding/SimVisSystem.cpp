@@ -40,6 +40,7 @@ SimVisSystem::~SimVisSystem()
 void SimVisSystem::updateState()
 {
 	Vector3 origin = mSceneOriginProvider();
+	mScene->setSceneOriginGeocentric(origin);
 
 	// Get nearest planet
 	sim::Entity* planet = findNearestEntityWithComponent<sim::PlanetComponent>(mWorld->getEntities(), origin).get();

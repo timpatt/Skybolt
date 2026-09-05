@@ -6,11 +6,14 @@
 
 #include "WaterMaterial.h"
 #include "SkyboltVisOsg/Renderable/Water/WaterStateSet.h"
-#include "SkyboltVisOsg/Renderable/Water/WaveHeightTextureGenerator.h"
+#include "SkyboltVisOsg/Renderable/Water/OceanHeightfieldTextureGenerator.h"
+#include "SkyboltVisOsg/OsgMathHelpers.h"
 #include "SkyboltVisOsg/OsgTextureHelpers.h"
+#include "SkyboltVisOsg/Scene.h"
 #include "SkyboltVisOsg/Shader/ShaderProgramRegistry.h"
 #include "SkyboltVisOsg/TextureGenerator/GpuTextureGenerator.h"
 #include "SkyboltVisOsg/TextureGenerator/GpuTextureGeneratorStateSets.h"
+#include <SkyboltSim/Spatial/Geocentric.h>
 
 #include <osg/Group>
 #include <osg/Switch>
@@ -123,7 +126,7 @@ public:
 	{
 		// Update subtraction amount for previous frame's foam mask when mixing with the current frame.
 		// This makes old foam slowly fade out over time.
-		const float totalFadeTime = 30.0f;
+		const float totalFadeTime = 10.0f;
 		float amount = std::min(1.0, std::abs(timeSeconds - mPrevTimeSeconds)) / totalFadeTime;
 		// Don't fade this frame if the amount is less than the minimum value that has any effect in 8 bit textures.
 		if (amount >= 0.005)
@@ -157,21 +160,24 @@ private:
 	double mPrevTimeSeconds = 0;
 };
 
-WaterMaterial::WaterMaterial(const WaterMaterialConfig& config)
+WaterMaterial::WaterMaterial(const WaterMaterialConfig& config) :
+	mOceanHeightfieldTextureGenerator(config.oceanHeightfieldTextureGenerator),
+	mScene(config.scene)
 {
+	assert(mOceanHeightfieldTextureGenerator);
+
 	WaterStateSetConfig stateSetConfig;
 
-	mWaveHeightTextureGenerator = config.factory->create();
-	const int cascadeCount = mWaveHeightTextureGenerator->getTextureCount();
+	const int cascadeCount = mOceanHeightfieldTextureGenerator->getTextureCount();
 
 	for (int i = 0; i < cascadeCount; ++i)
 	{
 		WaterStateSetConfig::WaveTextureSet waveTextureSet;
 
-		float textureWorldSize = mWaveHeightTextureGenerator->getTextureWorldSize(i);
+		float textureWorldSize = mOceanHeightfieldTextureGenerator->getTextureWorldSize(i);
 		waveTextureSet.waveHeightMapWorldSizes = textureWorldSize;
 
-		waveTextureSet.waveHeight = mWaveHeightTextureGenerator->getTexture(i);
+		waveTextureSet.waveHeight = mOceanHeightfieldTextureGenerator->getTexture(i);
 		waveTextureSet.waveHeight->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
 		waveTextureSet.waveHeight->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
 
@@ -202,26 +208,6 @@ WaterMaterial::WaterMaterial(const WaterMaterialConfig& config)
 	setStateSet(new WaterStateSet(stateSetConfig));
 }
 
-void WaterMaterial::setWaveHeight(float height)
-{
-	mWaveHeightTextureGenerator->setWaveHeight(height);
-}
-
-float WaterMaterial::getWaveHeight() const
-{
-	return mWaveHeightTextureGenerator->getWaveHeight();
-}
-
-void WaterMaterial::setWindVelocityHeading(float heading)
-{
-	mWaveHeightTextureGenerator->setWindVelocityHeading(heading);
-}
-
-float WaterMaterial::getWindVelocityHeading() const
-{
-	return mWaveHeightTextureGenerator->getWindVelocityHeading();
-}
-
 void WaterMaterial::setWakes(const std::vector<Wake>& wakes)
 {
 	static_cast<WaterStateSet*>(getStateSet())->setWakes(wakes);
@@ -229,11 +215,10 @@ void WaterMaterial::setWakes(const std::vector<Wake>& wakes)
 
 void WaterMaterial::update(double timeSeconds)
 {
-	double loopPeriod = 1000; // TODO: Seamless looping
-	double loopedTimeSeconds = std::fmod(timeSeconds, loopPeriod);
-		
-	if (mWaveHeightTextureGenerator->generate(loopedTimeSeconds))
+	if (mOceanHeightfieldTextureGenerator->getGenerationCount() != mLastGenerationCount)
 	{
+		mLastGenerationCount = mOceanHeightfieldTextureGenerator->getGenerationCount();
+
 		for (const auto& generator : mWaterSurfaceGpuTextureGenerators)
 		{
 			generator->requestRegenerate();
@@ -241,21 +226,27 @@ void WaterMaterial::update(double timeSeconds)
 
 		for (int i = 0; i < mWaveFoamMaskGenerators.size(); ++i)
 		{
-			mWaveFoamMaskGenerators[i]->advanceTime(loopedTimeSeconds);
+			mWaveFoamMaskGenerators[i]->advanceTime(timeSeconds);
 			static_cast<WaterStateSet*>(getStateSet())->setFoamTexture(i, mWaveFoamMaskGenerators[i]->getOutputTexture());
 			mWaveFoamMaskGenerators[i]->swapBuffers();
 		}
+	}
+
+	if (const auto& sceneOriginGeocentric = mScene->getSceneOriginGeocentric())
+	{
+		mOceanHeightfieldTextureGenerator->updateSceneOriginGeocentric(*sceneOriginGeocentric);
+		static_cast<WaterStateSet*>(getStateSet())->setTextureOriginNorthEast(math::toOsgVec2f(mOceanHeightfieldTextureGenerator->getTextureOriginNorthEast()));
 	}
 }
 
 int WaterMaterial::getCascadeCount() const
 {
-	return mWaveHeightTextureGenerator->getTextureCount();
+	return mOceanHeightfieldTextureGenerator->getTextureCount();
 }
 
 osg::ref_ptr<osg::Texture2D> WaterMaterial::getHeightTexture(int cascadeIndex) const
 {
-	return mWaveHeightTextureGenerator->getTexture(cascadeIndex);
+	return mOceanHeightfieldTextureGenerator->getTexture(cascadeIndex);
 }
 
 osg::ref_ptr<osg::Texture2D> WaterMaterial::getNormalTexture(int cascadeIndex) const
@@ -270,7 +261,7 @@ osg::ref_ptr<osg::Texture2D> WaterMaterial::getFoamMaskTexture(int cascadeIndex)
 
 sim::OceanSurfaceSamplerPtr WaterMaterial::getSurfaceSampler() const
 {
-	return mWaveHeightTextureGenerator->getSurfaceSampler();
+	return mOceanHeightfieldTextureGenerator->getSurfaceSampler();
 }
 
 } // namespace vis

@@ -15,11 +15,12 @@ namespace skybolt {
 class PlanetVisBinding : public SimpleSimVisBinding
 {
 public:
-	PlanetVisBinding(JulianDateProvider dateProvider, const sim::Entity* entity, const vis::PlanetPtr& visObject);
+	PlanetVisBinding(JulianDateProvider dateProvider, SimTimeProvider simTimeProvider, const sim::Entity* entity, const vis::PlanetPtr& visObject);
 	void syncVis(const GeocentricToNedConverter& converter) override;
 
 private:
 	JulianDateProvider mDateProvider;
+	SimTimeProvider mSimTimeProvider;
 };
 
 } // namespace skybolt

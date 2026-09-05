@@ -38,11 +38,13 @@ public:
 
 	void setWakes(const std::vector<Wake>& wakes);
 	void setFoamTexture(int index, osg::ref_ptr<osg::Texture2D> texture);
+	void setTextureOriginNorthEast(const osg::Vec2f& originNorthEast);
 
 private:
 	osg::ref_ptr<osg::Image> mWakeHashMapImage; //!< Maps a hashed wake spatial coordinate to {wake params first index, wake params last index + 1}
 	osg::ref_ptr<osg::Image> mWakeParamsImage;
 	int mFirstFoamMaskTextureIndex;
+	osg::ref_ptr<osg::Uniform> mTextureOriginNorthEastUniform;
 };
 
 } // namespace vis

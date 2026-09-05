@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "SimpleWaveHeightTextureGenerator.h"
+#include "SimpleOceanHeightfieldTextureGenerator.h"
 
 #include <osg/Image>
 #include <osg/Texture2D>
@@ -12,9 +12,9 @@
 namespace skybolt {
 namespace vis {
 
-SimpleWaveHeightTextureGenerator::SimpleWaveHeightTextureGenerator()
+SimpleOceanHeightfieldTextureGenerator::SimpleOceanHeightfieldTextureGenerator()
 {
-	int width = 512;
+	int width = 256;
 	int height = width;
 
 	osg::Image* image = new osg::Image;
@@ -34,6 +34,8 @@ SimpleWaveHeightTextureGenerator::SimpleWaveHeightTextureGenerator()
 
 	mTexture = (new osg::Texture2D(image));
 }
+
+
 
 } // namespace vis
 } // namespace skybolt

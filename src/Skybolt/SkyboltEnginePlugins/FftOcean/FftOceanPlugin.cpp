@@ -10,8 +10,9 @@
 #include <SkyboltEngine/EngineRoot.h>
 
 #ifdef BUILD_WITH_OSG
-#include "FftOceanWaveHeightTextureGenerator.h"
-#include <SkyboltVisOsg/Renderable/Water/SimpleWaveHeightTextureGenerator.h>
+#include "FftOceanHeightfieldTextureGenerator.h"
+#include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/Renderable/Water/SimpleOceanHeightfieldTextureGenerator.h>
 #endif
 
 #include <boost/config.hpp>
@@ -21,43 +22,41 @@
 namespace skybolt {
 
 #ifdef BUILD_WITH_OSG
-class FftOceanWaveHeightTextureGeneratorFactory : public vis::WaveHeightTextureGeneratorFactory
+static sim::ComponentPtr loadFftOcean(sim::Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
-public:
-	std::unique_ptr<vis::WaveHeightTextureGenerator> create() const override
-	{
-		return std::make_unique<vis::FftOceanWaveHeightTextureGenerator>([&] {
-			vis::FftOceanWaveHeightTextureGeneratorConfig c;
-			c.textureWorldSize = 500; // FIXME: To avoid texture wrapping issues, Scene::mWrappedNoisePeriod divided by this should have no remainder;
-			c.textureSizePixels = 512;
-			return c;
-			}());
-	}
-};
+	auto generator = std::make_shared<vis::FftOceanHeightfieldTextureGenerator>([&] {
+		vis::FftOceanHeightfieldTextureGeneratorConfig c;
+		c.textureWorldSize = 500;
+		c.textureSizePixels = 512;
+		c.seed = 0;
+		return c;
+		}());
+
+	return std::make_shared<sim::OceanComponent>(generator);
+}
 #endif
+
+ComponentFactoryPtr FftOceanPlugin::getOceanComponentFactory()
+{
+	static auto factory = std::make_shared<ComponentFactoryFunctionAdapter>(loadFftOcean);
+	return factory;
+}
 
 FftOceanPlugin::FftOceanPlugin(const PluginConfig& config)
 {
-	mVisFactoryRegistry = valueOrThrowException(getExpectedRegistry<vis::VisFactoryRegistry>(*config.engineRoot->factoryRegistries));
 #ifdef BUILD_WITH_OSG
-	// If using the default SimpleWaveHeightTextureGeneratorFactory, or no factory, then use this plugin instead.
+	// If using the default ocean, or no factory, then use this plugin instead.
 	// Otherwise anothe plugin is already being used and it should take precedent, so do nothing.
-	auto currentFactory = mVisFactoryRegistry->getFirstItemOfType<vis::WaveHeightTextureGeneratorFactory>();
-	if (!currentFactory || dynamic_cast<vis::SimpleWaveHeightTextureGeneratorFactory*>(currentFactory.get()))
+	ComponentFactoryPtr& oceanFactory = (*config.engineRoot->componentFactoryRegistry)["ocean"];
+	
+	if (!oceanFactory || oceanFactory == vis::getVisDefaultOceanComponentFactory())
 	{
-		mVisFactoryRegistry->removeItem(currentFactory);
-		mFactory = std::make_shared<FftOceanWaveHeightTextureGeneratorFactory>();
-		mVisFactoryRegistry->addItem(mFactory);
+		oceanFactory = getOceanComponentFactory();
 	}
 #endif
 }
 
-FftOceanPlugin::~FftOceanPlugin()
-{
-#ifdef BUILD_WITH_OSG
-	mVisFactoryRegistry->removeItem(mFactory);
-#endif
-}
+FftOceanPlugin::~FftOceanPlugin() = default;
 
 namespace plugins {
 

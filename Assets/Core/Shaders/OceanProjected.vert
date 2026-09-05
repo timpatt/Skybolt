@@ -14,8 +14,8 @@
 in vec4 osg_Vertex;
 out vec3 positionRelCameraWS;
 out vec3 positionWS;
+out vec2 undisplacedPositionRelTexCoordOrigin;
 out float logZ;
-out vec2 wrappedNoiseCoord;
 out AtmosphericScattering scattering;
 
 uniform sampler2D heightSamplers[OCEAN_CASCADE_COUNT];
@@ -29,6 +29,7 @@ uniform vec3 bottomLeftDir;
 uniform vec3 bottomRightDir;
 uniform float waterHeight;
 uniform vec2 heightMapTexCoordScales[OCEAN_CASCADE_COUNT];
+uniform vec2 heightMapTexCoordOriginWorldSpace;
 
 const float infinity = 1e10;
 
@@ -55,7 +56,7 @@ void main()
 
 	positionWS = intersectPlane(cameraPosition, vertCameraWorldDir, waterHeight);
 	
-	wrappedNoiseCoord = calcWrappedNoiseCoord(positionWS).xy;
+	undisplacedPositionRelTexCoordOrigin = positionWS.xy - heightMapTexCoordOriginWorldSpace;
 	positionWS.z += planetSurfaceDrop(length(vec2(positionWS.x, positionWS.y)));
 	
 	// Decrease displacement LOD level into distance to avoid shimmering artifacts due to geometric undersampling, and also
@@ -65,19 +66,18 @@ void main()
 	vec3 offset = vec3(0);
 	for (int i = 0; i < OCEAN_CASCADE_COUNT; ++i)
 	{
-		vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[i];
+		vec2 texCoord = undisplacedPositionRelTexCoordOrigin * heightMapTexCoordScales[i];
 		offset += textureLod(heightSamplers[i], texCoord, lod).xyz;
 	}
 
 #define PIN_TO_SCREEN_EDGES
 #ifdef PIN_TO_SCREEN_EDGES
-	vec2 edgeFeather = (abs(scaledVertexPos) - vec2(0.5)) / vec2(0.05); // 0 at edge and 1 at maximum distance beyond edge
-	float edgeFeatherScalar = max(0.0, max(edgeFeather.x, edgeFeather.y));
+	vec2 edgeFeather = (abs(scaledVertexPos) - vec2(0.5)) / vec2(0.5 * (screenCoordScale - 1.0)); // 0 at edge and 1 at maximum distance beyond edge
+	float edgeFeatherScalar = clamp(max(edgeFeather.x, edgeFeather.y), 0.0, 1.0);
 	offset.xy *= mix(1.0, 0.0, edgeFeatherScalar);
 #endif
 
 	positionWS.xyz += offset * vec3(1,1,-1);// * max(0.0, 1.0 - length(positionWS) / 5000);
-	
 	positionRelCameraWS = positionWS - cameraPosition;
 	
 	gl_Position = viewProjectionMatrix * vec4(positionWS, 1);

@@ -46,6 +46,7 @@ FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mWaveSteepness(config.waveSteepness),
 	mUseMultipleCores(config.useMultipleCores),
 	mWindVelocity(config.windVelocity),
+	mSeed(config.seed),
 	mFftGeneratorData(new FftGeneratorData)
 #ifdef USE_REFERENCE_FFT_NOISE_GENERATOR
 	,mRandomGenerator(boost::mt19937(config.seed), boost::random::normal_distribution<float>())
@@ -289,7 +290,7 @@ void FftOceanGenerator::calcHt0()
 #ifdef USE_REFERENCE_FFT_NOISE_GENERATOR
 			complex_type r = gaussians[index] / std::sqrt(2.f);
 #else
-			complex_type r = complex_type(deterministicNormalFast(kxInt, kyInt, 0), deterministicNormalFast(kxInt, kyInt, 1)) / std::sqrt(2.f);
+			complex_type r = complex_type(deterministicNormalFast(kxInt, kyInt, mSeed*2), deterministicNormalFast(kxInt, kyInt, mSeed*2 + 1)) / std::sqrt(2.f);
 #endif
 
 			mHt0[index] = r * std::sqrt(calcBruenton(n, m) / 2.0f) * dk;
@@ -420,6 +421,12 @@ void FftOceanGenerator::calculate(float t, const std::span<glm::vec3>& result)
 void FftOceanGenerator::setWindVelocity(const glm::vec2& windVelocity)
 {
 	mWindVelocity = windVelocity;
+	calcHt0();
+}
+
+void FftOceanGenerator::setSeed(int seed)
+{
+	mSeed = seed;
 	calcHt0();
 }
 

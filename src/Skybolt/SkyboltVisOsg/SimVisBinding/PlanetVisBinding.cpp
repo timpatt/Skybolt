@@ -13,9 +13,10 @@
 
 namespace skybolt {
 
-PlanetVisBinding::PlanetVisBinding(JulianDateProvider dateProvider, const sim::Entity* entity, const vis::PlanetPtr& visObject) :
+PlanetVisBinding::PlanetVisBinding(JulianDateProvider dateProvider, SimTimeProvider simTimeProvider, const sim::Entity* entity, const vis::PlanetPtr& visObject) :
 	SimpleSimVisBinding(entity, visObject),
-	mDateProvider(dateProvider)
+	mDateProvider(dateProvider),
+	mSimTimeProvider(simTimeProvider)
 {}
 
 void PlanetVisBinding::syncVis(const GeocentricToNedConverter& converter)
@@ -24,15 +25,7 @@ void PlanetVisBinding::syncVis(const GeocentricToNedConverter& converter)
 
 	auto visPlanet = static_cast<vis::Planet*>(mVisObjects.front().object.get());
 	visPlanet->setJulianDate(mDateProvider());
-
-	if (auto ocean = mEntity->getFirstComponent<sim::OceanComponent>(); ocean)
-	{
-		if (const auto& material = visPlanet->getWaterMaterial(); material)
-		{
-			material->setWaveHeight(ocean->waveHeight);
-			material->setWindVelocityHeading(ocean->windVelocityHeading);
-		}
-	}
+	visPlanet->setSimTime(mSimTimeProvider());
 
 	if (auto cloud = mEntity->getFirstComponent<sim::CloudComponent>(); cloud)
 	{

@@ -12,14 +12,14 @@
 
 const float cloudAltitude = 5000;
 
-uniform sampler2D coverageDetailSampler2;
+uniform sampler2D coverageDetailSampler;
 
 float calcDensityLowRes2(sampler2D cloudSampler, vec2 uv)
 {
 	float lod = 0.0;
 	DensityHullSample s;
 	s.coverageBase = sampleBaseCloudCoverage(cloudSampler, uv);
-	s.coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, lod);
+	s.coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod);
 	s.heightMultiplier = vec4(0.8);
 
 	vec4 d = calcCloudDensityLowRes(s);

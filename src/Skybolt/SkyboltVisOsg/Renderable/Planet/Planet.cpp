@@ -28,7 +28,7 @@
 #include "SkyboltVisOsg/Renderable/Water/ReflectionCameraController.h"
 #include "SkyboltVisOsg/Renderable/Water/Ocean.h"
 #include "SkyboltVisOsg/Renderable/Water/WaterMaterial.h"
-#include "SkyboltVisOsg/Renderable/Water/WaveHeightTextureGenerator.h"
+#include "SkyboltVisOsg/Renderable/Water/OceanHeightfieldTextureGenerator.h"
 
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -240,7 +240,7 @@ Planet::Planet(const PlanetConfig& config) :
 		surfaceConfig.parentTransform = mTransform;
 		surfaceConfig.gpuForest = forest;
 		surfaceConfig.planetTileSources = *config.planetTileSources;
-		surfaceConfig.oceanEnabled = config.waterEnabled;
+		surfaceConfig.oceanEnabled = config.oceanHeightfieldTextureGenerator != nullptr;
 		surfaceConfig.cloudsTexture = config.cloudsTexture;
 		surfaceConfig.tileTexturesProvider = createSurfaceTileTexturesProvider(textureCache);
 
@@ -248,31 +248,22 @@ Planet::Planet(const PlanetConfig& config) :
 	}
 
 	// Create water state set
-	if (config.waterEnabled)
+	if (config.oceanHeightfieldTextureGenerator)
 	{
-		auto factory = config.visFactoryRegistry->getFirstItemOfType<WaveHeightTextureGeneratorFactory>().get();
-		if (factory)
-		{
-			mWaterMaterial = new WaterMaterial([&]{
-				WaterMaterialConfig c;
-				c.factory = factory;
-				c.programs = config.programs;
-				return c;
-			}());
+		mWaterMaterial = new WaterMaterial(WaterMaterialConfig{
+			.oceanHeightfieldTextureGenerator = config.oceanHeightfieldTextureGenerator,
+			.programs = config.programs,
+			.scene = config.scene
+		});
 
-			// Create ocean
-			OceanConfig oceanConfig;
-			oceanConfig.oceanProgram = config.programs->getRequiredProgram("ocean");
-			oceanConfig.waterStateSet = mWaterMaterial->getStateSet();
+		// Create ocean
+		OceanConfig oceanConfig;
+		oceanConfig.oceanProgram = config.programs->getRequiredProgram("ocean");
+		oceanConfig.waterStateSet = mWaterMaterial->getStateSet();
 
-			mOcean.reset(new Ocean(oceanConfig));
-			mOcean->setPosition(osg::Vec3f(0, 0, 0));
-			mScene->addObject(mOcean);
-		}
-		else
-		{
-			SKYBOLT_LOG(warning) << "WaveHeightTextureGeneratorFactory not found in visFactoryRegistry. Water will not render correctly.";
-		}
+		mOcean.reset(new Ocean(oceanConfig));
+		mOcean->setPosition(osg::Vec3f(0, 0, 0));
+		mScene->addObject(mOcean);
 	}
 
 	osg::ref_ptr<osg::Group> nonBuildingFeaturesGroup = new osg::Group();
@@ -490,7 +481,7 @@ void Planet::updatePreRender(const CameraRenderContext& context)
 		double altitude = (getPosition() - context.camera.getPosition()).length() - mInnerRadius;
 		if (altitude < 40000) // TODO: ensure this value matches oceanMeshFadeoutEndDistance in Ocean.h shader file
 		{
-			mWaterMaterial->update(julianDateSeconds);
+			mWaterMaterial->update(mSimTime);
 		}
 	}
 }

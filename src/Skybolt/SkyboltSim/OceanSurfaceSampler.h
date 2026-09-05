@@ -10,6 +10,7 @@ class OceanSurfaceSampler
 public:
 	virtual ~OceanSurfaceSampler() = default;
 
+	virtual bool hasValidSurface() const = 0;
 	virtual double calcOceanAltitude(const skybolt::sim::LatLon& position, double filterRadius) const = 0;
 	virtual skybolt::sim::Vector3 calcOceanNormalNed(const skybolt::sim::LatLon& position, double filterRadius) const = 0;
 };
@@ -20,6 +21,8 @@ public:
 	PlanarOceanSurfaceSampler(double surfaceAltitude = 0) : mSurfaceAltitude(surfaceAltitude) {}
 	~PlanarOceanSurfaceSampler() override = default;
 	
+	bool hasValidSurface() const override { return true; }
+
 	double calcOceanAltitude(const skybolt::sim::LatLon& position, double filterRadius) const override
 	{
 		return mSurfaceAltitude;

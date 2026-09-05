@@ -31,9 +31,8 @@ WaterStateSet::WaterStateSet(const WaterStateSetConfig& config)
 	for (int i = 0; i < waveTextureCount; ++i)
 	{
 		const auto& textureSet = config.waveTextureSets[i];
-		// TODO: replace 10000 with Scene::mWrappedNoisePeriod
-		osg::Vec2f size(10000 / textureSet.waveHeightMapWorldSizes, 10000 / textureSet.waveHeightMapWorldSizes);
-		heightMapTexCoordScales->setElement(i, size);
+		osg::Vec2f scale(1.f / textureSet.waveHeightMapWorldSizes, 1.f / textureSet.waveHeightMapWorldSizes);
+		heightMapTexCoordScales->setElement(i, scale);
 	}
 
 	osg::ref_ptr<osg::TextureBuffer> wakeHashMapTexture;
@@ -92,6 +91,9 @@ WaterStateSet::WaterStateSet(const WaterStateSetConfig& config)
 	addUniform(createUniformSampler2d("foamSampler", i++));
 	addUniform(createUniformSamplerTbo("wakeHashMapTexture", i++));
 	addUniform(createUniformSamplerTbo("wakeParamsTexture", i++));
+
+	mTextureOriginNorthEastUniform = new osg::Uniform("heightMapTexCoordOriginWorldSpace", osg::Vec2f(0,0));
+	addUniform(mTextureOriginNorthEastUniform);
 }
 struct WakeSegment
 {
@@ -226,6 +228,11 @@ void WaterStateSet::setWakes(const std::vector<Wake>& wakes)
 void WaterStateSet::setFoamTexture(int index, osg::ref_ptr<osg::Texture2D> texture)
 {
 	setTextureAttributeAndModes(mFirstFoamMaskTextureIndex + index, texture, osg::StateAttribute::ON);
+}
+
+void WaterStateSet::setTextureOriginNorthEast(const osg::Vec2f& originNorthEast)
+{
+	mTextureOriginNorthEastUniform->set(originNorthEast);
 }
  
 } // namespace vis

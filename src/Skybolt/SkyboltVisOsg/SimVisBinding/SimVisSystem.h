@@ -20,6 +20,7 @@ namespace skybolt {
 class SimVisSystem : public sim::System
 {
 public:
+	//! @returns the scene origin in geocentric coordinates.
 	using SceneOriginProvider = std::function<sim::Vector3()>;
 
 	SimVisSystem(const sim::World* world, const vis::ScenePtr& scene);

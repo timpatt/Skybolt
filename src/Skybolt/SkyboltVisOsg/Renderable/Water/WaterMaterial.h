@@ -6,33 +6,31 @@
 
 #pragma once
 
-#include "SkyboltSim/SkyboltSimFwd.h"
 #include "SkyboltVisOsg/SkyboltVisOsgFwd.h"
 #include "SkyboltVisOsg/Renderable/Water/WaterStateSet.h"
+
+#include <SkyboltCommon/NonNullPtr.h>
+#include <SkyboltSim/SkyboltSimFwd.h>
+#include <SkyboltSim/Chrono.h>
 
 #include <osg/Group>
 
 namespace skybolt {
+
 namespace vis {
 
-class WaveHeightTextureGeneratorFactory;
 
 struct WaterMaterialConfig
 {
-	const WaveHeightTextureGeneratorFactory* factory;
+	OceanHeightfieldTextureGeneratorPtr oceanHeightfieldTextureGenerator;
 	const ShaderPrograms* programs;
+	const NonNullPtr<Scene> scene;
 };
 
 class WaterMaterial : public osg::Group
 {
 public:
 	WaterMaterial(const WaterMaterialConfig& config);
-
-	void setWaveHeight(float height);
-	float getWaveHeight() const;
-
-	void setWindVelocityHeading(float heading);
-	float getWindVelocityHeading() const;
 
 	void setWakes(const std::vector<Wake>& wakes);
 
@@ -46,9 +44,11 @@ public:
 	sim::OceanSurfaceSamplerPtr getSurfaceSampler() const; //!< Never returns null
 
 private:
-	std::unique_ptr<class WaveHeightTextureGenerator> mWaveHeightTextureGenerator;
+	NonNullPtr<Scene> mScene;
+	OceanHeightfieldTextureGeneratorPtr mOceanHeightfieldTextureGenerator;
 	std::vector<osg::ref_ptr<GpuTextureGenerator>> mWaterSurfaceGpuTextureGenerators; //!< stored in execution order
 	std::vector<osg::ref_ptr<class WaveFoamMaskGenerator>> mWaveFoamMaskGenerators;
+	std::size_t mLastGenerationCount = 0;
 };
 
 } // namespace vis

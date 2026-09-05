@@ -72,5 +72,7 @@ private:
 	LoadTimingPolicy mLoadTimingPolicy;
 };
 
+ComponentFactoryPtr getVisDefaultOceanComponentFactory();
+
 } // namespace vis
 } // namespace skybolt

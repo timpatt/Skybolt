@@ -49,5 +49,7 @@ typedef std::shared_ptr<StateSequenceController> StateSequenceControllerPtr;
 typedef std::shared_ptr<VisObjectsComponent> VisObjectsComponentPtr;
 
 typedef std::function<double()> JulianDateProvider;
+typedef std::function<double()> SimTimeProvider;
+
 
 } // namespace skybolt

@@ -96,6 +96,9 @@ public:
 	void setWindVelocity(const glm::vec2& windVelocity);
 	glm::vec2 getWindVelocity() const { return mWindVelocity; }
 
+	void setSeed(int seed);
+	int getSeed() const { return mSeed; }
+
 	glm::ivec2 getTextureSizePixels() const { return glm::ivec2(mTextureSizePixels, mTextureSizePixels); }
 	glm::dvec2 getTextureWorldSize() const { return glm::dvec2(mTextureWorldSize, mTextureWorldSize); }
 
@@ -127,6 +130,8 @@ private:
 	const bool mUseMultipleCores;
 
 	glm::vec2 mWindVelocity;
+	int mSeed;
+
 	std::vector<complex_type> mHt0;
 	std::vector<complex_type> mHt0Conj;
 

@@ -29,6 +29,7 @@
 #include <SkyboltSim/Components/CloudComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
+#include <SkyboltSim/Components/OceanComponent.h>
 #include <SkyboltSim/Components/SunComponent.h>
 #include <SkyboltSim/Spatial/AzimuthElevation.h>
 #include <SkyboltSim/Spatial/Frustum.h>
@@ -189,12 +190,9 @@ static Vector3 normalizeFunc(const Vector3& v)
 
 static void setWaveHeight(sim::Entity& entity, double height)
 {
-	if (vis::Planet* planet = getFirstVisObject<vis::Planet>(entity).get(); planet)
+	if (auto oceanComponent = entity.getFirstComponent<sim::OceanComponent>(); oceanComponent)
 	{
-		if (const auto& material = planet->getWaterMaterial(); material)
-		{
-			material->setWaveHeight(height);
-		}
+		oceanComponent->waveHeight;
 	}
 }
 

@@ -22,8 +22,8 @@
 
 in vec3 positionRelCameraWS;
 in vec3 positionWS;
+in vec2 undisplacedPositionRelTexCoordOrigin;
 in float logZ;
-in vec2 wrappedNoiseCoord;
 in AtmosphericScattering scattering;
 
 out vec4 color;
@@ -37,6 +37,7 @@ uniform vec2 heightMapTexCoordScales[OCEAN_CASCADE_COUNT];
 uniform vec3 lightDirection; // direction to light
 uniform float waterHeight;
 uniform vec3 ambientLightColor;
+uniform vec2 heightMapTexCoordOriginWorldSpace;
 
 #ifdef ENABLE_DEPTH_OFFSET
 	uniform float depthOffset;
@@ -44,6 +45,7 @@ uniform vec3 ambientLightColor;
 
 const float infinity = 1e10;
 const float normalMipmapBias = 1.0; // TODO: why is this needed?
+const float foamTexCoordScale = 0.04;
 
 float nearestPointOnLine(vec2 lineP0, vec2 lineP1, vec2 point)
 {
@@ -144,14 +146,14 @@ void main(void)
 		return;
 	}
 #endif
-	vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[0];
+	vec2 texCoord = undisplacedPositionRelTexCoordOrigin * heightMapTexCoordScales[0];
 	vec3 normalSample = texture(normalSamplers[0], texCoord, normalMipmapBias).rgb;
 	vec3 normal = normalize(normalSample * vec3(2) - vec3(1));
 	float foamMask = texture(foamMaskSamplers[0], texCoord).r;
 	
 	for (int i = 1; i < OCEAN_CASCADE_COUNT; ++i)
 	{
-		vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[i];
+		vec2 texCoord = undisplacedPositionRelTexCoordOrigin * heightMapTexCoordScales[i];
 		vec3 prevNormalSample = normal * 0.5 + vec3(0.5);
 		normalSample = texture(normalSamplers[i], texCoord, normalMipmapBias).rgb;		
 		normal = blendNormals(prevNormalSample, normalSample);
@@ -211,7 +213,7 @@ void main(void)
 	foamMask = max(foamMask, calcWakeMask(positionWS.xy, bowWakeStrength, sternWakeStrength).x);
 
 	vec3 foamColor = vec3(1.0);
-	float foamTexture = texture(foamSampler, wrappedNoiseCoord.xy*400, normalMipmapBias).r;
+	float foamTexture = texture(foamSampler, undisplacedPositionRelTexCoordOrigin.xy * foamTexCoordScale, normalMipmapBias).r;
 	float foamFraction = pow(foamTexture, 2 / (foamMask + 0.0001)) * smoothstep(0.0, 0.1, foamMask);
 	foamFraction += foamTexture * foamMask * 0.15; // simulate bubbles under surface
 	foamFraction = clamp(foamFraction, 0, 1);
@@ -219,7 +221,6 @@ void main(void)
 	color.rgb = mix(color.rgb, foamColor * foamReflectance, foamFraction);
 	
 	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
-
 #ifdef DISTANCE_CULL
 	color.a = min(1.0, (oceanMeshFadeoutEndDistance - viewDistance) / (oceanMeshFadeoutEndDistance - oceanMeshFadeoutStartDistance));
 #else
