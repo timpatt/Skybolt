@@ -69,13 +69,6 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program, 
 		stateSet->setTextureAttributeAndModes(unit, cloudsTexture);
 		stateSet->addUniform(createUniformSampler2d("globalAlphaSampler", unit++));
 	}
-	{
-		osg::ref_ptr<osg::Texture> texture = new osg::Texture2D(osgDB::readImageFile("Environment/Noise.png"));
-		texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-		texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
-		stateSet->setTextureAttributeAndModes(unit, texture);
-		stateSet->addUniform(createUniformSampler2d("coverageDetailSampler", unit++));
-	}
 
 	{
 //#define GENERATE_VOLUME_TEXTURE

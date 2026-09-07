@@ -23,7 +23,6 @@ layout(location = 0) out vec4 colorOut;
 layout(location = 1) out float depthOut;
 
 uniform sampler2D globalAlphaSampler;
-uniform sampler2D coverageDetailSampler;
 uniform sampler3D noiseVolumeSampler;
 uniform sampler2D sceneDepthSampler;
 

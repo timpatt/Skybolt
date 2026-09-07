@@ -303,7 +303,7 @@ void main()
 	{
 		vec3 positionRelPlanet = position_worldSpace - planetCenter;
 		vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
-		scattering = applyCloudOcclusion(scattering, positionRelPlanet, cameraPositionRelPlanet, lightDirection, cloudSampler);
+		scattering = applyCloudOcclusion(scattering, cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
 	}
 
 	vec3 visibleSunIrradiance = scattering.sunIrradiance * lightVisibility;
