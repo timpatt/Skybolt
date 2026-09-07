@@ -7,10 +7,12 @@
 #include "VisHud.h"
 #include <SkyboltVisOsg/OsgGeometryHelpers.h>
 #include <SkyboltVisOsg/OsgTextHelpers.h>
+#include <SkyboltCommon/LruCacheMap.h>
 
 #include <osg/Geode>
 #include <osg/Quat>
 #include <osgText/Text>
+#include <unordered_map>
 
 namespace skybolt {
 
@@ -20,49 +22,35 @@ public:
 	typedef osg::ref_ptr<osgText::Text> TextRef;
 
 	TextPool(size_t maxSize = 500) :
-		mMaxSize(maxSize)
+		mCachedTexts(maxSize)
 	{
 	}
 
-	// alignment is used as a checkout parameter because there's a bug in OSG where alignment
-	// can't be changed after text is generated. Therefore, if we're going to checkout an existing
+	// alignment is used as a key parameter because there's a bug in OSG where alignment
+	// can't be changed after text is generated. Therefore, if we're going to cache an existing
 	// text item from the pool, it must be with the desired alignment since we can't change it later.
-	TextPool::TextRef checkout(const osgText::String& message, osgText::TextBase::AlignmentType alignment)
+	TextPool::TextRef create(const osgText::String& message, osgText::TextBase::AlignmentType alignment)
 	{
 		TextRef text;
 
-		TextStringMap::iterator i = mUnusedTexts.find(toKey(message, alignment));
-		if (i != mUnusedTexts.end())
+		const std::string key = toKey(message, alignment);
+		if (mCachedTexts.get(key, text))
 		{
-			text = i->second;
-			mUnusedTexts.erase(i);
-		}
-		else
-		{
-			text = new osgText::Text();
-			text->setFont(vis::getDefaultFont());
-			text->setText(message);
-			text->setAlignment(alignment);
-			text->setUseDisplayList(false);
-			text->setUseVertexBufferObjects(true);
-			text->setUseVertexArrayObject(true);
-			text->setCullingActive(false);
+			return text;
 		}
 
-		if (mUsedTexts.size() < mMaxSize)
-			mUsedTexts.push_back(text);
+		text = new osgText::Text();
+		text->setFont(vis::getDefaultFont());
+		text->setText(message);
+		text->setAlignment(alignment);
+		text->setUseDisplayList(false);
+		text->setUseVertexBufferObjects(true);
+		text->setUseVertexArrayObject(true);
+		text->setCullingActive(false);
+
+		mCachedTexts.put(key, text);
 
 		return text;
-	}
-
-	void checkinAll()
-	{
-		size_t count = mUsedTexts.size();
-		for (size_t i = 0; i < count; ++i)
-		{
-			mUnusedTexts.insert(TextStringMap::value_type(toKey(mUsedTexts[i]->getText(), mUsedTexts[i]->getAlignment()), mUsedTexts[i]));
-		}
-		mUsedTexts.clear();
 	}
 
 private:
@@ -72,10 +60,8 @@ private:
 	}
 
 private:
-	typedef std::multimap<osgText::String, TextRef> TextStringMap;
-	TextStringMap mUnusedTexts;
-	std::vector<TextRef> mUsedTexts;
-	size_t mMaxSize;
+	typedef LruCacheMap<std::string, TextRef> TextStringMap;
+	TextStringMap mCachedTexts;
 };
 
 static const char *passThroughVertSource = {
@@ -216,7 +202,6 @@ void VisHud::clear()
 {
 	mLineVertices = new osg::Vec3Array;
 	mQuadVertices = new osg::Vec3Array;
-	mTextPool->checkinAll();
 	mTextGeode->removeDrawables(0, mTextGeode->getNumDrawables());
 
 	setDirty();
@@ -282,7 +267,7 @@ static osgText::TextBase::AlignmentType toOsgAlignment(HudDrawer::Alignment alig
 
 void VisHud::drawText(const glm::vec2 &p, const std::string &message, float rotation, float size, Alignment alignment)
 {
-    TextPool::TextRef text = mTextPool->checkout(message, toOsgAlignment(alignment));
+    TextPool::TextRef text = mTextPool->create(message, toOsgAlignment(alignment));
     text->setPosition(toVec3(p));
 	text->setCharacterSize(size < 0.0 ? 0.03 : size);
 	text->setRotation(osg::Quat(rotation, osg::Vec3f(0,0,1)));
