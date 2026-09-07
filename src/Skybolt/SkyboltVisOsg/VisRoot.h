@@ -10,7 +10,6 @@
 #include <SkyboltEngine/ComponentFactory.h>
 #include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltVis/DisplaySettings.h>
-#include <SkyboltVis/VisFactory.h>
 #include "SkyboltVisOsg/SkyboltVisOsgFwd.h"
 #include "SkyboltVisOsg/RenderContext.h"
 
@@ -30,7 +29,6 @@ struct VisRootConfig
 {
 	DisplaySettings displaySettings;
 	const std::vector<std::string>& assetPackagePaths;
-	VisFactoryRegistryPtr visFactoryRegistry;
 	ComponentFactoryRegistryPtr componentFactoryRegistry; //!< Never null
 	NonNullPtr<sim::World> world;
 	sim::SystemRegistryPtr systemRegistry;
@@ -71,8 +69,6 @@ private:
 	std::vector<WindowPtr> mWindows;
 	LoadTimingPolicy mLoadTimingPolicy;
 };
-
-ComponentFactoryPtr getVisDefaultOceanComponentFactory();
 
 } // namespace vis
 } // namespace skybolt

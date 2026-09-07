@@ -13,6 +13,7 @@
 #include <osg/Image>
 #include <atomic>
 #include <condition_variable>
+#include <functional>
 #include <mutex>
 #include <thread>
 
@@ -43,11 +44,9 @@ class FftOceanHeightfieldTextureGenerator : public OceanHeightfieldTextureGenera
 public:
 	FftOceanHeightfieldTextureGenerator(const FftOceanHeightfieldTextureGeneratorConfig& config) :
 		mWorldSize(config.textureWorldSize),
-		mWaveHeight(0.5),
+		mSignificantWaveHeight(0.5),
 		mSeed(config.seed)
 	{
-		mWindVelocity = calcWindVelocity();
-
 		mGeneratorResult = std::vector<glm::vec3>(config.textureSizePixels * config.textureSizePixels, glm::vec3(0,0,0));
 
 		mGenerator.reset(new FftOceanGenerator([&] {
@@ -56,7 +55,8 @@ public:
 			c.seed = config.seed;
 			c.textureSizePixels = config.textureSizePixels;
 			c.textureWorldSize = config.textureWorldSize;
-			c.windVelocity = mWindVelocity;
+			c.significantWaveHeight = mSignificantWaveHeight;
+			c.windVelocityHeading = mWindVelocityHeading;
 			c.waveSpectrumWindow = config.waveSpectrumWindow;
 			return c;
 			}()));
@@ -107,7 +107,7 @@ public:
 
 		// If input state has changed, request a new texture to be generated
 		bool timeChanged = !mRequestTime || (time != *mRequestTime);
-		if (timeChanged || mWindVelocityChanged || mSeedChanged)
+		if (timeChanged || mSignificantWaveHeightChanged || mWindVelocityHeading || mSeedChanged)
 		{
 			mRequestTime = time;
 			{
@@ -143,10 +143,16 @@ public:
 			{
 				std::lock_guard<std::mutex> lock(mGeneratorResultMutex);
 
-				if (mWindVelocityChanged)
+				if (mSignificantWaveHeightChanged)
 				{
-					mGenerator->setWindVelocity(mWindVelocity);
-					mWindVelocityChanged = false;
+					mGenerator->setSignificantWaveHeight(mSignificantWaveHeight);
+					mSignificantWaveHeightChanged = false;
+				}
+
+				if (mWindVelocityHeadingChanged)
+				{
+					mGenerator->setWindVelocityHeading(mWindVelocityHeading);
+					mWindVelocityHeadingChanged = false;
 				}
 
 				if (mSeedChanged)
@@ -167,15 +173,14 @@ public:
 		return mWorldSize;
 	}
 
-	float getWaveHeight() const override { return mWaveHeight; }
+	float getSignificantWaveHeight() const override { return mSignificantWaveHeight; }
 
-	void setWaveHeight(float height) override
+	void setSignificantWaveHeight(float height) override
 	{
-		if (mWaveHeight != height)
+		if (mSignificantWaveHeight != height)
 		{
-			mWaveHeight = height;
-			mWindVelocity = calcWindVelocity();
-			mWindVelocityChanged = true;
+			mSignificantWaveHeight = height;
+			mSignificantWaveHeightChanged = true;
 		}
 	}
 
@@ -186,8 +191,8 @@ public:
 		if (mWindVelocityHeading != heading)
 		{
 			mWindVelocityHeading = heading;
-			mWindVelocity = calcWindVelocity();
-			mWindVelocityChanged = true;
+			mWindVelocityHeading = heading;
+			mWindVelocityHeadingChanged = true;
 		}
 	}
 
@@ -261,19 +266,10 @@ public:
 	}
 
 private:
-	glm::vec2 calcWindVelocity() const {
-		float windSpeed = FftOceanGenerator::calcWindSpeedFromMaxWaveHeight(mWaveHeight, mGravity);
-		return math::vec2Rotate(glm::vec2(windSpeed, 0), mWindVelocityHeading);
-	}
-
-private:
 	const float mGravity = 9.8f;
 	std::unique_ptr<FftOceanGenerator> mGenerator;
 	osg::ref_ptr<osg::Texture2D> mTexture;
 	float mWorldSize;
-	float mWaveHeight;
-	float mWindVelocityHeading = 0;
-	int mSeed = 0;
 
 	sim::Vector3 mTextureOriginGeocentric = {};
 	glm::dvec2 mTextureOriginNorthEast = {};
@@ -291,8 +287,13 @@ private:
 	std::optional<sim::SecondsD> mRequestTime;
 	bool mGeneratorRequest = false;
 
-	std::atomic<glm::vec2> mWindVelocity;
-	std::atomic_bool mWindVelocityChanged = false;
+	float mSignificantWaveHeight = 0;
+	std::atomic_bool mSignificantWaveHeightChanged = false;
+	
+	float mWindVelocityHeading = 0;
+	std::atomic_bool mWindVelocityHeadingChanged = false;
+
+	std::atomic_int mSeed = 0;
 	std::atomic_bool mSeedChanged = false;
 };
 

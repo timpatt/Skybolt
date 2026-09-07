@@ -31,7 +31,8 @@ struct FftOceanGeneratorConfig
 	int seed;
 	int textureSizePixels;
 	float textureWorldSize;
-	glm::vec2 windVelocity;
+	float significantWaveHeight;
+	float windVelocityHeading;
 	float gravity;
 	WaveSpectrumWindow waveSpectrumWindow;
 	float waveSteepness = 6.4f; //!< In range [0, inf). TODO: change input range to be [0, 1] and scale internally to make it easier to control.
@@ -78,23 +79,15 @@ public:
 	FftOceanGenerator(const FftOceanGeneratorConfig& config);
 	~FftOceanGenerator();
 
-	static float calcWindSpeedFromMaxWaveHeight(float maxWaveHeight, float g)
-	{
-		return std::sqrt(maxWaveHeight * g);
-	}
-
-	static float calcMaxWaveHeight(float windSpeed, float g)
-	{
-		// From paper
-		return windSpeed * windSpeed / g;
-	}
-
 	//! Generates a vector displacement image of the wave field at given time
 	//! @param result is a pointer to a buffer of size mTextureSizePixels * mTextureSizePixels in which to store the calculated output
 	void calculate(float time, const std::span<glm::vec3>& result);
 
-	void setWindVelocity(const glm::vec2& windVelocity);
-	glm::vec2 getWindVelocity() const { return mWindVelocity; }
+	void setSignificantWaveHeight(float waveHeight);
+	float getSignificantWaveHeight() const { return mSignificantWaveHeight; }
+
+	void setWindVelocityHeading(float windVelocityHeading);
+	float getWindVelocityHeading() const { return mWindVelocityHeading; }
 
 	void setSeed(int seed);
 	int getSeed() const { return mSeed; }
@@ -107,8 +100,8 @@ public:
 
 private:
 	Simd4 calcDispersion(Simd4 kx, Simd4 kz) const;
-	float calcPhillips(int n, int m) const;
-	float calcBruenton(int n, int m) const;
+	float calcPhillips(int n, int m, const glm::vec2& windVelocity) const;
+	float calcBruenton(int n, int m, const glm::vec2& windVelocity) const;
 	void calcHt0();
 
 	using aligned_complex_type = complex_type; //!< Must be alligned for simd/avx. Allocate with mufft_alloc to gaurantee alignment
@@ -120,6 +113,8 @@ private:
 	using aligned_complex_type_ptr = std::unique_ptr<aligned_complex_type[], MufftArrayDeleter>; //!< wrapped to gaurantee data is freed with mufft_free
 	static aligned_complex_type_ptr allocateAlignedComplexType(size_t elementCount);
 
+	glm::vec2 calcWindVelocity() const;
+
 private:
 	const int mTextureSizePixels;
 	const float mTextureWorldSize;
@@ -129,7 +124,8 @@ private:
 	const float mWaveSteepness;
 	const bool mUseMultipleCores;
 
-	glm::vec2 mWindVelocity;
+	float mSignificantWaveHeight;
+	float mWindVelocityHeading;
 	int mSeed;
 
 	std::vector<complex_type> mHt0;

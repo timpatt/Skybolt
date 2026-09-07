@@ -24,8 +24,8 @@ public:
 	//! @returns the total number of times he ocean surface has been generated
 	virtual std::size_t getGenerationCount() const = 0;
 
-	virtual float getWaveHeight() const = 0;
-	virtual void setWaveHeight(float height) = 0;
+	virtual float getSignificantWaveHeight() const = 0;
+	virtual void setSignificantWaveHeight(float height) = 0;
 
 	virtual float getWindVelocityHeading() const = 0;
 	virtual void setWindVelocityHeading(float heading) = 0;
@@ -51,7 +51,12 @@ public:
 	OceanSurfaceSampler& getOceanSurfaceSampler() const;
 
 	int seed = 0;
-	double waveHeight = 1;
+
+	//! Significant wave height is the average trough-to-crest height of the highest 1/3 of waves.
+	//! Also defined as 4 times the standard deviation of the surface elevation.
+	//! See https://en.wikipedia.org/wiki/Significant_wave_height
+	double significantWaveHeight = 1;
+
 	double windVelocityHeading = 0;
 
 	const std::shared_ptr<OceanHeightfieldGenerator> heightfieldGenerator; //!< May be null

@@ -12,46 +12,6 @@
 
 using namespace skybolt::vis;
 
-TEST_CASE("Generate FFT ocean texture")
-{
-	FftOceanGeneratorConfig config;
-	config.seed = 0;
-	config.textureSizePixels = 256;
-	config.textureWorldSize = 1000;
-	config.windVelocity = glm::vec2(10, 0);
-	config.gravity = 9.8;
-	FftOceanGenerator generator(config);
-
-	float maxHeight = generator.calcMaxWaveHeight(glm::length(config.windVelocity), config.gravity);
-
-	std::vector<glm::vec3> result(generator.getTextureSizePixels().x * generator.getTextureSizePixels().y);
-	generator.calculate(0, std::span<glm::vec3>{result.data(), result.size()});
-
-	float vMax = -std::numeric_limits<float>::infinity();
-
-	size_t elementCount = result.size();
-	std::vector<unsigned char> resultChar(result.size() * 3);
-	for (size_t i = 0; i < elementCount * 3; ++i)
-	{
-		float v = reinterpret_cast<float*>(result.data())[i];
-		resultChar[i] = 128.f + 128.f * v / maxHeight;
-
-		vMax = std::max(vMax, v);
-	}
-
-	CHECK(vMax > maxHeight * 0.4f);
-	CHECK(vMax < maxHeight * 2.0f);
-
-	if (0)
-	{
-		SimpleImageFactory factory;
-		ImagePtr image = valueOrThrowException(factory.createImage(config.textureSizePixels, config.textureSizePixels, Image::Format::RGB8, Image::ColorSpace::Linear));
-		memcpy(image->getRawData(), resultChar.data(), elementCount * 3);
-		factory.writeImage(*image, "C:/Users/Public/test.png");
-	}
-
-}
-
 //! Calculates the maximum wave height based on trough to crest
 static float calcMaxWaveHeight(const std::vector<glm::vec3>& displacementMap)
 {
@@ -64,6 +24,44 @@ static float calcMaxWaveHeight(const std::vector<glm::vec3>& displacementMap)
 		vMax = std::max(vMax, v.z);
 	}
 	return vMax - vMin;
+}
+
+TEST_CASE("Generate FFT ocean texture")
+{
+	FftOceanGeneratorConfig config;
+	config.seed = 0;
+	config.textureSizePixels = 256;
+	config.textureWorldSize = 1000;
+	config.significantWaveHeight = 5;
+	config.gravity = 9.8;
+	FftOceanGenerator generator(config);
+
+	const float maxHeight = config.significantWaveHeight * 2; // Approx guess for max save height
+
+	std::vector<glm::vec3> result(generator.getTextureSizePixels().x * generator.getTextureSizePixels().y);
+	generator.calculate(0, std::span<glm::vec3>{result.data(), result.size()});
+
+	float measuredMaxHeight = calcMaxWaveHeight(result);
+	CHECK(measuredMaxHeight > config.significantWaveHeight);
+	CHECK(measuredMaxHeight < maxHeight);
+
+	constexpr bool saveImage = false;
+	if (saveImage)
+	{
+		size_t elementCount = result.size();
+		std::vector<unsigned char> resultChar(result.size() * 3);
+		for (size_t i = 0; i < elementCount * 3; ++i)
+		{
+			float v = reinterpret_cast<float*>(result.data())[i];
+			resultChar[i] = 128.f + 128.f * v / maxHeight;
+		}
+
+		SimpleImageFactory factory;
+		ImagePtr image = valueOrThrowException(factory.createImage(config.textureSizePixels, config.textureSizePixels, Image::Format::RGB8, Image::ColorSpace::Linear));
+		memcpy(image->getRawData(), resultChar.data(), elementCount * 3);
+		factory.writeImage(*image, "C:/Users/Public/test.png");
+	}
+
 }
 
 static float calcElevationStandardDeviation(const std::vector<glm::vec3>& displacementMap)
@@ -98,34 +96,30 @@ static float calcSignificantWaveHeight(const std::vector<glm::vec3>& displacemen
 	return 4.f * calcElevationStandardDeviation(displacementMap);
 }
 
-static float calcSignificantWaveHeightForWindSpeed(float speed)
+static float measureSignificantWaveHeightFromModelForConfiguredHeight(float significantWaveHeight)
 {
 	FftOceanGeneratorConfig config;
 	config.seed = 0;
-	config.textureSizePixels = 256;
-	config.textureWorldSize = 1000;
-	config.windVelocity = glm::vec2(speed, 0);
+	config.textureSizePixels = 512;
+	config.textureWorldSize = 2000;
+	config.significantWaveHeight = significantWaveHeight;
 	config.gravity = 9.8;
 	FftOceanGenerator generator(config);
 
-	std::vector<glm::vec3> result(generator.getTextureWorldSize().x * generator.getTextureWorldSize().y);
+	std::vector<glm::vec3> result(generator.getTextureSizePixels().x * generator.getTextureSizePixels().y);
 	generator.calculate(0, std::span<glm::vec3>{result.data(), result.size()});
 
 	return calcSignificantWaveHeight(result);
 }
 
-// FIXME: Currently disabled because test fails because wave heights are not calibrated to beaufort scale
-/*
-TEST_CASE("FFT ocean wave height is as expected for given wind speed")
+
+TEST_CASE("FFT ocean wave height is as expected")
 {
 	constexpr float espilon = 0.1f;
-	// Based on https://en.wikipedia.org/wiki/Beaufort_scale
-	CHECK(calcSignificantWaveHeightForWindSpeed(1.5f) == Approx(0.3).epsilon(espilon)); // sea state 1
-	CHECK(calcSignificantWaveHeightForWindSpeed(3.3f) == Approx(0.6).epsilon(espilon)); // sea state 2
-	CHECK(calcSignificantWaveHeightForWindSpeed(5.4f) == Approx(1.2).epsilon(espilon)); // sea state 3
-	CHECK(calcSignificantWaveHeightForWindSpeed(10.7f) == Approx(3).epsilon(espilon)); // sea state 5
-	CHECK(calcSignificantWaveHeightForWindSpeed(17.1f) == Approx(5.5).epsilon(espilon)); // sea state 7
-	CHECK(calcSignificantWaveHeightForWindSpeed(24.4f) == Approx(10).epsilon(espilon)); // sea state 9
-	CHECK(calcSignificantWaveHeightForWindSpeed(32.6f) == Approx(16).epsilon(espilon)); // sea state 11
+
+	for (float height = 0; height < 20.f; height += 2.f)
+	{
+		float measuredHeight = measureSignificantWaveHeightFromModelForConfiguredHeight(height);
+		CHECK(measuredHeight == Approx(height).epsilon(espilon));
+	}
 }
-*/

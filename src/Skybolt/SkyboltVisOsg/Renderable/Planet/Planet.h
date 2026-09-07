@@ -7,7 +7,6 @@
 #pragma once
 
 #include "PlanetSurface.h"
-#include "SkyboltVis/VisFactory.h"
 #include "SkyboltVis/Renderable/Clouds/CloudRenderingParams.h"
 #include "SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h"
 #include "SkyboltVisOsg/SkyboltVisOsgFwd.h"

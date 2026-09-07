@@ -43,9 +43,10 @@ static sim::ComponentPtr loadOcean(sim::Entity* entity, const ComponentFactoryCo
 	return std::make_shared<sim::OceanComponent>(generator);
 }
 
-ComponentFactoryPtr getVisDefaultOceanComponentFactory()
+static ComponentFactoryPtr getVisDefaultOceanComponentFactory()
 {
 	auto factory = std::make_shared<ComponentFactoryFunctionAdapter>(loadOcean);
+	factory->tags = { "vis" };
 	return factory;
 }
 
@@ -89,14 +90,13 @@ VisRoot::VisRoot(VisRootConfig config) :
 
 	// Override the basic sim ocean component factory with a vis-enabled component
 	ComponentFactoryPtr& oceanComponentFactory = (*config.componentFactoryRegistry)["ocean"];
-	if (oceanComponentFactory == getSimDefaultOceanComponentFactory())
+	if (oceanComponentFactory->hasTag("sim"))
 	{
 		oceanComponentFactory = getVisDefaultOceanComponentFactory();
 	}
 
 	mVisObjectFactory = std::make_unique<VisObjectFactory>(VisObjectFactoryConfig{
 		.scene = mScene,
-		.visFactoryRegistry = config.visFactoryRegistry.get(),
 		.componentFactoryRegistry = config.componentFactoryRegistry,
 		.programs = mPrograms.get()
 		});

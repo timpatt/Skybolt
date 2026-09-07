@@ -36,9 +36,10 @@ static sim::ComponentPtr loadFftOcean(sim::Entity* entity, const ComponentFactor
 }
 #endif
 
-ComponentFactoryPtr FftOceanPlugin::getOceanComponentFactory()
+static ComponentFactoryPtr getOceanComponentFactory()
 {
 	static auto factory = std::make_shared<ComponentFactoryFunctionAdapter>(loadFftOcean);
+	factory->tags = { "fft" };
 	return factory;
 }
 
@@ -49,7 +50,7 @@ FftOceanPlugin::FftOceanPlugin(const PluginConfig& config)
 	// Otherwise anothe plugin is already being used and it should take precedent, so do nothing.
 	ComponentFactoryPtr& oceanFactory = (*config.engineRoot->componentFactoryRegistry)["ocean"];
 	
-	if (!oceanFactory || oceanFactory == vis::getVisDefaultOceanComponentFactory())
+	if (!oceanFactory || oceanFactory->hasTag("sim") ||oceanFactory->hasTag("vis"))
 	{
 		oceanFactory = getOceanComponentFactory();
 	}

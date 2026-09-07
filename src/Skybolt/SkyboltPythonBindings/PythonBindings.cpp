@@ -188,11 +188,11 @@ static Vector3 normalizeFunc(const Vector3& v)
 	return glm::normalize(v);
 }
 
-static void setWaveHeight(sim::Entity& entity, double height)
+static void setSignificantWaveHeight(sim::Entity& entity, double height)
 {
 	if (auto oceanComponent = entity.getFirstComponent<sim::OceanComponent>(); oceanComponent)
 	{
-		oceanComponent->waveHeight;
+		oceanComponent->significantWaveHeight;
 	}
 }
 
@@ -588,7 +588,7 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("captureScreenshot", [](vis::VisRoot& visRoot, const std::string& filename) { return vis::captureScreenshot(visRoot, filename); });
 	m.def("moveDistanceAndBearing", &moveDistanceAndBearing);
 	m.def("transformToScreenSpace", &transformToScreenSpace);
-	m.def("setWaveHeight", &setWaveHeight);
+	m.def("setSignificantWaveHeight", &setSignificantWaveHeight);
 	m.def("calcSmallestAngleFromTo", &math::calcSmallestAngleFromTo<double>);
 	m.def("getProperties", &getComponentProperties);
 	m.def("getProperty", &getComponentProperty);

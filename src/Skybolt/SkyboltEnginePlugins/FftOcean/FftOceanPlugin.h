@@ -16,8 +16,6 @@ public:
 	FftOceanPlugin(const PluginConfig& config);
 
 	~FftOceanPlugin() override;
-
-	static ComponentFactoryPtr getOceanComponentFactory();
 };
 
 namespace plugins {

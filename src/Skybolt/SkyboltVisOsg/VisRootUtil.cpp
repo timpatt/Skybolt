@@ -5,7 +5,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <SkyboltEngine/EngineRoot.h>
-#include <SkyboltEngine/FactoryRegistries.h>
 #include <SkyboltVisOsg/Rect.h>
 #include <SkyboltVisOsg/VisRoot.h>
 #include <osgViewer/CompositeViewer>
@@ -16,7 +15,6 @@ std::unique_ptr<vis::VisRoot> createVisRoot(const EngineRoot& engineRoot)
 {
 	auto visRoot = std::make_unique<vis::VisRoot>(vis::VisRootConfig{
 		.assetPackagePaths = engineRoot.getAssetPackagePaths(),
-		.visFactoryRegistry = valueOrThrowException(getExpectedRegistry<vis::VisFactoryRegistry>(*engineRoot.factoryRegistries)),
 		.componentFactoryRegistry = engineRoot.componentFactoryRegistry,
 		.world = &engineRoot.scenario->world,
 		.systemRegistry = engineRoot.systemRegistry,

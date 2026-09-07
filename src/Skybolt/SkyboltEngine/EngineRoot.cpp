@@ -12,7 +12,6 @@
 #include <SkyboltSim/System/EntitySystem.h>
 #include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/World.h>
-#include <SkyboltVis/VisFactory.h>
 #include <SkyboltVis/Image/ImageFactory.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltCommon/File/FileUtility.h>
@@ -205,8 +204,6 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	}());
 	tileSourceFactoryRegistry->addDefaultFactories();
 	factoryRegistries->addItem(tileSourceFactoryRegistry);
-
-	factoryRegistries->addItem(std::make_shared<vis::VisFactoryRegistry>());
 
 	// Create entity factory
 	EntityFactory::Context context{

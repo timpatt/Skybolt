@@ -9,7 +9,6 @@
 #include "SkyboltVisOsg/SkyboltVisOsgFwd.h"
 #include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltEngine/EntityFactory.h>
-#include <SkyboltVis/VisFactory.h>
 
 namespace skybolt {
 namespace vis {
@@ -17,7 +16,6 @@ namespace vis {
 struct VisObjectFactoryConfig
 {
 	vis::ScenePtr scene;
-	NonNullPtr<vis::VisFactoryRegistry> visFactoryRegistry;
 	ComponentFactoryRegistryPtr componentFactoryRegistry;
 	const vis::ShaderPrograms* programs;
 };
@@ -29,7 +27,6 @@ public:
 
 private:
 	vis::ScenePtr mScene;
-	NonNullPtr<vis::VisFactoryRegistry> mVisFactoryRegistry;
 	const ComponentFactoryRegistryPtr mComponentFactoryRegistry;
 	NonNullPtr<const vis::ShaderPrograms> mPrograms;
 	vis::ModelFactoryPtr mModelFactory;

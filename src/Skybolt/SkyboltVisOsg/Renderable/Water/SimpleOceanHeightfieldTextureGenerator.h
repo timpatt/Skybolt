@@ -33,8 +33,8 @@ public:
 		return mGenerationCount;
 	}
 
-	float getWaveHeight() const override { return 0.0f; }
-	void setWaveHeight(float height) override {};
+	float getSignificantWaveHeight() const override { return 0.0f; }
+	void setSignificantWaveHeight(float height) override {};
 
 	float getWindVelocityHeading() const override { return 0.0f; }
 	void setWindVelocityHeading(float heading) override {};

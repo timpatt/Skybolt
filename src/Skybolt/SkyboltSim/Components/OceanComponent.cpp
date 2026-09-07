@@ -15,7 +15,7 @@ SKYBOLT_REFLECT(OceanComponent) {
 	registry.type<OceanComponent>("OceanComponent")
 		.superType<Component>()
 		.property("seed", &OceanComponent::seed)
-		.property("waveHeight", &OceanComponent::waveHeight)
+		.property("significantWaveHeight", &OceanComponent::significantWaveHeight)
 		.property("windVelocityHeading", &OceanComponent::windVelocityHeading, {{PropertyMetadataNames::units, Units::Radians}});
 }
 
@@ -28,7 +28,7 @@ OceanComponent::OceanComponent(std::shared_ptr<OceanHeightfieldGenerator> height
 void OceanComponent::update()
 {
 	if (!heightfieldGenerator) { return; }
-	heightfieldGenerator->setWaveHeight(waveHeight);
+	heightfieldGenerator->setSignificantWaveHeight(significantWaveHeight);
 	heightfieldGenerator->setWindVelocityHeading(windVelocityHeading);
 	heightfieldGenerator->setSeed(seed);
 

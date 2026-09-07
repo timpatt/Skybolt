@@ -17,6 +17,7 @@
 #include <SkyboltVis/SkyboltVisFwd.h>
 #include <nlohmann/json.hpp>
 #include <functional>
+#include <set>
 #include <px_sched/px_sched.h>
 
 namespace skybolt {
@@ -38,7 +39,14 @@ struct ComponentFactoryContext
 	NonNullPtr<refl::TypeRegistry> typeRegistry;
 };
 
-class ComponentFactory
+struct Taggable
+{
+	std::set<std::string> tags;
+
+	bool hasTag(const std::string& tag) const { return tags.contains(tag); }
+};
+
+class ComponentFactory : public Taggable
 {
 public:
 	virtual ~ComponentFactory() {}
@@ -64,7 +72,5 @@ typedef RegistryT<std::string, ComponentFactoryPtr> ComponentFactoryRegistry;
 typedef std::shared_ptr<ComponentFactoryRegistry> ComponentFactoryRegistryPtr;
 
 void addDefaultFactories(ComponentFactoryRegistry& registry);
-
-ComponentFactoryPtr getSimDefaultOceanComponentFactory();
 
 } // namespace skybolt

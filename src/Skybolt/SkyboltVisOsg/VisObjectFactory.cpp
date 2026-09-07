@@ -238,7 +238,6 @@ static vis::ModelPtr createVisualModel(const nlohmann::json& json, vis::ModelFac
 struct VisObjectFactoryContext
 {
 	vis::ScenePtr scene;
-	NonNullPtr<vis::VisFactoryRegistry> visFactoryRegistry;
 	NonNullPtr<const vis::ShaderPrograms> programs;
 	vis::ModelFactory* modelFactory;
 	vis::TextureCache* textureCache;
@@ -686,7 +685,6 @@ static vis::ModelFactoryPtr createModelFactory(const vis::ShaderPrograms& progra
 
 VisObjectFactory::VisObjectFactory(const VisObjectFactoryConfig& config) :
 	mScene(config.scene),
-	mVisFactoryRegistry(config.visFactoryRegistry),
 	mComponentFactoryRegistry(config.componentFactoryRegistry),
 	mPrograms(config.programs),
 	mModelFactory(createModelFactory(*config.programs)),
@@ -710,7 +708,6 @@ VisObjectFactory::VisObjectFactory(const VisObjectFactoryConfig& config) :
 
 	VisObjectFactoryContext visObjectFactoryContext{
 		.scene = mScene,
-		.visFactoryRegistry = mVisFactoryRegistry,
 		.programs = mPrograms,
 		.modelFactory = mModelFactory.get(),
 		.textureCache = mTextureCache.get()

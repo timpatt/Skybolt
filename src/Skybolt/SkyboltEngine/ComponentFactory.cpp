@@ -405,6 +405,13 @@ static sim::ComponentPtr loadSun(Entity* entity, const ComponentFactoryContext& 
 	return std::make_shared<sim::SunComponent>();
 }
 
+static ComponentFactoryPtr getSimDefaultOceanComponentFactory()
+{
+	static auto factory = std::make_shared<ComponentFactoryFunctionAdapter>(loadOcean);
+	factory->tags = { "sim" };
+	return factory;
+}
+
 void addDefaultFactories(ComponentFactoryRegistry& registry)
 {
 	registry["shipWake"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadShipWake);
@@ -430,12 +437,6 @@ void addDefaultFactories(ComponentFactoryRegistry& registry)
 	registry["scenarioMetadata"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadScenarioMetadata);
 	registry["sun"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadSun);
 	registry["tailRotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadTailRotor);
-}
-
-ComponentFactoryPtr getSimDefaultOceanComponentFactory()
-{
-	static auto factory = std::make_shared<ComponentFactoryFunctionAdapter>(loadOcean);
-	return factory;
 }
 
 } // namespace skybolt

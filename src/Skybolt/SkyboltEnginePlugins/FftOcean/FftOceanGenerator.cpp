@@ -45,7 +45,8 @@ FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mWaveSpectrumWindow(config.waveSpectrumWindow),
 	mWaveSteepness(config.waveSteepness),
 	mUseMultipleCores(config.useMultipleCores),
-	mWindVelocity(config.windVelocity),
+	mSignificantWaveHeight(config.significantWaveHeight),
+	mWindVelocityHeading(config.windVelocityHeading),
 	mSeed(config.seed),
 	mFftGeneratorData(new FftGeneratorData)
 #ifdef USE_REFERENCE_FFT_NOISE_GENERATOR
@@ -95,7 +96,7 @@ Simd4 FftOceanGenerator::calcDispersion(Simd4 kx, Simd4 kz) const
 
 // Phillips Spectrum modulated by wind speed and direction
 // Section 3.3, equation 23
-float FftOceanGenerator::calcPhillips(int n, int m) const
+float FftOceanGenerator::calcPhillips(int n, int m, const glm::vec2& windVelocity) const
 {
 	glm::vec2 normalizedCoord(2 * n - mTextureSizePixels, 2 * m - mTextureSizePixels);
 	glm::vec2 k = math::piF() * normalizedCoord * mOneOnTextureWorldSize;
@@ -107,14 +108,14 @@ float FftOceanGenerator::calcPhillips(int n, int m) const
 		return 0.0;
 	}
 
-	float windSpeed = glm::length(mWindVelocity);
+	float windSpeed = glm::length(windVelocity);
 
 	// |k|^4
 	float k_len2 = kLength * kLength;
 	float k_len4 = k_len2 * k_len2;
 
 	// |k dot w|^2
-	float kw = glm::dot(k / kLength, mWindVelocity / windSpeed);
+	float kw = glm::dot(k / kLength, windVelocity / windSpeed);
 	kw = kw * kw;
 
 	// L, L^2
@@ -166,12 +167,12 @@ bool omnispectrum = false;
 //! Bruneton's wave spectrum is from "A unified directional spectrum for long and short wind-driven waves"
 //! by T. Elfouhaily, B. Chapron, K. Katsaros, D. Vandemark.
 //! Journal of Geophysical Research vol 102, p781-796, 1997
-float FftOceanGenerator::calcBruenton(int n, int m) const
+float FftOceanGenerator::calcBruenton(int n, int m, const glm::vec2& windVelocity) const
 {
 	glm::vec2 normalizedCoord(2 * n - mTextureSizePixels, 2 * m - mTextureSizePixels);
 	glm::vec2 k = math::piF() * normalizedCoord * mOneOnTextureWorldSize;
 
-	float windSpeed = glm::length(mWindVelocity);
+	float windSpeed = glm::length(windVelocity);
 	if (windSpeed == 0)
 	{
 		return 0.0;
@@ -225,7 +226,7 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 	float a0 = log(2.0f) / 4.0f; float ap = 4.0; float am = 0.13f * u_star / cm; // Eq 59
 	float Delta = tanh(a0 + ap * pow(c / cp, 2.5f) + am * pow(cm / c, 2.5f)); // Eq 57
 
-	float cosPhi = glm::dot(k / kLength, mWindVelocity / windSpeed);
+	float cosPhi = glm::dot(k / kLength, windVelocity / windSpeed);
 
 	// Suppress waves traveling opposite to wind, and double waves traveling with wind to preserve energy
 	if (cosPhi < 0.0) {
@@ -261,6 +262,7 @@ void FftOceanGenerator::calcHt0()
 	// Determinism is important as it ensoure ocean surface shape looks similar across different texture resolutions.
 	constexpr float maxFftResolution = 100000; // The precise value doesn't matter, so long as it's high enough to achieve good quanitization of k, but not so high as to cause numerical artifacts.
 	const float kQuantizationCellSize = 2.f * math::piF() / maxFftResolution;
+	const glm::vec2 windVelocity = calcWindVelocity();
 
     std::vector<int> mIndices(mTextureSizePixels);
     std::iota(mIndices.begin(), mIndices.end(), 0); // Fill the vector with values 0 through size - 1
@@ -293,8 +295,8 @@ void FftOceanGenerator::calcHt0()
 			complex_type r = complex_type(deterministicNormalFast(kxInt, kyInt, mSeed*2), deterministicNormalFast(kxInt, kyInt, mSeed*2 + 1)) / std::sqrt(2.f);
 #endif
 
-			mHt0[index] = r * std::sqrt(calcBruenton(n, m) / 2.0f) * dk;
-			mHt0Conj[index] = std::conj(r * std::sqrt(calcBruenton(-n, -m) / 2.0f) * dk);
+			mHt0[index] = r * std::sqrt(calcBruenton(n, m, windVelocity) / 2.0f) * dk;
+			mHt0Conj[index] = std::conj(r * std::sqrt(calcBruenton(-n, -m, windVelocity) / 2.0f) * dk);
 			++index;
 		}
 	});
@@ -330,6 +332,11 @@ static float filterNan(float v, float valueIfNan)
 void FftOceanGenerator::calculate(float t, const std::span<glm::vec3>& result)
 {
 	//cxxtimer::Timer timer(true);
+
+	if (mHt0.empty())
+	{
+		calcHt0();
+	}
 
 	if (result.size() != (mTextureSizePixels * mTextureSizePixels))
 	{
@@ -418,16 +425,32 @@ void FftOceanGenerator::calculate(float t, const std::span<glm::vec3>& result)
 	}
 }
 
-void FftOceanGenerator::setWindVelocity(const glm::vec2& windVelocity)
+void FftOceanGenerator::setSignificantWaveHeight(float significantWaveHeight)
 {
-	mWindVelocity = windVelocity;
-	calcHt0();
+	mSignificantWaveHeight = significantWaveHeight;
+	mHt0.clear();
+}
+
+void FftOceanGenerator::setWindVelocityHeading(float windVelocityHeading)
+{
+	mWindVelocityHeading = windVelocityHeading;
+	mHt0.clear();
 }
 
 void FftOceanGenerator::setSeed(int seed)
 {
 	mSeed = seed;
-	calcHt0();
+	mHt0.clear();
+}
+
+glm::vec2 FftOceanGenerator::calcWindVelocity() const
+{
+	float calibrationFactor = 8.f;
+	float windSpeed = std::sqrt(mSignificantWaveHeight * calibrationFactor * mGravity);
+	return glm::vec2(
+		windSpeed * std::cos(mWindVelocityHeading),
+		windSpeed * std::sin(mWindVelocityHeading)
+	);
 }
 
 } // namespace vis
