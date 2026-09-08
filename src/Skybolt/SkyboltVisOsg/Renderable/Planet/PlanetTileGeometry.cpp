@@ -72,7 +72,7 @@ osg::ref_ptr<osg::Geometry> createPlanetTileGeometry(const osg::Vec3d& tileCente
 
 osg::ref_ptr<osg::Geode> createPlanetTileGeode(const osg::Vec3d& tileCenter, const Box2d& latLonBounds, double planetRadius, PrimitiveType type)
 {
-	float skirtLength = 0.005 * latLonBounds.size().length() * planetRadius; // TODO: tweak
+	float skirtLength = 0.005 * glm::length(latLonBounds.size()) * planetRadius; // TODO: tweak
 	osg::ref_ptr<osg::Geometry> geometry = createPlanetTileGeometry(tileCenter, latLonBounds, planetRadius, skirtLength, type);
 
 	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
