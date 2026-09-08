@@ -332,6 +332,8 @@ public:
 
 	Format getFormat() const override { return mFormat; }
 
+	Origin getOrigin() const override { return Origin::TopLeft; }
+
 	ColorSpace getColorSpace() const override { return mColorSpace; }
 	void setColorSpace(ColorSpace space) override { mColorSpace = space; }
 

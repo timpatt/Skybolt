@@ -29,6 +29,11 @@ float HeightMapElevationProvider::get(double x, double y) const
 	int sMax = mImage->getWidth() - 1;
 	int tMax = mImage->getHeight() - 1;
 
+	if (mImage->getOrigin() == Image::Origin::TopLeft)
+	{
+		uv.y = double(tMax) - uv.y;
+	}
+
 	uv.x = skybolt::math::clamp(uv.x, 0.0, double(sMax));
 	uv.y = skybolt::math::clamp(uv.y, 0.0, double(tMax));
 

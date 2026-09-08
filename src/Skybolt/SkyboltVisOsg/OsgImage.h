@@ -33,6 +33,8 @@ public:
 
 	Format getFormat() const override;
 
+	Origin getOrigin() const override;
+
 	ColorSpace getColorSpace() const override;
 	void setColorSpace(ColorSpace space) override;
 

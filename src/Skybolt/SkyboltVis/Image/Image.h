@@ -86,6 +86,14 @@ public:
 
 	virtual Format getFormat() const = 0;
 
+	enum class Origin
+	{
+		TopLeft,
+		BottomLeft
+	};
+
+	virtual Origin getOrigin() const = 0; // @deprecated. Eventually we might only support TopLeft format, but currently provided to allow OsgImage to use bottom left origin.
+
 	virtual ColorSpace getColorSpace() const = 0;
 	virtual void setColorSpace(ColorSpace space) = 0;
 

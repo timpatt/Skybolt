@@ -171,6 +171,11 @@ void OsgImage::setColorSpace(ColorSpace space)
 	mColorSpace = space;
 }
 
+OsgImage::Origin OsgImage::getOrigin() const
+{
+	return Origin::TopLeft;
+}
+
 void OsgImage::addMetadata(const std::string& key, const ImageMetadataValue& value)
 {
 	mMetadata[key] = value;
