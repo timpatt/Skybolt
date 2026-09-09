@@ -30,6 +30,7 @@ uniform vec3 bottomRightDir;
 uniform float waterHeight;
 uniform vec2 heightMapTexCoordScales[OCEAN_CASCADE_COUNT];
 uniform vec2 heightMapTexCoordOriginWorldSpace;
+uniform float maxWaveHeight;
 
 const float infinity = 1e10;
 
@@ -44,10 +45,10 @@ vec3 intersectPlane(in vec3 origin, in vec3 dir, float waterHeight)
     return vec3(origin.x, origin.y, -waterHeight) + vec3(dir.x, dir.y, 0) * infinity;
 }
 
-const float screenCoordScale = 1.1; // TODO: tweak and optimize
-
 void main()
 {
+	const float screenCoordScale = min(2.0, 1.01 + maxWaveHeight * 0.1); // Simple heuristic. Might need some tweaking.
+
 	vec2 scaledVertexPos = osg_Vertex.xy * vec2(screenCoordScale); // +/- 0.5 at screen edges
 	vec2 screenCoord = scaledVertexPos + vec2(0.5); // 0 and 1 at screen edges
 	vec3 topDir = mix(topLeftDir, topRightDir, screenCoord.x);
@@ -55,7 +56,7 @@ void main()
 	vec3 vertCameraWorldDir = mix(topDir, bottomDir, screenCoord.y);
 
 	positionWS = intersectPlane(cameraPosition, vertCameraWorldDir, waterHeight);
-	
+
 	undisplacedPositionRelTexCoordOrigin = positionWS.xy - heightMapTexCoordOriginWorldSpace;
 	positionWS.z += planetSurfaceDrop(length(vec2(positionWS.x, positionWS.y)));
 	

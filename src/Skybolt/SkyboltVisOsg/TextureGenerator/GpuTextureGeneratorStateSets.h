@@ -13,7 +13,10 @@ namespace skybolt {
 namespace vis {
 
 osg::StateSet* createVectorDisplacementToNormalMapStateSet(osg::ref_ptr<osg::Program> program, osg::Texture2D* heightTexture, const osg::Vec2f& textureWorldSize);
+void setVectorDisplacementToNormalMapTextureWorldSize(osg::StateSet& stateSet, const osg::Vec2f& textureWorldSize);
+
 osg::StateSet* createWaveFoamMaskGeneratorStateSet(osg::ref_ptr<osg::Program> program, osg::Texture2D* heightTexture, osg::Texture2D* prevOutputTexture, const osg::Vec2f& textureWorldSize, float lambda);
+void setWaveFoamMaskGeneratorTextureWorldSize(osg::StateSet& stateSet, const osg::Vec2f& textureWorldSize);
 
 } // namespace vis
 } // namespace skybolt

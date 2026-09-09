@@ -100,7 +100,9 @@ public:
 		for (int i = 0; i < 2; ++i)
 		{
 			const int otherIndex = (i == 0);
-			mGenerator[i] = new GpuTextureGenerator(mOutputTexture[i], createWaveFoamMaskGeneratorStateSet(config.program, config.waveVectorDisplacementTexture, mOutputTexture[otherIndex], config.textureWorldSize, jacobianLambda), generateMipMaps);
+			auto waveFoamGeneratorStateSet = createWaveFoamMaskGeneratorStateSet(config.program, config.waveVectorDisplacementTexture, mOutputTexture[otherIndex], config.textureWorldSize, jacobianLambda);
+			mGenerator[i] = new GpuTextureGenerator(mOutputTexture[i], waveFoamGeneratorStateSet, generateMipMaps);
+			mWaveFoamGeneratorStateSets[i] = waveFoamGeneratorStateSet;
 			mSwitch->addChild(mGenerator[i], i == 0);
 		}
 
@@ -147,6 +149,15 @@ public:
 		return mOutputTexture[mIndex];
 	}
 
+	void setTextureWorldSize(const osg::Vec2f& size)
+	{
+		for (int i = 0; i < 2; ++i)
+		{
+			assert(mGenerator[i]->getStateSet());
+			setWaveFoamMaskGeneratorTextureWorldSize(*mWaveFoamGeneratorStateSets[i], size);
+		}
+	}
+
 private:
 	osg::ref_ptr<osg::Switch> mSwitch;
 	// Two outputs so we can ping-pong between them.
@@ -154,11 +165,18 @@ private:
 	// so that the foam can persist over time.
 	osg::ref_ptr<GpuTextureGenerator> mGenerator[2];
 	osg::ref_ptr<osg::Texture2D> mOutputTexture[2];
+	osg::ref_ptr<osg::StateSet> mWaveFoamGeneratorStateSets[2];
 	int mIndex;
 
 	osg::ref_ptr<osg::Uniform> mFoamMaskSubtractionAmountUniform;
 	double mPrevTimeSeconds = 0;
 };
+
+float getMaxWaveHeight(const OceanHeightfieldTextureGenerator& generator)
+{
+	// Estimate max wave height as 2x the significant wave height
+	return generator.significantWaveHeight * 2;
+}
 
 WaterMaterial::WaterMaterial(const WaterMaterialConfig& config) :
 	mOceanHeightfieldTextureGenerator(config.oceanHeightfieldTextureGenerator),
@@ -175,7 +193,7 @@ WaterMaterial::WaterMaterial(const WaterMaterialConfig& config) :
 		WaterStateSetConfig::WaveTextureSet waveTextureSet;
 
 		float textureWorldSize = mOceanHeightfieldTextureGenerator->getTextureWorldSize(i);
-		waveTextureSet.waveHeightMapWorldSizes = textureWorldSize;
+		waveTextureSet.textureWorldSize = textureWorldSize;
 
 		waveTextureSet.waveHeight = mOceanHeightfieldTextureGenerator->getTexture(i);
 		waveTextureSet.waveHeight->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
@@ -187,9 +205,11 @@ WaterMaterial::WaterMaterial(const WaterMaterialConfig& config) :
 		osg::Vec2f textureWorldSize2d(textureWorldSize, textureWorldSize);
 		const bool generateMipMaps = true;
 		waveTextureSet.waveNormal = createNormalTexture(width, height);
-		osg::ref_ptr<GpuTextureGenerator> generator = new GpuTextureGenerator(waveTextureSet.waveNormal, createVectorDisplacementToNormalMapStateSet(config.programs->getRequiredProgram("vectorDisplacementToNormal"), waveTextureSet.waveHeight, textureWorldSize2d), generateMipMaps);
+		auto normalGeneratorStateSet = createVectorDisplacementToNormalMapStateSet(config.programs->getRequiredProgram("vectorDisplacementToNormal"), waveTextureSet.waveHeight, textureWorldSize2d);
+		osg::ref_ptr<GpuTextureGenerator> generator = new GpuTextureGenerator(waveTextureSet.waveNormal, normalGeneratorStateSet, generateMipMaps);
 		addChild(generator);
 		mWaterSurfaceGpuTextureGenerators.push_back(generator);
+		mNormalGeneratorStateSet.push_back(normalGeneratorStateSet);
 
 		WaveFoamMaskGeneratorConfig generatorConfig;
 		generatorConfig.program = config.programs->getRequiredProgram("waveFoamMaskGenerator");
@@ -203,6 +223,7 @@ WaterMaterial::WaterMaterial(const WaterMaterialConfig& config) :
 		waveTextureSet.waveFoamMask = waveFoamMaskGenerator->getOutputTexture();
 
 		stateSetConfig.waveTextureSets.push_back(waveTextureSet);
+		stateSetConfig.maxWaveHeight = getMaxWaveHeight(*mOceanHeightfieldTextureGenerator);
 	}
 
 	setStateSet(new WaterStateSet(stateSetConfig));
@@ -218,6 +239,18 @@ void WaterMaterial::update(double timeSeconds)
 	if (mOceanHeightfieldTextureGenerator->getGenerationCount() != mLastGenerationCount)
 	{
 		mLastGenerationCount = mOceanHeightfieldTextureGenerator->getGenerationCount();
+		
+		WaterStateSet* stateSet = static_cast<WaterStateSet*>(getStateSet());
+		stateSet->setMaxWaveHeight(getMaxWaveHeight(*mOceanHeightfieldTextureGenerator));
+
+		for (int i = 0; i < mOceanHeightfieldTextureGenerator->getTextureCount(); ++i)
+		{
+			float textureWorldSize = mOceanHeightfieldTextureGenerator->getTextureWorldSize(i);
+			osg::Vec2f textureWorldSize2d(textureWorldSize, textureWorldSize);
+			stateSet->setTextureWorldSize(i, textureWorldSize2d);
+			mWaveFoamMaskGenerators[i]->setTextureWorldSize(textureWorldSize2d);
+			setVectorDisplacementToNormalMapTextureWorldSize(*mNormalGeneratorStateSet[i], textureWorldSize2d);
+		}
 
 		for (const auto& generator : mWaterSurfaceGpuTextureGenerators)
 		{
@@ -227,7 +260,7 @@ void WaterMaterial::update(double timeSeconds)
 		for (int i = 0; i < mWaveFoamMaskGenerators.size(); ++i)
 		{
 			mWaveFoamMaskGenerators[i]->advanceTime(timeSeconds);
-			static_cast<WaterStateSet*>(getStateSet())->setFoamTexture(i, mWaveFoamMaskGenerators[i]->getOutputTexture());
+			stateSet->setFoamTexture(i, mWaveFoamMaskGenerators[i]->getOutputTexture());
 			mWaveFoamMaskGenerators[i]->swapBuffers();
 		}
 	}
@@ -257,11 +290,6 @@ osg::ref_ptr<osg::Texture2D> WaterMaterial::getNormalTexture(int cascadeIndex) c
 osg::ref_ptr<osg::Texture2D> WaterMaterial::getFoamMaskTexture(int cascadeIndex) const
 {
 	return mWaveFoamMaskGenerators[cascadeIndex]->getOutputTexture();
-}
-
-sim::OceanSurfaceSamplerPtr WaterMaterial::getSurfaceSampler() const
-{
-	return mOceanHeightfieldTextureGenerator->getSurfaceSampler();
 }
 
 } // namespace vis

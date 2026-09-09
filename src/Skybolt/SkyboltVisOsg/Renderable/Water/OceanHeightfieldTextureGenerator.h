@@ -15,7 +15,7 @@
 namespace skybolt {
 namespace vis {
 
-class OceanHeightfieldTextureGenerator : public sim::OceanHeightfieldGenerator
+class OceanHeightfieldTextureGenerator : public sim::OceanComponent
 {
 public:
 	virtual ~OceanHeightfieldTextureGenerator() = default;

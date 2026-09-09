@@ -41,13 +41,12 @@ public:
 	osg::ref_ptr<osg::Texture2D> getFoamMaskTexture(int cascadeIndex) const;
 	int getCascadeCount() const;
 
-	sim::OceanSurfaceSamplerPtr getSurfaceSampler() const; //!< Never returns null
-
 private:
 	NonNullPtr<Scene> mScene;
 	OceanHeightfieldTextureGeneratorPtr mOceanHeightfieldTextureGenerator;
 	std::vector<osg::ref_ptr<GpuTextureGenerator>> mWaterSurfaceGpuTextureGenerators; //!< stored in execution order
 	std::vector<osg::ref_ptr<class WaveFoamMaskGenerator>> mWaveFoamMaskGenerators;
+	std::vector<osg::ref_ptr<osg::StateSet>> mNormalGeneratorStateSet;
 	std::size_t mLastGenerationCount = 0;
 };
 

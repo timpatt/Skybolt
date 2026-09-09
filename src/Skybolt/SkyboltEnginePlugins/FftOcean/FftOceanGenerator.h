@@ -92,8 +92,12 @@ public:
 	void setSeed(int seed);
 	int getSeed() const { return mSeed; }
 
-	glm::ivec2 getTextureSizePixels() const { return glm::ivec2(mTextureSizePixels, mTextureSizePixels); }
+	void setTextureWorldSize(float textureWorldSize);
 	glm::dvec2 getTextureWorldSize() const { return glm::dvec2(mTextureWorldSize, mTextureWorldSize); }
+
+	glm::ivec2 getTextureSizePixels() const { return glm::ivec2(mTextureSizePixels, mTextureSizePixels); }
+
+	void setWaveSpectrumWindow(const WaveSpectrumWindow& window);
 
 	using complex_type = std::complex<float> ;
 	const std::vector<complex_type>& getHt0Image() const { return mHt0; } //!< Image has dimensions of (mTextureSizePixels, mTextureSizePixels)
@@ -117,19 +121,20 @@ private:
 
 private:
 	const int mTextureSizePixels;
-	const float mTextureWorldSize;
-	const float mOneOnTextureWorldSize;
 	const float mGravity;
-	const WaveSpectrumWindow mWaveSpectrumWindow;
 	const float mWaveSteepness;
 	const bool mUseMultipleCores;
 
+	WaveSpectrumWindow mWaveSpectrumWindow;
+	float mTextureWorldSize;
+	float mOneOnTextureWorldSize;
 	float mSignificantWaveHeight;
 	float mWindVelocityHeading;
 	int mSeed;
 
 	std::vector<complex_type> mHt0;
 	std::vector<complex_type> mHt0Conj;
+	bool mHt0Dirty = true;
 
 	aligned_complex_type_ptr mFftInputVertical;
 	aligned_complex_type_ptr mFftInputHorizontal[2];

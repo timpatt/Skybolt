@@ -39,8 +39,7 @@ static void addOsgFileSearchPaths(const std::vector<std::string>& assetPackagePa
 
 static sim::ComponentPtr loadOcean(sim::Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
-	auto generator = std::make_shared<SimpleOceanHeightfieldTextureGenerator>();
-	return std::make_shared<sim::OceanComponent>(generator);
+	return std::make_shared<SimpleOceanHeightfieldTextureGenerator>();
 }
 
 static ComponentFactoryPtr getVisDefaultOceanComponentFactory()

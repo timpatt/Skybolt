@@ -22,10 +22,7 @@ namespace vis {
 
 struct FftOceanHeightfieldTextureGeneratorConfig
 {
-	float textureWorldSize;
 	int textureSizePixels;
-	WaveSpectrumWindow waveSpectrumWindow;
-	int seed = 0;
 };
 
 static glm::dvec2 calcTextureOriginNorthEast(const sim::Vector3& sceneOriginGeocentric, const sim::Vector3& textureOriginGeocentric)
@@ -42,22 +39,19 @@ static glm::dvec2 calcTextureOriginNorthEast(const sim::Vector3& sceneOriginGeoc
 class FftOceanHeightfieldTextureGenerator : public OceanHeightfieldTextureGenerator
 {
 public:
-	FftOceanHeightfieldTextureGenerator(const FftOceanHeightfieldTextureGeneratorConfig& config) :
-		mWorldSize(config.textureWorldSize),
-		mSignificantWaveHeight(0.5),
-		mSeed(config.seed)
+	FftOceanHeightfieldTextureGenerator(const FftOceanHeightfieldTextureGeneratorConfig& config)
 	{
 		mGeneratorResult = std::vector<glm::vec3>(config.textureSizePixels * config.textureSizePixels, glm::vec3(0,0,0));
 
 		mGenerator.reset(new FftOceanGenerator([&] {
 			FftOceanGeneratorConfig c;
 			c.gravity = mGravity;
-			c.seed = config.seed;
+			c.seed = seed;
 			c.textureSizePixels = config.textureSizePixels;
-			c.textureWorldSize = config.textureWorldSize;
-			c.significantWaveHeight = mSignificantWaveHeight;
-			c.windVelocityHeading = mWindVelocityHeading;
-			c.waveSpectrumWindow = config.waveSpectrumWindow;
+			c.textureWorldSize = textureWorldSize;
+			c.significantWaveHeight = significantWaveHeight;
+			c.windVelocityHeading = windVelocityHeading;
+			c.waveSpectrumWindow = waveSpectrumWindow;
 			return c;
 			}()));
 
@@ -71,13 +65,6 @@ public:
 		mTexture->setFilter(osg::Texture2D::FilterParameter::MAG_FILTER, osg::Texture2D::FilterMode::LINEAR);
 
 		mGeneratorThread = std::thread([this] {runGeneratorThread(); });
-		{
-			std::lock_guard<std::mutex> lock(mGeneratorRequestMutex);
-			mGeneratorRequest = true;
-		}
-		mGeneratorRequestCV.notify_one();
-
-		generate(0);
 	}
 
 	~FftOceanHeightfieldTextureGenerator()
@@ -85,6 +72,12 @@ public:
 		mTerminateGeneratorThread = true;
 		mGeneratorRequestCV.notify_one();
 		mGeneratorThread.join();
+	}
+
+	const sim::OceanSurfaceSampler& getSurfaceSampler() const
+	{
+		static auto sampler = std::make_shared<sim::PlanarOceanSurfaceSampler>();
+		return *sampler;
 	}
 
 	bool generate(sim::SecondsD time) override
@@ -99,30 +92,27 @@ public:
 				std::lock_guard<std::mutex> lock(mGeneratorResultMutex);
 				memcpy(image->data(), mGeneratorResult.data(), mGeneratorResult.size() * sizeof(float) * 3);
 				mGeneratorHasResult = false;
-				++mGenerationCount;
 			}
 			image->dirty();
 			textureUpdated = true;
 		}
 
+		// Check if input changed
+		GenerationRequest request = createGenerationRequest(time);
+		bool changed = (!mPrevGenerationRequest || (*mPrevGenerationRequest != request));
+
 		// If input state has changed, request a new texture to be generated
-		bool timeChanged = !mRequestTime || (time != *mRequestTime);
-		if (timeChanged || mSignificantWaveHeightChanged || mWindVelocityHeading || mSeedChanged)
+		if (changed)
 		{
-			mRequestTime = time;
+			mPrevGenerationRequest = request;
 			{
 				// Request a new image to be generated
 				std::lock_guard<std::mutex> lock(mGeneratorRequestMutex);
-				mGeneratorRequest = true;
+				mGenerationRequest = request;
 			}
 			mGeneratorRequestCV.notify_one(); // Safe to call notify_one outside the mGeneratorRequestMutex lock
 		}
 		return textureUpdated;
-	}
-
-	std::size_t getGenerationCount() const override
-	{
-		return mGenerationCount;
 	}
 
 	void runGeneratorThread()
@@ -132,10 +122,10 @@ public:
 			// Wait for generation request
 			{
 				std::unique_lock<std::mutex> lock(mGeneratorRequestMutex); // Must lock before calling wait()
-				mGeneratorRequestCV.wait(lock, [this] {return mGeneratorRequest || mTerminateGeneratorThread; });
+				mGeneratorRequestCV.wait(lock, [this] {return mGenerationRequest || mTerminateGeneratorThread; });
 			}
 
-			if (mTerminateGeneratorThread)
+			if (!mGenerationRequest || mTerminateGeneratorThread)
 			{
 				return;
 			}
@@ -143,56 +133,15 @@ public:
 			{
 				std::lock_guard<std::mutex> lock(mGeneratorResultMutex);
 
-				if (mSignificantWaveHeightChanged)
-				{
-					mGenerator->setSignificantWaveHeight(mSignificantWaveHeight);
-					mSignificantWaveHeightChanged = false;
-				}
-
-				if (mWindVelocityHeadingChanged)
-				{
-					mGenerator->setWindVelocityHeading(mWindVelocityHeading);
-					mWindVelocityHeadingChanged = false;
-				}
-
-				if (mSeedChanged)
-				{
-					mGenerator->setSeed(mSeed);
-					mSeedChanged = false;
-				}
-
-				mGenerator->calculate(mRequestTime.value_or(0), std::span<glm::vec3>{mGeneratorResult.data(), mGeneratorResult.size()});
+				mGenerator->setTextureWorldSize(mGenerationRequest->textureWorldSize);
+				mGenerator->setSignificantWaveHeight(mGenerationRequest->significantWaveHeight);
+				mGenerator->setWindVelocityHeading(mGenerationRequest->windVelocityHeading);
+				mGenerator->setSeed(mGenerationRequest->seed);
+				mGenerator->setWaveSpectrumWindow(mGenerationRequest->waveSpectrumWindow);
+				mGenerator->calculate(mGenerationRequest->requestTime, std::span<glm::vec3>{mGeneratorResult.data(), mGeneratorResult.size()});
 				mGeneratorHasResult = true;
-				mGeneratorRequest = false;
+				mGenerationRequest.reset();
 			}
-		}
-	}
-
-	float getWorldSize() const
-	{
-		return mWorldSize;
-	}
-
-	float getSignificantWaveHeight() const override { return mSignificantWaveHeight; }
-
-	void setSignificantWaveHeight(float height) override
-	{
-		if (mSignificantWaveHeight != height)
-		{
-			mSignificantWaveHeight = height;
-			mSignificantWaveHeightChanged = true;
-		}
-	}
-
-	float getWindVelocityHeading() const override { return mWindVelocityHeading; }
-
-	void setWindVelocityHeading(float heading) override
-	{
-		if (mWindVelocityHeading != heading)
-		{
-			mWindVelocityHeading = heading;
-			mWindVelocityHeading = heading;
-			mWindVelocityHeadingChanged = true;
 		}
 	}
 
@@ -204,21 +153,7 @@ public:
 		return mTexture;
 	}
 
-	float getTextureWorldSize(int index) const override { return mWorldSize; }
-
-	int getSeed() const override
-	{
-		return mSeed;
-	}
-
-	void setSeed(int seed) override
-	{
-		if (mSeed != seed)
-		{
-			mSeed = seed;
-			mSeedChanged = true;
-		}
-	}
+	float getTextureWorldSize(int index) const override { return textureWorldSize; }
 
 	const sim::Vector3& getTextureOriginGeocentric() const override
 	{
@@ -234,7 +169,7 @@ public:
 	{
 		double originDistance = glm::distance(mTextureOriginGeocentric, sceneOriginGeocentric);
 
-		const double teleportDistance = 100 * mWorldSize;
+		const double teleportDistance = 100 * textureWorldSize;
 		if (originDistance > teleportDistance)
 		{
 			// Teleport the texture origin if the scene origin has moved a long way the texture origin.
@@ -242,7 +177,7 @@ public:
 			mTextureOriginNorthEast = {};
 			return;
 		}
-		else if (originDistance < mWorldSize)
+		else if (originDistance < textureWorldSize)
 		{
 			// No need to update the geocentric texture origin if the scene origin is already close to the texture origin
 			mTextureOriginNorthEast = calcTextureOriginNorthEast(sceneOriginGeocentric, mTextureOriginGeocentric);
@@ -257,22 +192,56 @@ public:
 
 		// Find the remainder of the displacement relative to the texture world size.
 		// Apply remainder as an offset to the texture coordinates.
-		displacementNed.x = std::fmod(displacementNed.x, (double)mWorldSize);
-		displacementNed.y = std::fmod(displacementNed.y, (double)mWorldSize);
+		displacementNed.x = std::fmod(displacementNed.x, (double)textureWorldSize);
+		displacementNed.y = std::fmod(displacementNed.y, (double)textureWorldSize);
 		displacementNed.z = 0; // Don't offset the texture in the vertical direction
 
 		mTextureOriginGeocentric = sceneOriginGeocentric + ltpOrientation * displacementNed;
 		mTextureOriginNorthEast = displacementNed;
 	}
 
+	struct GenerationRequest
+	{
+		sim::SecondsD requestTime;
+		float textureWorldSize;
+		float significantWaveHeight;
+		float windVelocityHeading;
+		WaveSpectrumWindow waveSpectrumWindow;
+		int seed;
+
+		bool operator==(const GenerationRequest& other) const = default;
+	};
+
+	GenerationRequest createGenerationRequest(sim::SecondsD requestTime) const
+	{
+		return GenerationRequest{
+			.requestTime = requestTime,
+			.textureWorldSize = textureWorldSize,
+			.significantWaveHeight = (float)significantWaveHeight,
+			.windVelocityHeading = (float)windVelocityHeading,
+			.waveSpectrumWindow = waveSpectrumWindow,
+			.seed = seed
+		};
+	}
+
+	float textureWorldSize = 500;
+	WaveSpectrumWindow waveSpectrumWindow;
+
+public: // Component interface
+	std::vector<std::type_index> getExposedTypes() const override
+	{
+		return {typeid(FftOceanHeightfieldTextureGenerator), typeid(OceanComponent)};
+	}
+
 private:
 	const float mGravity = 9.8f;
 	std::unique_ptr<FftOceanGenerator> mGenerator;
 	osg::ref_ptr<osg::Texture2D> mTexture;
-	float mWorldSize;
 
 	sim::Vector3 mTextureOriginGeocentric = {};
 	glm::dvec2 mTextureOriginNorthEast = {};
+
+	std::optional<GenerationRequest> mPrevGenerationRequest;
 
 	std::thread mGeneratorThread;
 	std::atomic_bool mTerminateGeneratorThread = false;
@@ -280,22 +249,18 @@ private:
 	std::vector<glm::vec3> mGeneratorResult;
 	std::mutex mGeneratorResultMutex;
 	std::atomic_bool mGeneratorHasResult = false;
-	std::size_t mGenerationCount;
 
 	std::mutex mGeneratorRequestMutex;
 	std::condition_variable mGeneratorRequestCV;
-	std::optional<sim::SecondsD> mRequestTime;
-	bool mGeneratorRequest = false;
-
-	float mSignificantWaveHeight = 0;
-	std::atomic_bool mSignificantWaveHeightChanged = false;
-	
-	float mWindVelocityHeading = 0;
-	std::atomic_bool mWindVelocityHeadingChanged = false;
-
-	std::atomic_int mSeed = 0;
-	std::atomic_bool mSeedChanged = false;
+	std::optional<GenerationRequest> mGenerationRequest;
 };
+
+SKYBOLT_REFLECT(FftOceanHeightfieldTextureGenerator)
+{
+	registry.type<FftOceanHeightfieldTextureGenerator>("FftOceanHeightfieldTextureGenerator")
+		.superType<sim::OceanComponent>()
+		.property("textureWorldSize", &FftOceanHeightfieldTextureGenerator::textureWorldSize);
+}
 
 } // namespace vis
 } // namespace skybolt

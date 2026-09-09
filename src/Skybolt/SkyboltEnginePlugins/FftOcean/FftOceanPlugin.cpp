@@ -24,17 +24,11 @@ namespace skybolt {
 #ifdef BUILD_WITH_OSG
 static sim::ComponentPtr loadFftOcean(sim::Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
-	auto generator = std::make_shared<vis::FftOceanHeightfieldTextureGenerator>([&] {
-		vis::FftOceanHeightfieldTextureGeneratorConfig c;
-		c.textureWorldSize = 500;
-		c.textureSizePixels = 512;
-		c.seed = 0;
-		return c;
-		}());
-
-	return std::make_shared<sim::OceanComponent>(generator);
+	return std::make_shared<vis::FftOceanHeightfieldTextureGenerator>(vis::FftOceanHeightfieldTextureGeneratorConfig{
+		.textureSizePixels = 512
+		});
 }
-#endif
+
 
 static ComponentFactoryPtr getOceanComponentFactory()
 {
@@ -42,6 +36,7 @@ static ComponentFactoryPtr getOceanComponentFactory()
 	factory->tags = { "fft" };
 	return factory;
 }
+#endif
 
 FftOceanPlugin::FftOceanPlugin(const PluginConfig& config)
 {

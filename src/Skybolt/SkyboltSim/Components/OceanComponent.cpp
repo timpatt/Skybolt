@@ -19,31 +19,12 @@ SKYBOLT_REFLECT(OceanComponent) {
 		.property("windVelocityHeading", &OceanComponent::windVelocityHeading, {{PropertyMetadataNames::units, Units::Radians}});
 }
 
-OceanComponent::OceanComponent(std::shared_ptr<OceanHeightfieldGenerator> heightfieldGeneratorArg) :
-	heightfieldGenerator(std::move(heightfieldGeneratorArg))
-{
-	assert(heightfieldGenerator);
-}
-
 void OceanComponent::update()
 {
-	if (!heightfieldGenerator) { return; }
-	heightfieldGenerator->setSignificantWaveHeight(significantWaveHeight);
-	heightfieldGenerator->setWindVelocityHeading(windVelocityHeading);
-	heightfieldGenerator->setSeed(seed);
-
-	heightfieldGenerator->generate(mSimTime);
-}
-
-OceanSurfaceSampler& OceanComponent::getOceanSurfaceSampler() const
-{
-	if (!heightfieldGenerator)
+	if (generate(mSimTime))
 	{
-		static auto sampler = std::make_shared<sim::PlanarOceanSurfaceSampler>();
-		return *sampler;
+		++mGenerationCount;
 	}
-
-	return *heightfieldGenerator->getSurfaceSampler();
 }
 
 } // namespace sim

@@ -27,6 +27,16 @@ osg::StateSet* createVectorDisplacementToNormalMapStateSet(osg::ref_ptr<osg::Pro
 	return stateSet;
 }
 
+void setVectorDisplacementToNormalMapTextureWorldSize(osg::StateSet& stateSet, const osg::Vec2f& textureWorldSize)
+{
+	osg::Uniform* uniform = stateSet.getUniform("textureSizeInWorldSpace");
+	if (!uniform)
+	{
+		throw std::runtime_error("State set provided is not suitable for wave foam mask generator");
+	}
+	uniform->set(textureWorldSize);
+}
+
 osg::StateSet* createWaveFoamMaskGeneratorStateSet(osg::ref_ptr<osg::Program> program, osg::Texture2D* heightTexture, osg::Texture2D* prevOutputTexture, const osg::Vec2f& textureWorldSize, float lambda)
 {
 	osg::StateSet* stateSet = new osg::StateSet();
@@ -46,6 +56,16 @@ osg::StateSet* createWaveFoamMaskGeneratorStateSet(osg::ref_ptr<osg::Program> pr
 	stateSet->addUniform(new osg::Uniform("texelSizeInWorldSpace", texelSizeInWorldSpace));
 
 	return stateSet;
+}
+
+void setWaveFoamMaskGeneratorTextureWorldSize(osg::StateSet& stateSet, const osg::Vec2f& textureWorldSize)
+{
+	osg::Uniform* uniform = stateSet.getUniform("texelSizeInWorldSpace");
+	if (!uniform)
+	{
+		throw std::runtime_error("State set provided is not suitable for wave foam mask generator");
+	}
+	uniform->set(textureWorldSize);
 }
 
 } // namespace vis

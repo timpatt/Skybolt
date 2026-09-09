@@ -440,7 +440,7 @@ static void loadVisualPlanet(Entity* entity, const ComponentFactoryContext& cont
 	config.imageFactory = context.imageFactory;
 	config.scene = visObjectFactoryContext.scene.get();
 	config.innerRadius = planetComponent->radius;
-	config.oceanHeightfieldTextureGenerator = oceanComponent ? dynamic_pointer_cast<OceanHeightfieldTextureGenerator>(oceanComponent->heightfieldGenerator) : nullptr;
+	config.oceanHeightfieldTextureGenerator = oceanComponent ? dynamic_pointer_cast<OceanHeightfieldTextureGenerator>(oceanComponent) : nullptr;
 	config.fileLocator = context.fileLocator;
 	
 	{

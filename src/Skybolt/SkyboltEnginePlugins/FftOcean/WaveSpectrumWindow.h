@@ -17,6 +17,8 @@ struct WaveSpectrumWindow
 
 	std::optional<float> cutoffWavelengthShortest; //!< If set, cuts off wavelengths shorter than this value
 	std::optional<float> cutoffWavelengthLongest; //!< If set, cuts off wavelengths longer than this value
+
+	bool operator==(const WaveSpectrumWindow& other) const = default;
 };
 
 inline float calcNyquistWavelength(float textureWorldSize, int textureSizePixels)

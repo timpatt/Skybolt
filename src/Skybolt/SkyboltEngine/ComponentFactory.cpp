@@ -376,9 +376,8 @@ static sim::ComponentPtr loadPlanet(Entity* entity, const ComponentFactoryContex
 
 static sim::ComponentPtr loadOcean(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
-	return std::make_shared<OceanComponent>();
+	return std::make_shared<PlanarOceanComponent>();
 }
-
 
 static sim::ComponentPtr loadPlanetElevationTileSource(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {

@@ -16,28 +16,23 @@ class SimpleOceanHeightfieldTextureGenerator : public OceanHeightfieldTextureGen
 public:
 	SimpleOceanHeightfieldTextureGenerator();
 
+	sim::OceanSurfaceSampler& getSurfaceSampler() const
+	{
+		static auto sampler = std::make_shared<sim::PlanarOceanSurfaceSampler>();
+		return *sampler;
+	}
+
 	bool generate(double time) override
 	{
 		// Stub functionality to "generate" if not already generated
-		if (mGenerationCount)
+		if (getGenerationCount())
 		{
 			// No need to re-generate
 			return false;
 		}
-		mGenerationCount = 1;
+
 		return true;
 	}
-
-	std::size_t getGenerationCount() const override
-	{
-		return mGenerationCount;
-	}
-
-	float getSignificantWaveHeight() const override { return 0.0f; }
-	void setSignificantWaveHeight(float height) override {};
-
-	float getWindVelocityHeading() const override { return 0.0f; }
-	void setWindVelocityHeading(float heading) override {};
 
 	int getTextureCount() const override { return 1; }
 
@@ -47,9 +42,6 @@ public:
 	}
 
 	float getTextureWorldSize(int index) const override { return 100; } // Size doesn't matter as the ocean surface is flat
-
-	int getSeed() const override { return 0; }
-	void setSeed(int seed) override {};
 
 	const sim::Vector3& getTextureOriginGeocentric() const override { return mTextureOriginGeocentric; }
 	const glm::dvec2& getTextureOriginNorthEast() const override
@@ -63,7 +55,6 @@ public:
 
 private:
 	osg::ref_ptr<osg::Texture2D> mTexture;
-	std::size_t mGenerationCount;
 
 	sim::Vector3 mTextureOriginGeocentric = {};
 };

@@ -39,12 +39,12 @@ void FftOceanGenerator::MufftArrayDeleter::operator() (aligned_complex_type* p) 
 //! See https://people.computing.clemson.edu/~jtessen/reports/papers_files/coursenotes2004.pdf
 FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mTextureSizePixels(config.textureSizePixels),
-	mTextureWorldSize(config.textureWorldSize),
-	mOneOnTextureWorldSize(1.0f / mTextureWorldSize),
 	mGravity(config.gravity),
-	mWaveSpectrumWindow(config.waveSpectrumWindow),
 	mWaveSteepness(config.waveSteepness),
 	mUseMultipleCores(config.useMultipleCores),
+	mWaveSpectrumWindow(config.waveSpectrumWindow),
+	mTextureWorldSize(config.textureWorldSize),
+	mOneOnTextureWorldSize(1.0f / mTextureWorldSize),
 	mSignificantWaveHeight(config.significantWaveHeight),
 	mWindVelocityHeading(config.windVelocityHeading),
 	mSeed(config.seed),
@@ -64,8 +64,6 @@ FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mFftOutputVertical = allocateAlignedComplexType(size);
 	mFftOutputHorizontal[0] = allocateAlignedComplexType(size);
 	mFftOutputHorizontal[1] = allocateAlignedComplexType(size);
-
-	calcHt0();
 
 	mFftGeneratorData->verticalPlan = mufft_create_plan_2d_c2c(config.textureSizePixels, config.textureSizePixels, MUFFT_FORWARD, MUFFT_FLAG_CPU_ANY);
 
@@ -256,6 +254,7 @@ void runParallelOrSequential(bool useParallel, Container&& container, Func&& fun
 
 void FftOceanGenerator::calcHt0()
 {
+	mHt0Dirty = false;
 	const float dk = 2.0f * math::piF() / mTextureWorldSize;
 
 	// Calculate a minimum delta k to use to quantize k for random number lookup, to ensure random number generation is deterministic as a function of k.
@@ -333,7 +332,7 @@ void FftOceanGenerator::calculate(float t, const std::span<glm::vec3>& result)
 {
 	//cxxtimer::Timer timer(true);
 
-	if (mHt0.empty())
+	if (mHt0Dirty)
 	{
 		calcHt0();
 	}
@@ -427,25 +426,54 @@ void FftOceanGenerator::calculate(float t, const std::span<glm::vec3>& result)
 
 void FftOceanGenerator::setSignificantWaveHeight(float significantWaveHeight)
 {
-	mSignificantWaveHeight = significantWaveHeight;
-	mHt0.clear();
+	if (significantWaveHeight != mSignificantWaveHeight)
+	{
+		mSignificantWaveHeight = significantWaveHeight;
+		mHt0Dirty = true;
+	}
 }
 
 void FftOceanGenerator::setWindVelocityHeading(float windVelocityHeading)
 {
-	mWindVelocityHeading = windVelocityHeading;
-	mHt0.clear();
+	if (mWindVelocityHeading != windVelocityHeading)
+	{
+		mWindVelocityHeading = windVelocityHeading;
+		mHt0Dirty = true;
+	}
 }
 
 void FftOceanGenerator::setSeed(int seed)
 {
-	mSeed = seed;
-	mHt0.clear();
+	if (mSeed != seed)
+	{
+		mSeed = seed;
+		mHt0Dirty = true;
+	}
+}
+
+void FftOceanGenerator::setTextureWorldSize(float textureWorldSize)
+{
+	if (mTextureWorldSize != textureWorldSize)
+	{
+		mTextureWorldSize = textureWorldSize;
+		mOneOnTextureWorldSize = 1.f / mTextureWorldSize;
+		mHt0Dirty = true;
+	}
+}
+
+void FftOceanGenerator::setWaveSpectrumWindow(const WaveSpectrumWindow& window)
+{
+	if (mWaveSpectrumWindow != window)
+	{
+		mWaveSpectrumWindow = window;
+		mHt0Dirty = true;
+	}
 }
 
 glm::vec2 FftOceanGenerator::calcWindVelocity() const
 {
-	float calibrationFactor = 8.f;
+	float calibrationFactor = 8.f; // Required to achieve the specified wave height. Tested in FftOceanGeneratorTest.
+
 	float windSpeed = std::sqrt(mSignificantWaveHeight * calibrationFactor * mGravity);
 	return glm::vec2(
 		windSpeed * std::cos(mWindVelocityHeading),

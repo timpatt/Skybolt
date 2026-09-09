@@ -13,42 +13,18 @@
 
 namespace skybolt::sim {
 
-class OceanHeightfieldGenerator
+class OceanComponent : public Component
 {
 public:
-	virtual ~OceanHeightfieldGenerator() {}
+	~OceanComponent() override = default;
+
+	virtual const OceanSurfaceSampler& getSurfaceSampler() const = 0;
 
 	//! @return true if the texture was generated or re-generated, or false if the previously generated texture should be used.
 	virtual bool generate(sim::SecondsD time) = 0;
 
 	//! @returns the total number of times he ocean surface has been generated
-	virtual std::size_t getGenerationCount() const = 0;
-
-	virtual float getSignificantWaveHeight() const = 0;
-	virtual void setSignificantWaveHeight(float height) = 0;
-
-	virtual float getWindVelocityHeading() const = 0;
-	virtual void setWindVelocityHeading(float heading) = 0;
-
-	virtual int getSeed() const = 0;
-	virtual void setSeed(int seed) = 0;
-
-	//! @returns an interface for sampling the ocean surface eometry. Result is never null.
-	virtual skybolt::sim::OceanSurfaceSamplerPtr getSurfaceSampler() const
-	{
-		static auto sampler = std::make_shared<sim::PlanarOceanSurfaceSampler>();
-		return sampler;
-	}
-};
-
-class OceanComponent : public Component
-{
-public:
-	//! If heightfieldGenerator is null, a planar ocean surface is used
-	explicit OceanComponent(std::shared_ptr<OceanHeightfieldGenerator> heightfieldGenerator = nullptr);
-	~OceanComponent() override = default;
-
-	OceanSurfaceSampler& getOceanSurfaceSampler() const;
+	virtual std::size_t getGenerationCount() const { return mGenerationCount; }
 
 	int seed = 0;
 
@@ -58,8 +34,6 @@ public:
 	double significantWaveHeight = 1;
 
 	double windVelocityHeading = 0;
-
-	const std::shared_ptr<OceanHeightfieldGenerator> heightfieldGenerator; //!< May be null
 
 protected:
 	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
@@ -72,6 +46,27 @@ protected:
 
 private:
 	SecondsD mSimTime = 0;
+	std::size_t mGenerationCount = 0;
+};
+
+class PlanarOceanComponent : public OceanComponent
+{
+	OceanSurfaceSampler& getSurfaceSampler() const override
+	{
+		static auto sampler = std::make_shared<sim::PlanarOceanSurfaceSampler>();
+		return *sampler;
+	}
+
+	bool generate(sim::SecondsD time) override
+	{
+		return false;
+	}
+
+public: // Component interface
+	std::vector<std::type_index> getExposedTypes() const override
+	{
+		return {typeid(PlanarOceanComponent), typeid(OceanComponent)};
+	}
 };
 
 SKYBOLT_REFLECT_EXTERN(OceanComponent)

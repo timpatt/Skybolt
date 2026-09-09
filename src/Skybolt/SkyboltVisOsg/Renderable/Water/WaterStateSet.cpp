@@ -26,13 +26,13 @@ WaterStateSet::WaterStateSet(const WaterStateSetConfig& config)
 	const int waveTextureCount = config.waveTextureSets.size();
 
 	setDefine("OCEAN_CASCADE_COUNT", std::to_string(waveTextureCount));
-	osg::Uniform* heightMapTexCoordScales = new osg::Uniform(osg::Uniform::FLOAT_VEC2, "heightMapTexCoordScales", waveTextureCount);
+	mHeightMapTexCoordScales = new osg::Uniform(osg::Uniform::FLOAT_VEC2, "heightMapTexCoordScales", waveTextureCount);
 
 	for (int i = 0; i < waveTextureCount; ++i)
 	{
 		const auto& textureSet = config.waveTextureSets[i];
-		osg::Vec2f scale(1.f / textureSet.waveHeightMapWorldSizes, 1.f / textureSet.waveHeightMapWorldSizes);
-		heightMapTexCoordScales->setElement(i, scale);
+		osg::Vec2f scale(1.f / textureSet.textureWorldSize, 1.f / textureSet.textureWorldSize);
+		mHeightMapTexCoordScales->setElement(i, scale);
 	}
 
 	osg::ref_ptr<osg::TextureBuffer> wakeHashMapTexture;
@@ -55,7 +55,7 @@ WaterStateSet::WaterStateSet(const WaterStateSetConfig& config)
 		wakeParamsTexture->setInternalFormat(GL_RGBA32F_ARB);
 	}
 
-	addUniform(heightMapTexCoordScales);
+	addUniform(mHeightMapTexCoordScales);
 	osg::Texture2D* foamTexture = new osg::Texture2D(osgDB::readImageFile("Environment/Foam.jpg"));
 	foamTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
 	foamTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
@@ -94,6 +94,9 @@ WaterStateSet::WaterStateSet(const WaterStateSetConfig& config)
 
 	mTextureOriginNorthEastUniform = new osg::Uniform("heightMapTexCoordOriginWorldSpace", osg::Vec2f(0,0));
 	addUniform(mTextureOriginNorthEastUniform);
+
+	mMaxWaveHeightUniform = new osg::Uniform("maxWaveHeight", config.maxWaveHeight);
+	addUniform(mMaxWaveHeightUniform);
 }
 struct WakeSegment
 {
@@ -233,6 +236,17 @@ void WaterStateSet::setFoamTexture(int index, osg::ref_ptr<osg::Texture2D> textu
 void WaterStateSet::setTextureOriginNorthEast(const osg::Vec2f& originNorthEast)
 {
 	mTextureOriginNorthEastUniform->set(originNorthEast);
+}
+
+void WaterStateSet::setTextureWorldSize(int i, const osg::Vec2f& textureWorldSize)
+{
+	osg::Vec2f scale(1.f / textureWorldSize.x(), 1.f / textureWorldSize.y());
+	mHeightMapTexCoordScales->setElement(i, scale);
+}
+
+void WaterStateSet::setMaxWaveHeight(float maxWaveHeight)
+{
+	mMaxWaveHeightUniform->set(maxWaveHeight);
 }
  
 } // namespace vis
