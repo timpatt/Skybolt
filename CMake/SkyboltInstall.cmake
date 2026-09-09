@@ -214,22 +214,20 @@ function(skybolt_install_osg_plugins)
 	# FIXME: This pattern is duplicated a fair bit...
 	set(_config_types ${CMAKE_CONFIGURATION_TYPES} ${CMAKE_BUILD_TYPE})
 	list(REMOVE_DUPLICATES _config_types)
+	set(_success FALSE)
 	foreach(_config ${_config_types})
 		string(TOUPPER ${_config} _config_upper)
-
-		if (NOT "${openscenegraph-mr_PACKAGE_FOLDER_${_config_upper}}")
+		if (NOT EXISTS "${openscenegraph-mr_PACKAGE_FOLDER_${_config_upper}}")
 			message(WARNING "OpenSceneGraph package folder not found for config ${_config}. Skipping installation for this config.")
 			continue()
 		endif()
 
-		set(_osg_plugins_dir "${openscenegraph-mr_PACKAGE_FOLDER_${_config_upper}}/${_runtime_lib_path}/osgPlugins-${OpenSceneGraph_VERSION_STRING}")
-
+		set(_osg_plugins_dir "${openscenegraph-mr_PACKAGE_FOLDER_${_config_upper}}/bin/osgPlugins-${OpenSceneGraph_VERSION_STRING}")
 		file(GLOB_RECURSE _plugins "${_osg_plugins_dir}/*${CMAKE_SHARED_LIBRARY_SUFFIX}*")
 		
 		if (NOT _plugins)
 			message(FATAL_ERROR "OpenSceneGraph plugins were not found in ${_osg_plugins_dir}/*${CMAKE_SHARED_LIBRARY_SUFFIX}*")
 		endif()
-		
 		install(
 			FILES ${_plugins}
 			CONFIGURATIONS "${_config}"
@@ -242,5 +240,9 @@ function(skybolt_install_osg_plugins)
 			DESTINATION "${_runtime_lib_path}"
 			${_install_args}
 		)
+		set(_success TRUE)
 	endforeach()
+	if (NOT _success)
+		message(FATAL_ERROR "Can't install OpenSceneGraph plugins because they were not found for any configuration.")
+	endif()
 endfunction()

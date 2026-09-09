@@ -110,14 +110,18 @@ function(_skybolt_configure_conan_init_script)
 	endif()
 
 	# FIXME: This'll probably fail on Windows with a multi-generator
+	set(Skybolt_BIN_DIR "\"${CMAKE_BINARY_DIR}/${_runtime_lib_path}\"")
 	set(Skybolt_PLUGIN_DIRS "\"${CMAKE_BINARY_DIR}/${_runtime_lib_path}/plugins\"")
+	set(Skybolt_ASSETS_DIR "\"${CMAKE_SOURCE_DIR}/Assets\"")
 	configure_file(
 		"CMake/conan-skybolt-init.cmake.in" 
 		"${CMAKE_BINARY_DIR}/conan-skybolt-init-buildtree.cmake"
 		@ONLY
 	)	
 
+	set(Skybolt_BIN_DIR "\"\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_lib_path}\"")
 	set(Skybolt_PLUGIN_DIRS "\"\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_lib_path}/plugins\"")
+	set(Skybolt_ASSETS_DIR "\"\${CMAKE_SOURCE_DIR}/Assets\"")
 	configure_file("CMake/conan-skybolt-init.cmake.in" "${CMAKE_BINARY_DIR}/conan-skybolt-init-installtree.cmake" @ONLY)
 	install(FILES ${CMAKE_BINARY_DIR}/conan-skybolt-init-installtree.cmake
 		DESTINATION CMake
