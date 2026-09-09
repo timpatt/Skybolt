@@ -1,29 +1,55 @@
 macro(skybolt_install target)
-	# Install target
+cmake_parse_arguments(arg "" "COMPONENT;DEVELOPMENT_COMPONENT" "" ${ARGN})
+
+	if(NOT arg_COMPONENT)
+		set(arg_COMPONENT Runtime)
+	endif()
+	if(NOT arg_DEVELOPMENT_COMPONENT)
+		set(arg_DEVELOPMENT_COMPONENT Development)
+	endif()
+
 	install(TARGETS ${target}
 		EXPORT SkyboltTargets
-		RUNTIME_DEPENDENCY_SET SkyboltDependencies # Adds runtime dependencies to SkyboltDependencies target
-		LIBRARY DESTINATION lib COMPONENT Runtime
-		ARCHIVE DESTINATION lib COMPONENT Development EXCLUDE_FROM_ALL
-		RUNTIME DESTINATION bin COMPONENT Runtime
+		RUNTIME_DEPENDENCY_SET SkyboltDependencies
+		LIBRARY DESTINATION lib COMPONENT ${arg_COMPONENT}
+		ARCHIVE DESTINATION lib COMPONENT ${arg_DEVELOPMENT_COMPONENT} EXCLUDE_FROM_ALL
+		RUNTIME DESTINATION bin COMPONENT ${arg_COMPONENT}
 	)
 endmacro()
 
 macro(skybolt_plugin_install target)
+cmake_parse_arguments(arg "" "COMPONENT;DEVELOPMENT_COMPONENT" "" ${ARGN})
+
+	if(NOT arg_COMPONENT)
+		set(arg_COMPONENT Runtime)
+	endif()
+	if(NOT arg_DEVELOPMENT_COMPONENT)
+		set(arg_DEVELOPMENT_COMPONENT Development)
+	endif()
+
 	install(TARGETS ${target}
 		EXPORT SkyboltTargets
-		LIBRARY DESTINATION lib/plugins COMPONENT Runtime
-		ARCHIVE DESTINATION lib COMPONENT Development EXCLUDE_FROM_ALL
-		RUNTIME DESTINATION bin/plugins COMPONENT Runtime
+		LIBRARY DESTINATION lib/plugins COMPONENT ${arg_COMPONENT}
+		ARCHIVE DESTINATION lib COMPONENT ${arg_DEVELOPMENT_COMPONENT} EXCLUDE_FROM_ALL
+		RUNTIME DESTINATION bin/plugins COMPONENT ${arg_COMPONENT}
 	)
 endmacro()
 
 macro(skybolt_python_module_install target)
+cmake_parse_arguments(arg "" "COMPONENT;DEVELOPMENT_COMPONENT" "" ${ARGN})
+
+	if(NOT arg_COMPONENT)
+		set(arg_COMPONENT Runtime)
+	endif()
+	if(NOT arg_DEVELOPMENT_COMPONENT)
+		set(arg_DEVELOPMENT_COMPONENT Development)
+	endif()
+
 	install(TARGETS ${target}
 		EXPORT SkyboltTargets
-		LIBRARY DESTINATION lib COMPONENT Runtime
-		ARCHIVE DESTINATION lib COMPONENT Development EXCLUDE_FROM_ALL
-		RUNTIME DESTINATION bin COMPONENT Runtime
+		LIBRARY DESTINATION lib COMPONENT ${arg_COMPONENT}
+		ARCHIVE DESTINATION lib COMPONENT ${arg_DEVELOPMENT_COMPONENT} EXCLUDE_FROM_ALL
+		RUNTIME DESTINATION bin COMPONENT ${arg_COMPONENT}
 	)
 endmacro()
 
