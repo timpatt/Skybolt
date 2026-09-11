@@ -38,7 +38,8 @@ static ComponentFactoryPtr getOceanComponentFactory()
 }
 #endif
 
-FftOceanPlugin::FftOceanPlugin(const PluginConfig& config)
+FftOceanPlugin::FftOceanPlugin(const PluginConfig& config) :
+	Plugin(config)
 {
 #ifdef BUILD_WITH_OSG
 	// If using the default ocean, or no factory, then use this plugin instead.

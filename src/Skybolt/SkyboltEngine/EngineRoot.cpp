@@ -168,7 +168,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	}
 
 	// Ensure the required asset packages were found
-	std::set<std::string> missingRequiredPackages = {"Core", "Globe"};
+	std::set<std::string> missingRequiredPackages = {"Core"};
 	for (const auto& [name, path] : assetPackageFilepaths)
 	{
 		missingRequiredPackages.erase(name);
@@ -239,6 +239,7 @@ void EngineRoot::loadPlugins(const std::vector<PluginFactory>& pluginFactories)
 {
 	PluginConfig config;
 	config.engineRoot = this;
+	config.logger = getLogger();
 
 	// Create plugins and store them in EngineRoot to ensure plugins exist for lifetime of EngineRoot.
 	for (const auto& factory : pluginFactories)

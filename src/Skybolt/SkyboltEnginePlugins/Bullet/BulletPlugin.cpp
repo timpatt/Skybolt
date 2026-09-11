@@ -121,6 +121,7 @@ class BulletPlugin : public Plugin
 {
 public:
 	BulletPlugin(const PluginConfig& config) :
+		Plugin(config),
 		mSystemRegistry(config.engineRoot->systemRegistry),
 		mBulletWorld(std::make_unique<BulletWorld>())
 	{

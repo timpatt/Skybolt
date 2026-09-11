@@ -12,9 +12,11 @@ namespace skybolt {
 
 class Event;
 class EventEmitter;
+class Logger;
 class Random;
 
 using EventEmitterPtr = std::shared_ptr<EventEmitter>;
+using LoggerPtr = std::shared_ptr<Logger>;
 using RandomPtr = std::shared_ptr<Random>;
 
 } // namespace skybolt

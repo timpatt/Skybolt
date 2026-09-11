@@ -256,6 +256,7 @@ class JsbSimPlugin : public Plugin
 {
 public:
 	JsbSimPlugin(const PluginConfig& config) :
+		Plugin(config),
 		mComponentFactoryRegistry(valueOrThrowException(getExpectedRegistry<ComponentFactoryRegistry>(*config.engineRoot->factoryRegistries)))
 	{
 		const nlohmann::json& settings = config.engineRoot->engineSettings;

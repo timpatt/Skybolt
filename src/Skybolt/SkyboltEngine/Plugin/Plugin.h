@@ -8,6 +8,7 @@
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include <SkyboltCommon/Registry.h>
+#include <SkyboltCommon/SkyboltCommonFwd.h>
 #include <SkyboltCommon/TypedItemContainer.h>
 
 #include <boost/dll/import.hpp>
@@ -18,11 +19,16 @@ namespace skybolt {
 struct PluginConfig
 {
 	EngineRoot* engineRoot; //!< Never null. Lifetime is guaranteed to exceed plugin lifetime.
+
+	//! Never null. Allows plugins use the logger as the main application module, which plugins otherwise
+	//! might not have access to since the logger is a singleton stored as a static variable inside the application module.
+	LoggerPtr logger;
 };
 
 class BOOST_SYMBOL_VISIBLE Plugin
 {
 public:
+	Plugin(const PluginConfig& config);
 	virtual ~Plugin() = default;
 
 	//! Name of a symbol with `CreatePluginFunctionT` signature.

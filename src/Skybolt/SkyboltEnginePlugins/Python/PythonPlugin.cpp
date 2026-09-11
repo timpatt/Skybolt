@@ -52,7 +52,8 @@ static bool isPythonPluginModule(const file::Path& filename)
 class PythonComponentPlugin : public Plugin
 {
 public:
-	PythonComponentPlugin(const PluginConfig& config)
+	PythonComponentPlugin(const PluginConfig& config) :
+		Plugin(config)
 	{
 		mPythonInterpreter.useExternalEngine(config.engineRoot);
 
