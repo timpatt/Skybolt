@@ -15,7 +15,7 @@ Example usage:
 `skybolt run <my_scenario.scenario.json> [--real-time]
 
 ### Scenario Viewer App
-Skybolt comes with a Qt-based 3D scenario viewer application. Example scenarios that demonstrate use cases of the application can be found in `/Scenarios`.
+Skybolt comes with a Qt-based 3D scenario viewer application. Example scenarios that demonstrate use cases of the application can be found in `/Assets/SkyboltExamples/Scenarios`.
 
 ## Creating Applications with Skybolt
 The `src/SkyboltExamples` directory contains example applications demonstrating how to build your own projects using Skybolt libraries.
