@@ -102,6 +102,16 @@ std::map<std::string, refl::TypePtr> getComponentTypesByName(refl::TypeRegistry&
 	return result;
 }
 
+std::string removeLibPrefix(std::string_view str)
+{
+	// Plugin filenames have a "lib" prefix on linux
+    if (str.starts_with("lib"))
+	{
+        str.remove_prefix(3);
+    }
+    return std::string(str);
+}
+
 int dumpComponents(const po::variables_map& vm)
 {
 	if (!vm.count("filename"))
@@ -126,7 +136,7 @@ int dumpComponents(const po::variables_map& vm)
 
 	for (size_t i = 0; i < pluginFilepaths.size(); ++i)
 	{
-		std::string pluginName = pluginFilepaths[i].stem().string();
+		std::string pluginName = removeLibPrefix(pluginFilepaths[i].stem().string());
 		if (pluginsJson.contains(pluginName))
 		{
 			SKYBOLT_LOG(warning) << "Duplicate plugin '" << pluginName << "' found. Skipping duplicates.";

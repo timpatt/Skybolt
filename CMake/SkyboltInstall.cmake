@@ -186,9 +186,9 @@ function(skybolt_install_qt_plugins)
 	_skybolt_install_qt_plugin_folder(xcbglintegrations DESTINATION "${ARG_DESTINATION}" ${_install_args})
 
 	# dlls go into 'bin', whereas sos go into 'lib' by default
-	set(_runtime_lib_path ${CMAKE_INSTALL_LIBDIR})
+	set(_destination_runtime_lib_dir ${CMAKE_INSTALL_LIBDIR})
 	if (WIN32)
-		set(_runtime_lib_path ${CMAKE_INSTALL_BINDIR})
+		set(_destination_runtime_lib_dir ${CMAKE_INSTALL_BINDIR})
 	endif()
 
 	# On Linux platform/libxcb.so dynamically loads *another* dependency!?!  Install it here:
@@ -206,7 +206,7 @@ function(skybolt_install_qt_plugins)
 				CONFIGURATIONS ${_config}
 				# This is a general dependency (albeit depended-on by a plugin), so it goes in the 
 				# runtime library directory; not the plugin directory
-				DESTINATION "${_runtime_lib_path}"
+				DESTINATION "${_destination_runtime_lib_dir}"
 				${_install_args}
 			)
 		endif()
@@ -232,9 +232,11 @@ function(skybolt_install_osg_plugins)
 	endif()
 
 	# dlls go into 'bin', whereas sos go into 'lib' by default
-	set(_runtime_lib_path ${CMAKE_INSTALL_LIBDIR})
+	set(_source_runtime_lib_dir lib)
+	set(_destination_runtime_lib_dir ${CMAKE_INSTALL_LIBDIR})
 	if (WIN32)
-		set(_runtime_lib_path ${CMAKE_INSTALL_BINDIR})
+		set(_source_runtime_lib_dir bin)
+		set(_destination_runtime_lib_dir ${CMAKE_INSTALL_BINDIR})
 	endif()
 
 	# FIXME: This pattern is duplicated a fair bit...
@@ -248,7 +250,7 @@ function(skybolt_install_osg_plugins)
 			continue()
 		endif()
 
-		set(_osg_plugins_dir "${openscenegraph-mr_PACKAGE_FOLDER_${_config_upper}}/bin/osgPlugins-${OpenSceneGraph_VERSION_STRING}")
+		set(_osg_plugins_dir "${openscenegraph-mr_PACKAGE_FOLDER_${_config_upper}}/${_source_runtime_lib_dir}/osgPlugins-${OpenSceneGraph_VERSION_STRING}")
 		file(GLOB_RECURSE _plugins "${_osg_plugins_dir}/*${CMAKE_SHARED_LIBRARY_SUFFIX}*")
 		
 		if (NOT _plugins)
@@ -257,13 +259,13 @@ function(skybolt_install_osg_plugins)
 		install(
 			FILES ${_plugins}
 			CONFIGURATIONS "${_config}"
-			DESTINATION "${_runtime_lib_path}/osgPlugins-${OpenSceneGraph_VERSION_STRING}"
+			DESTINATION "${_destination_runtime_lib_dir}/osgPlugins-${OpenSceneGraph_VERSION_STRING}"
 			${_install_args}
 		)
 		# Install the dependencies of the plugins
 		skybolt_install_deps(
 			LIBRARIES "${_plugins}" 
-			DESTINATION "${_runtime_lib_path}"
+			DESTINATION "${_destination_runtime_lib_dir}"
 			${_install_args}
 		)
 		set(_success TRUE)

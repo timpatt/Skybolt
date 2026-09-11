@@ -12,6 +12,8 @@ class SkyboltConan(ConanFile):
     options = {
         "enable_boost_log": [True, False],
         "enable_bullet": [True, False],
+        "enable_docs": [True, False],
+        "enable_examples": [True, False],
         "enable_fft_ocean": [True, False],
         "enable_jsbsim": [True, False],
         "enable_map_features_converter": [True, False],
@@ -27,11 +29,13 @@ class SkyboltConan(ConanFile):
     default_options = {
         "enable_boost_log": True,
         "enable_bullet": False,
-        "enable_osg": True,
-        "enable_osg_curl_plugin": True,
+        "enable_docs": False,
+        "enable_examples": True,
         "enable_fft_ocean": True,
 		"enable_jsbsim": False,
         "enable_map_features_converter": True,
+        "enable_osg": True,
+        "enable_osg_curl_plugin": True,
         "enable_python": True,
         "enable_qt": True,
         "enable_tests": True,
@@ -56,11 +60,9 @@ class SkyboltConan(ConanFile):
         if self.options.enable_osg:
             self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
         self.options["bullet3"].double_precision = True
+
         if self.options.get_safe("shared"):
             self.options.rm_safe("fPIC")
-
-        self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
-        self.options["bullet3"].double_precision = True
 
     def requirements(self):
         self.requires("boost/1.85.0", transitive_headers=True)
@@ -142,8 +144,8 @@ class SkyboltConan(ConanFile):
         tc.variables["BUILD_WITH_OSG_CURL_PLUGIN"] = bool(self.options.enable_osg_curl_plugin)
         tc.variables["BUILD_TESTING"] = bool(self.options.enable_tests)
 
-        tc.variables["SKYBOLT_BUILD_EXAMPLES"] = False
-        tc.variables["SKYBOLT_INSTALL_DEPENDENCIES"] = False
+        tc.variables["SKYBOLT_BUILD_DOCS"] = bool(self.options.enable_docs)
+        tc.variables["SKYBOLT_BUILD_EXAMPLES"] = bool(self.options.enable_examples)
 
         tc.generate()
 
@@ -164,21 +166,24 @@ class SkyboltConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
-        self.cpp_info.libs = ["AircraftHud", "SkyboltEngine"]
-        if self.options.enable_qt:
-            self.cpp_info.libs.append("SkyboltEngineQt")
 
         # When building static libraries, the order of the libs matters; SkyboltEngineQt depends on SkyboltVis
         # The linker walks left to right, and collates items that are required and expects them to be satisfied later on
-        if self.options.enable_osg:
-            self.cpp_info.libs.extend(["SkyboltVisOsg"])
-        self.cpp_info.libs.extend(["SkyboltVis", "SkyboltSim", "SkyboltCommon"])
-        self.cpp_info.builddirs = ["CMake"]
-        self.cpp_info.set_property("cmake_build_modules", ["CMake/conan-skybolt-init-installtree.cmake"])
-
         if self.options.enable_fft_ocean:
             self.cpp_info.libs.append("FftOcean")
 
         if self.options.enable_bullet:
             self.cpp_info.libs.append("SkyboltBullet")
+
+        if self.options.enable_qt:
+            self.cpp_info.libs.append("SkyboltEngineQt")
+
+        if self.options.enable_osg:
+            self.cpp_info.libs.append("SkyboltVisOsg")
+
+        self.cpp_info.libs.extend(["SkyboltEngine", "AircraftHud", "SkyboltVis", "SkyboltSim", "SkyboltCommon"])
+
+        self.cpp_info.builddirs = ["CMake"]
+        self.cpp_info.set_property("cmake_build_modules", ["CMake/conan-skybolt-init-installtree.cmake"])
+
 

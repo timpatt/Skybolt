@@ -24,3 +24,5 @@ target_link_libraries (${TARGET_NAME} PUBLIC ${LIBS})
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER PythonLibs)
 
 skybolt_python_module_install(${TARGET_NAME})
+
+skybolt_add_python_stubs_target(TARGET ${TARGET_NAME})

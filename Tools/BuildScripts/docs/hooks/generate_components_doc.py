@@ -36,7 +36,7 @@ def run_skybolt_and_dump_components(output_filepath: Path):
         print(f"Error output: {e.stderr}")
         raise RuntimeError(f"Command '{args}' failed with exit code {e.returncode}", e)
     except FileNotFoundError as e:
-        raise RuntimeError(f"Failed to find '{args[0]}' executable. Env: {os.environ['PATH']}", e)
+        raise RuntimeError(f"Failed to find '{args[0]}' executable. PATH: {os.environ['PATH']}", e)
     except Exception as e:
         raise RuntimeError(f"Command '{args}' failed with exit code {e.returncode}", e)
 

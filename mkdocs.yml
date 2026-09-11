@@ -23,7 +23,9 @@ nav:
     - skybolt_util: python_api/skybolt_util.md
 
 hooks:
-  - docs/hooks/generate_components_doc.py
+  - Tools/BuildScripts/docs/hooks/setup_skybolt_environment.py
+  - Tools/BuildScripts/docs/hooks/generate_components_doc.py
+  - Tools/BuildScripts/docs/hooks/python_docstrings_validation.py
 
 plugins:
   - search

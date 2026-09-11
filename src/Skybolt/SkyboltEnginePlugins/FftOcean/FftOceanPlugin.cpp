@@ -11,7 +11,6 @@
 
 #ifdef BUILD_WITH_OSG
 #include "FftOceanHeightfieldTextureGenerator.h"
-#include <SkyboltVisOsg/VisRoot.h>
 #include <SkyboltVisOsg/Renderable/Water/SimpleOceanHeightfieldTextureGenerator.h>
 #endif
 

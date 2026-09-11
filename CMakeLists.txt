@@ -17,12 +17,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-OPTION(SKYBOLT_PLUGINS_STATIC_BUILD "Build skybolt plugins as static libraries" OFF)
-if (SKYBOLT_PLUGINS_STATIC_BUILD)
-	set (SKYBOLT_PLUGINS_LIBRARY_TYPE STATIC)
-else()
-	set (SKYBOLT_PLUGINS_LIBRARY_TYPE SHARED)
-endif()
+set(Skybolt_BUILD_SCRIPTS_DIR "${CMAKE_SOURCE_DIR}/Tools/BuildScripts")
 
 #-------------------------------------------------------------
 # Compiler flags
@@ -71,6 +66,12 @@ endif()
 #-------------------------------------------------------------
 # Build options
 #-------------------------------------------------------------
+OPTION(SKYBOLT_PLUGINS_STATIC_BUILD "Build skybolt plugins as static libraries" OFF)
+if (SKYBOLT_PLUGINS_STATIC_BUILD)
+	set (SKYBOLT_PLUGINS_LIBRARY_TYPE STATIC)
+else()
+	set (SKYBOLT_PLUGINS_LIBRARY_TYPE SHARED)
+endif()
 
 OPTION(BUILD_WITH_OSG "Use OpenSceneGraph" ON)
 if (BUILD_WITH_OSG)
@@ -94,34 +95,50 @@ include(AddSourceGroup)
 include(SetPluginTargetProperties)
 include(Catch)
 include(SkyboltInstall)
+include(SkyboltPythonStubs)
 
 add_subdirectory(src/Skybolt)
 
 option(SKYBOLT_BUILD_EXAMPLES "Build Skybolt Examples" ON)
-if (BUILD_WITH_OSG)
+if (SKYBOLT_BUILD_EXAMPLES AND BUILD_WITH_OSG)
 	add_subdirectory(src/SkyboltExamples)
 endif()
 
+#-------------------------------------------------------------
+# Set package layout variables, used by documentation generation and downstream conan packages
+#-------------------------------------------------------------
+set(_runtime_lib_path ${CMAKE_INSTALL_LIBDIR})
+set(_runtime_bin_path ${CMAKE_INSTALL_BINDIR})
+# No config suffix on Linux
+set(_runtime_lib_path_with_config ${CMAKE_INSTALL_LIBDIR})
+set(_runtime_bin_path_with_config ${CMAKE_INSTALL_BINDIR})
+if (WIN32)
+	set(_runtime_lib_path ${CMAKE_INSTALL_BINDIR})
+	set(_runtime_bin_path ${CMAKE_INSTALL_BINDIR})
+	set(_runtime_lib_path_with_config ${CMAKE_INSTALL_BINDIR}/$<CONFIG>)
+	set(_runtime_bin_path_with_config ${CMAKE_INSTALL_BINDIR}/$<CONFIG>)
+endif()
+
+set(Skybolt_ASSETS_DIR "${CMAKE_SOURCE_DIR}/Assets")
+set(Skybolt_BIN_DIR "${CMAKE_BINARY_DIR}/${_runtime_bin_path_with_config}")
+set(Skybolt_DOCS_DIR "${CMAKE_BINARY_DIR}/docs")
+set(Skybolt_PLUGIN_DIRS "${CMAKE_BINARY_DIR}/${_runtime_lib_path_with_config}/plugins")
+set(Skybolt_PYTHON_MODULE_DIR "${CMAKE_BINARY_DIR}/${_runtime_lib_path_with_config}")
+
 function(_skybolt_configure_conan_init_script)
 	# TODO: Document this
-	set(_runtime_lib_path ${CMAKE_INSTALL_LIBDIR})
-	if (WIN32)
-		set(_runtime_lib_path ${CMAKE_INSTALL_BINDIR})
-	endif()
-
-	# FIXME: This'll probably fail on Windows with a multi-generator
-	set(Skybolt_BIN_DIR "\"${CMAKE_BINARY_DIR}/${_runtime_lib_path}\"")
-	set(Skybolt_PLUGIN_DIRS "\"${CMAKE_BINARY_DIR}/${_runtime_lib_path}/plugins\"")
-	set(Skybolt_ASSETS_DIR "\"${CMAKE_SOURCE_DIR}/Assets\"")
 	configure_file(
 		"CMake/conan-skybolt-init.cmake.in" 
 		"${CMAKE_BINARY_DIR}/conan-skybolt-init-buildtree.cmake"
 		@ONLY
 	)	
 
-	set(Skybolt_BIN_DIR "\"\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_lib_path}\"")
-	set(Skybolt_PLUGIN_DIRS "\"\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_lib_path}/plugins\"")
-	set(Skybolt_ASSETS_DIR "\"\${CMAKE_SOURCE_DIR}/Assets\"")
+	set(Skybolt_ASSETS_DIR "\${CMAKE_CURRENT_LIST_DIR}/../Assets")
+	set(Skybolt_BIN_DIR "\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_bin_path}")
+	set(Skybolt_BUILD_SCRIPTS_DIR "\${CMAKE_CURRENT_LIST_DIR}/../Tools/BuildScripts")
+	set(Skybolt_DOCS_DIR "\${CMAKE_CURRENT_LIST_DIR}/../docs")
+	set(Skybolt_PLUGIN_DIRS "\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_lib_path}/plugins")
+	set(Skybolt_PYTHON_MODULE_DIR "\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_lib_path}")
 	configure_file("CMake/conan-skybolt-init.cmake.in" "${CMAKE_BINARY_DIR}/conan-skybolt-init-installtree.cmake" @ONLY)
 	install(FILES ${CMAKE_BINARY_DIR}/conan-skybolt-init-installtree.cmake
 		DESTINATION CMake
@@ -131,6 +148,18 @@ function(_skybolt_configure_conan_init_script)
 endfunction()
 
 _skybolt_configure_conan_init_script()
+
+#-------------------------------------------------------------
+# Documentation
+#-------------------------------------------------------------
+OPTION(SKYBOLT_BUILD_DOCS "Add a 'docs' target for generating documentation with MkDocs" OFF)
+
+if (SKYBOLT_BUILD_DOCS)
+	include(SkyboltDocs)
+	skybolt_add_docs_target()
+	add_dependencies(Docs SkyboltApp)
+	add_dependencies(Docs skybolt_PythonStubs)
+endif()
 
 #-------------------------------------------------------------
 # Installation
@@ -149,6 +178,13 @@ install(
 	COMPONENT Development
 	EXCLUDE_FROM_ALL
 	FILES_MATCHING PATTERN "*.h*"
+)
+
+# Install Build scripts
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/Tools/BuildScripts
+	DESTINATION .
+	COMPONENT Development
+	EXCLUDE_FROM_ALL
 )
 
 # Install runtime dependencies
@@ -175,4 +211,18 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/Assets
 	DESTINATION .
 	COMPONENT Assets
 	EXCLUDE_FROM_ALL
+)
+
+# Install docs
+if (SKYBOLT_BUILD_DOCS)
+	install(DIRECTORY ${CMAKE_BINARY_DIR}/docs/
+		DESTINATION Docs
+		COMPONENT Docs
+		EXCLUDE_FROM_ALL
+	)
+endif()
+
+install(FILES ${CMAKE_SOURCE_DIR}/License.txt ${CMAKE_SOURCE_DIR}/README.md
+	DESTINATION .
+	COMPONENT Runtime
 )

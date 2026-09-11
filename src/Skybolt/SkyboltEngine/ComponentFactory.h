@@ -20,6 +20,10 @@
 #include <set>
 #include <px_sched/px_sched.h>
 
+namespace px_sched {
+class Scheduler;
+}
+
 namespace skybolt {
 
 struct ComponentFactoryContext

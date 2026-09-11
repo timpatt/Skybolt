@@ -1,3 +1,4 @@
+import argparse
 import importlib
 import os
 import sys
@@ -10,7 +11,7 @@ def generate_skybolt_stubs(module_name: str, module_search_dirs: Sequence[Path],
         sys.path.append(str(dir.resolve()))
     import setup_environment
     setup_environment.setup_skybolt_environment() # Setup environment so that skybolt can find DLLs
-    print(f"module_search_dirs {module_search_dirs}")
+
     try:
         importlib.import_module(module_name)
     except Exception as e:
@@ -38,3 +39,28 @@ def generate_skybolt_stubs(module_name: str, module_search_dirs: Sequence[Path],
     # Verify the output is present
     if not output_file.exists():
         raise RuntimeError(f"Failed to create stubs for module '{module_name}'")
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate Python stubs for a Skybolt C extension module.")
+    parser.add_argument("module_name", help="Name of the compiled module to generate stubs for, e.g. 'skybolt'")
+    parser.add_argument("output_file", type=Path, help="Path to the output .pyi stub file")
+    parser.add_argument(
+        "--module-search-dir",
+        dest="module_search_dirs",
+        type=Path,
+        action="append",
+        default=[],
+        help="Directory to search for the module and its dependencies. Can be specified multiple times."
+    )
+
+    args = parser.parse_args()
+
+    generate_skybolt_stubs(
+        module_name=args.module_name,
+        module_search_dirs=args.module_search_dirs,
+        output_file=args.output_file
+    )
+
+
+if __name__ == "__main__":
+    main()
