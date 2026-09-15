@@ -1,5 +1,8 @@
+ # Run custom environment setup code to configure PATH variable
+ # for finding skybolt runtime libraries. This can be skipped
+ # if the PATH is already configured.
 import setup_environment
-setup_environment.setup_skybolt_environment() # Environment must be setup before importing skybolt
+setup_environment.setup_skybolt_environment()
 
 import skybolt as sb
 

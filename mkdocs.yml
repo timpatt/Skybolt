@@ -21,6 +21,7 @@ nav:
     - python_api/index.md
     - skybolt: python_api/skybolt.md
     - skybolt_util: python_api/skybolt_util.md
+    - Basic Usage Example: python_api/basic_usage_example.md
 
 hooks:
   - Tools/BuildScripts/docs/hooks/setup_skybolt_environment.py
@@ -44,3 +45,7 @@ plugins:
             filters:
               - "!^__.*__$"  # Exclude all magic methods
               - "!^_pybind11_.*_$"  # Exclude pybind11 internal details
+
+markdown_extensions:
+  - pymdownx.snippets:
+      base_path: ["."]
