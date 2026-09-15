@@ -60,6 +60,8 @@ int runScenario(const po::variables_map& vm)
 	engineRoot->scenario->timeSource->setState(sim::TimeSource::StatePlaying);
 
 	const std::string scenarioFilename = vm["scenario"].as<std::string>();
+	const double minTimestep = vm["min-timestep"].as<double>();
+	const double maxTimestep = vm["max-timestep"].as<double>();
 	const bool realTime = vm.count("real-time") > 0;
 	const bool noTty = vm.count("no-tty") > 0;
 
@@ -82,8 +84,10 @@ int runScenario(const po::variables_map& vm)
 	{
 		const auto& timeSource = engineRoot->scenario->timeSource;
 		timeSource->setState(sim::TimeSource::StatePlaying);
-		SimUpdater updater(engineRoot.get());
+		SimUpdater updater(engineRoot->scenario.get(), engineRoot->systemRegistry);
 		updater.setRequestedTimeRate(realTime ? 1.0 : 1000000.0);
+		updater.setMinSimTimeStep(minTimestep);
+		updater.setMaxSimTimeStep(maxTimestep);
 
 		const sim::SecondsD simDuration = timeSource->getRange().getDuration();
 
@@ -138,6 +142,8 @@ po::options_description createRunOptions()
 	po::options_description options("Run options");
 	options.add_options()
 		("real-time", "run simulation in real time")
+		("min-timestep", po::value<double>()->default_value(10.0), "min timestep for the simulation")
+		("max-timestep", po::value<double>()->default_value(10.0), "max timestep for the simulation")
 		("scenario", po::value<std::string>(), "scenario filename")
 		("no-tty", "disable TTY in console output");
 	EngineCommandLineParser::addOptions(options);

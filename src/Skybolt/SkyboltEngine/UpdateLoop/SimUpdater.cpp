@@ -11,12 +11,15 @@
 using namespace skybolt;
 using namespace skybolt::sim;
 
-SimUpdater::SimUpdater(skybolt::NonNullPtr<skybolt::EngineRoot> engineRoot) :
-	mEngineRoot(engineRoot),
+SimUpdater::SimUpdater(skybolt::NonNullPtr<skybolt::Scenario> scenario, const SystemRegistryPtr& systemRegistry) :
+	mScenario(scenario),
+	mSystemRegistry(systemRegistry),
 	mAverageWallDt(std::make_unique<UniformAveragedBuffer>(16))
 {
+	assert(mSystemRegistry);
+
 	// TODO: unhack modifying the sim stepper here. It's a bit messy.
-	if (auto simStepper = dynamic_cast<sim::SimStepper*>(mEngineRoot->scenario->timeSource.get()); simStepper)
+	if (auto simStepper = dynamic_cast<sim::SimStepper*>(mScenario->timeSource.get()); simStepper)
 	{
 		simStepper->setMaxDynamicsSubsteps(std::nullopt);
 	}
@@ -26,9 +29,9 @@ SimUpdater::~SimUpdater() = default;
 
 void SimUpdater::update(SecondsD wallDt)
 {
-	if (auto simStepper = dynamic_cast<sim::SimStepper*>(mEngineRoot->scenario->timeSource.get()); simStepper)
+	if (auto simStepper = dynamic_cast<sim::SimStepper*>(mScenario->timeSource.get()); simStepper)
 	{
-		bool isLive = mEngineRoot->scenario->timelineMode.get() == TimelineMode::Live;
+		bool isLive = mScenario->timelineMode.get() == TimelineMode::Live;
 		simStepper->setDynamicsEnabled(isLive);
 	}
 
@@ -43,14 +46,29 @@ void SimUpdater::advanceWallTime(SecondsD wallDt)
 {
 	// Calculate simulation delta time
 	double simDt;
-	TimeSource& timeSource = *mEngineRoot->scenario->timeSource;
+	TimeSource& timeSource = *mScenario->timeSource;
 	if (timeSource.getState() == TimeSource::StatePlaying)
 	{
 		mAverageWallDt->addValue(wallDt);
 		double averageWallDt = mAverageWallDt->getResult();
 
-		simDt = std::min(averageWallDt * mRequestedTimeRate, mMaxSimDt);
-		mActualTimeRate = simDt / averageWallDt;
+		mAccumulatedWallTime += averageWallDt;
+		double accumulatedSimTime = mAccumulatedWallTime * mRequestedTimeRate;
+		if (accumulatedSimTime > mMaxSimDt)
+		{
+			simDt = mMaxSimDt;
+		}
+		else if (accumulatedSimTime < mMinSimDt)
+		{
+			return; // Don't advance time yet, wait until we have accumulated enough sim time
+		}
+		else
+		{
+			simDt = accumulatedSimTime;
+		}
+
+		mActualTimeRate = simDt / mAccumulatedWallTime;
+		mAccumulatedWallTime = 0;
 	}
 	else
 	{
@@ -63,7 +81,7 @@ void SimUpdater::advanceWallTime(SecondsD wallDt)
 	timeSource.advanceTime(simDt);
 
 	// Advance wallclock time
-	for (const SystemPtr& system : *mEngineRoot->systemRegistry)
+	for (const SystemPtr& system : *mSystemRegistry)
 	{
 		system->advanceWallTime(mWallTime, wallDt);
 	}

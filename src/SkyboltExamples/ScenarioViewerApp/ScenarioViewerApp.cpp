@@ -335,7 +335,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 	auto params = EngineCommandLineParser::parse(argc, argv);
 	std::unique_ptr<EngineRoot> engineRoot = EngineRootFactory::create(params, std::make_shared<vis::OsgImageFactory>());
 
-	SimUpdater simUpdater(engineRoot.get());
+	SimUpdater simUpdater(engineRoot->scenario.get(), engineRoot->systemRegistry);
 
 	// Allow user to reset the simulation state to t=0 if they rewind to the beginning
 	std::shared_ptr<SimSnapshotRegistry> snapshotRegistry = createSnapshotRegistry(*engineRoot);

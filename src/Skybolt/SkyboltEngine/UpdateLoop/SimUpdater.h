@@ -9,13 +9,14 @@
 #include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltCommon/WeightAveragedBuffer.h>
 #include <SkyboltEngine/SkyboltEngineFwd.h>
-#include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltSim/Chrono.h>
+#include <SkyboltSim/SkyboltSimFwd.h>
+#include <SkyboltSim/System/SystemRegistry.h>
 
 class SimUpdater
 {
 public:
-	SimUpdater(skybolt::NonNullPtr<skybolt::EngineRoot> engineRoot);
+	SimUpdater(skybolt::NonNullPtr<skybolt::Scenario> scenario, const skybolt::sim::SystemRegistryPtr& systemRegistry);
 	~SimUpdater();
 
 	void update(skybolt::sim::SecondsD wallDt);
@@ -25,17 +26,21 @@ public:
 
 	double getActualTimeRate() const { return mActualTimeRate; }
 
+	void setMinSimTimeStep(double dt) { mMinSimDt = dt; }
 	void setMaxSimTimeStep(double dt) { mMaxSimDt = dt; }
 
 protected:
 	void advanceWallTime(skybolt::sim::SecondsD wallDt);
 
-	const skybolt::NonNullPtr<skybolt::EngineRoot> mEngineRoot;
+	const skybolt::NonNullPtr<skybolt::Scenario> mScenario;
+	const skybolt::sim::SystemRegistryPtr mSystemRegistry;
 
 	std::unique_ptr<skybolt::UniformAveragedBuffer> mAverageWallDt;
-	double mMaxSimDt = 10;
+	skybolt::sim::SecondsD mMinSimDt = 0.01;
+	skybolt::sim::SecondsD mMaxSimDt = 10;
 
 	skybolt::sim::SecondsD mWallTime = 0;
+	skybolt::sim::SecondsD mAccumulatedWallTime = 0;
 	double mRequestedTimeRate = 1;
 	double mActualTimeRate = 1;
 };
