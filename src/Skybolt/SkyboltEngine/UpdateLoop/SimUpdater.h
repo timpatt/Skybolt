@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <SkyboltCommon/Expected.h>
 #include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltCommon/WeightAveragedBuffer.h>
 #include <SkyboltEngine/SkyboltEngineFwd.h>
@@ -29,6 +30,11 @@ public:
 	void setMinSimTimeStep(double dt) { mMinSimDt = dt; }
 	void setMaxSimTimeStep(double dt) { mMaxSimDt = dt; }
 
+	//! If true, the simulation will only advance when all systems are ready to advance.
+	bool requireLockstep = false;
+
+	const skybolt::Expected<std::monostate>& getReadyForAdvanceStatus() const { return mReadyForAdvanceStatus; }
+
 protected:
 	void advanceWallTime(skybolt::sim::SecondsD wallDt);
 
@@ -43,4 +49,6 @@ protected:
 	skybolt::sim::SecondsD mAccumulatedWallTime = 0;
 	double mRequestedTimeRate = 1;
 	double mActualTimeRate = 1;
+
+	skybolt::Expected<std::monostate> mReadyForAdvanceStatus;
 };

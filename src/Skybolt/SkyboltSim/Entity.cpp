@@ -69,6 +69,19 @@ void Entity::advanceWallTime(SecondsD newTime, SecondsD dt)
 	}
 }
 
+Expected<std::monostate> Entity::isReadyToAdvanceSimTime() const
+{
+	for (const ComponentPtr& c : mComponents.getAllItems())
+	{
+		auto result = c->isReadyToAdvanceSimTime();
+		if (!has_value(result))
+		{
+			return std::get<UnexpectedMessage>(result);
+		}
+	}
+	return std::monostate{};
+}
+
 void Entity::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
 	for (const ComponentPtr& c : mComponents.getAllItems())

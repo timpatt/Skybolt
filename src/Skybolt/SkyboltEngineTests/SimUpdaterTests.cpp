@@ -14,6 +14,24 @@
 
 using namespace skybolt;
 
+class DummyProgressBlockingSystem : public sim::System
+{
+public:
+    skybolt::Expected<std::monostate> isReadyToAdvanceSimTime() const override
+    {
+        if (ready)
+        {
+            return std::monostate{};
+        }
+        else
+        {
+            return skybolt::UnexpectedMessage{"Dummy system not ready to advance sim time"};
+        }
+    }
+
+    bool ready = true;
+};
+
 TEST_CASE("SimUpdater: update advances time", "[SimUpdater]") 
 {
     auto timeSource = std::make_shared<sim::TimeSource>(sim::TimeRange{0, 100});
@@ -68,5 +86,28 @@ TEST_CASE("SimUpdater: update advances time", "[SimUpdater]")
         updater.update(0.05);
         CHECK(scenario.timeSource->getTime() == Approx(0.1));
         CHECK(updater.getActualTimeRate() == Approx(1.0));
+    }
+
+    SECTION("Updater waits for system to be ready to advance time when requireLockstep enabled") 
+    {
+        auto system = std::make_shared<DummyProgressBlockingSystem>();
+		systemRegistry->push_back(system);
+
+		// When lockstep is required, the updater should not advance time if any system is not ready to advance sim time.
+        system->ready = false;
+        updater.requireLockstep = true;
+        updater.update(0.05);
+        CHECK(scenario.timeSource->getTime() == 0.0);
+
+		// When the system is ready, the updater should advance time.
+        system->ready = true;
+        updater.update(0.05);
+        CHECK(scenario.timeSource->getTime() == Approx(0.05));
+
+		// When lockstep is not required, the updater should advance time regardless of system readiness.
+        system->ready = false;
+		updater.requireLockstep = false;
+        updater.update(0.05);
+        CHECK(scenario.timeSource->getTime() == Approx(0.1));
     }
 }

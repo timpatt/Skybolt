@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <SkyboltCommon/Expected.h>
 #include "SkyboltSim/Chrono.h"
 #include <boost/signals2.hpp>
 #include <tuple>
@@ -46,7 +47,6 @@ public:
 	virtual void setTime(sim::SecondsD time);
 
 	virtual void advanceTime(sim::SecondsD dt);
-
 	virtual void advanceToTime(sim::SecondsD time);
 
 	const TimeRange& getRange() const { return mRange; }
@@ -54,6 +54,10 @@ public:
 
 	State getState() const { return mState; }
 	void setState(const State& state);
+
+	//! If true, the time source is only allowed to advance when all systems are ready to advance.
+	bool requireLockstep = false;
+
 
 	boost::signals2::signal<void(const State&)> stateChanged;
 	boost::signals2::signal<void(SecondsD oldTime, SecondsD newTime)> timeAboutToChange;

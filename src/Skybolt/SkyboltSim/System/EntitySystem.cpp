@@ -30,6 +30,19 @@ void EntitySystem::setSimTime(SecondsD newTime)
 	}
 }
 
+Expected<std::monostate> EntitySystem::isReadyToAdvanceSimTime() const
+{
+	for (const EntityPtr& entity : mWorld->getEntities())
+	{
+		auto result = entity->isReadyToAdvanceSimTime();
+		if (!has_value(result))
+		{
+			return std::get<UnexpectedMessage>(result);
+		}
+	}
+	return std::monostate{};
+}
+
 void EntitySystem::advanceWallTime(SecondsD newTime, SecondsD dt)
 {
 	// Take a copy of the entities container so that the list doesn't change during timestep

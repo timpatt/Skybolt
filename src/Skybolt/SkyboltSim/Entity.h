@@ -85,7 +85,9 @@ public:
 
 public: // SimUpdatable interface
 	void setSimTime(SecondsD newTime) override;
+
 	void advanceWallTime(SecondsD newTime, SecondsD dt) override;
+	Expected<std::monostate> isReadyToAdvanceSimTime() const override;
 	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
 	void update(UpdateStage stage) override;
 

@@ -19,6 +19,9 @@ public:
 	EntitySystem(World* world);
 
 	void setSimTime(SecondsD newTime) override;
+
+	Expected<std::monostate> isReadyToAdvanceSimTime() const override;
+
 	void advanceWallTime(SecondsD newTime, SecondsD dt) override;
 	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
 	void update(UpdateStage stage) override;

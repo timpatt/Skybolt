@@ -48,6 +48,24 @@ private:
 
 }
 
+template<typename T>
+class CustomProgressBarDisplay : public barkeep::ProgressBarDisplay<T>
+{
+public:
+	using barkeep::ProgressBarDisplay<T>::ProgressBarDisplay;
+
+	void setMessage(const std::string& message)
+	{
+		this->message_ = message;
+	}
+};
+
+template <typename Progress, typename ProgressProvider = barkeep::provider_t<Progress>>
+auto CustomProgressBar(Progress* progress,
+                 const barkeep::ProgressBarConfig<barkeep::value_t<ProgressProvider>>& cfg = {}) {
+  return std::make_shared<CustomProgressBarDisplay<Progress>>(progress, cfg);
+}
+
 int runScenario(const po::variables_map& vm)
 {
 	if (!vm.count("scenario"))
@@ -63,6 +81,7 @@ int runScenario(const po::variables_map& vm)
 	const double minTimestep = vm["min-timestep"].as<double>();
 	const double maxTimestep = vm["max-timestep"].as<double>();
 	const bool realTime = vm.count("real-time") > 0;
+	const bool lockstep = vm.count("lockstep") > 0;
 	const bool noTty = vm.count("no-tty") > 0;
 
 	try
@@ -88,12 +107,13 @@ int runScenario(const po::variables_map& vm)
 		updater.setRequestedTimeRate(realTime ? 1.0 : 1000000.0);
 		updater.setMinSimTimeStep(minTimestep);
 		updater.setMaxSimTimeStep(maxTimestep);
+		updater.requireLockstep = lockstep;
 
 		const sim::SecondsD simDuration = timeSource->getRange().getDuration();
 
 		std::atomic<size_t> elapsedSeconds{0};
 		auto bar =
-			barkeep::ProgressBar(&elapsedSeconds, {
+			CustomProgressBar(&elapsedSeconds, {
 			  .total = std::size_t(std::ceil(simDuration)),
 			  .message = "Simulating",
 			  .speed = 1.,
@@ -111,6 +131,16 @@ int runScenario(const po::variables_map& vm)
 			updater.update(wallDt);
 
 			elapsedSeconds = size_t(timeSource->getTime() - timeSource->getRange().start);
+
+			auto status = updater.getReadyForAdvanceStatus();
+			if (has_value(status))
+			{
+				bar->setMessage("Simulating");
+			}
+			else
+			{
+				bar->setMessage(std::get<UnexpectedMessage>(status).str);
+			}
 		}
 	}
 	catch (const std::exception& e)
@@ -142,9 +172,10 @@ po::options_description createRunOptions()
 	po::options_description options("Run options");
 	options.add_options()
 		("real-time", "run simulation in real time")
-		("min-timestep", po::value<double>()->default_value(10.0), "min timestep for the simulation")
+		("min-timestep", po::value<double>()->default_value(0.01), "min timestep for the simulation")
 		("max-timestep", po::value<double>()->default_value(10.0), "max timestep for the simulation")
 		("scenario", po::value<std::string>(), "scenario filename")
+		("lockstep", "wait for external simulation processes (image generators etc) to complete a timestep/frame before advancing the simulation")
 		("no-tty", "disable TTY in console output");
 	EngineCommandLineParser::addOptions(options);
 	return options;

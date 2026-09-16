@@ -44,41 +44,57 @@ void SimUpdater::update(SecondsD wallDt)
 
 void SimUpdater::advanceWallTime(SecondsD wallDt)
 {
-	// Calculate simulation delta time
-	double simDt;
-	TimeSource& timeSource = *mScenario->timeSource;
-	if (timeSource.getState() == TimeSource::StatePlaying)
+	mReadyForAdvanceStatus = std::monostate{};
+	if (requireLockstep)
 	{
-		mAverageWallDt->addValue(wallDt);
-		double averageWallDt = mAverageWallDt->getResult();
-
-		mAccumulatedWallTime += averageWallDt;
-		double accumulatedSimTime = mAccumulatedWallTime * mRequestedTimeRate;
-		if (accumulatedSimTime > mMaxSimDt)
+		for (const SystemPtr& system : *mSystemRegistry)
 		{
-			simDt = mMaxSimDt;
+			mReadyForAdvanceStatus = system->isReadyToAdvanceSimTime();
+			if (!has_value(mReadyForAdvanceStatus))
+			{
+				break; // Don't advance time yet, wait until all systems are ready to advance
+			}
 		}
-		else if (accumulatedSimTime < mMinSimDt)
+	}
+
+	if (has_value(mReadyForAdvanceStatus))
+	{
+		// Calculate simulation delta time
+		double simDt;
+		TimeSource& timeSource = *mScenario->timeSource;
+		if (timeSource.getState() == TimeSource::StatePlaying)
 		{
-			return; // Don't advance time yet, wait until we have accumulated enough sim time
+			mAverageWallDt->addValue(wallDt);
+			double averageWallDt = mAverageWallDt->getResult();
+
+			mAccumulatedWallTime += averageWallDt;
+			double accumulatedSimTime = mAccumulatedWallTime * mRequestedTimeRate;
+			if (accumulatedSimTime > mMaxSimDt)
+			{
+				simDt = mMaxSimDt;
+			}
+			else if (accumulatedSimTime < mMinSimDt)
+			{
+				return; // Don't advance time yet, wait until we have accumulated enough sim time
+			}
+			else
+			{
+				simDt = accumulatedSimTime;
+			}
+
+			mActualTimeRate = simDt / mAccumulatedWallTime;
+			mAccumulatedWallTime = 0;
 		}
 		else
 		{
-			simDt = accumulatedSimTime;
+			simDt = 0;
 		}
 
-		mActualTimeRate = simDt / mAccumulatedWallTime;
-		mAccumulatedWallTime = 0;
+		// Simulate by dt.
+		// Note: we still need to simulate even if dt is 0, because some systems/components
+		// need to still be updated even when the simulation is paused, e.g. in an editor application.
+		timeSource.advanceTime(simDt);
 	}
-	else
-	{
-		simDt = 0;
-	}
-
-	// Simulate by dt.
-	// Note: we still need to simulate even if dt is 0, because some systems/components
-	// need to still be updated even when the simulation is paused, e.g. in an editor application.
-	timeSource.advanceTime(simDt);
 
 	// Advance wallclock time
 	for (const SystemPtr& system : *mSystemRegistry)

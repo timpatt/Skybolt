@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Chrono.h"
+#include <SkyboltCommon/Expected.h>
 
 namespace skybolt {
 namespace sim {
@@ -27,6 +28,9 @@ class SimUpdatable
 {
 public:
 	virtual ~SimUpdatable() = default;
+
+	//! @return nullopt 
+	virtual Expected<std::monostate> isReadyToAdvanceSimTime() const { return std::monostate{}; }
 
 	virtual void setSimTime(SecondsD newTime) {};
 	virtual void advanceWallTime(SecondsD newTime, SecondsD dt) {};
