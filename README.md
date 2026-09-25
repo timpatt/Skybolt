@@ -7,7 +7,7 @@ A C++/Python-based engine for simulating and visualizing dynamic objects such as
 ![Shuttle in space](https://prograda.com/wp-content/uploads/2024/10/Shuttle5-300x170-1.jpg) !["Ship on ocean"](https://prograda.com/wp-content/uploads/2020/11/ShipHeloShot1-300x169.jpg)
 
 ## Features
-* **Dynamic Simulation:** Real-time 3D object simulation within a geospatial coordinate system.
+* **Dynamic Simulation:** Real-time 3D object simulation within a planetary environment.
 * **Modular Architecture**: Model dynamic objects using a composition-based entity-component system (ECS) with a configurable property framework.
 * **Photoreal Rendering**: Visualize photorealistic environments, including terrain, ocean, urban infrastructure, and atmospheric conditions.
 * **Extensible Framework**: Add custom functionality through C++ and Python-based plugins. 

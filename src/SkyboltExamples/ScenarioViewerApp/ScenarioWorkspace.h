@@ -32,7 +32,6 @@ public:
 
 	std::optional<ErrorMessage> loadScenario(const QString& filename);
 	std::optional<ErrorMessage> loadScenario(QFile& file);
-	std::optional<ErrorMessage> saveScenario(const QString& filename);
 
 	QString getScenarioFilename() const { return mScenarioFilename; }
 
@@ -42,13 +41,11 @@ signals:
 	void scenarioUnloaded();
 	void scenarioNewed();
 	void scenarioLoaded(const nlohmann::json& json);
-	void scenarioSaved(nlohmann::json& json) const;
 	void scenarioFilenameChanged(const QString& filename);
 
 protected:
 	virtual void unloadScenario();
 	virtual void loadScenario(const nlohmann::json& json);
-	virtual void saveScenario(nlohmann::json& json) const;
 
 	virtual void setScenarioFilename(const QString& filename);
 

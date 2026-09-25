@@ -2,7 +2,7 @@
 A C++/Python-based engine for simulating and visualizing dynamic objects such as aircraft, ships and spacecraft, in a 3D planetary environment.
 
 ## Features
-* **Dynamic Simulation:** Real-time 3D object simulation within a geospatial coordinate system.
+* **Dynamic Simulation:** Real-time 3D object simulation within a planetary environment.
 * **Modular Architecture**: Model dynamic objects using a composition-based entity-component system (ECS) with a configurable property framework.
 * **Photoreal Rendering**: Visualize photorealistic environments, including terrain, ocean, urban infrastructure, and atmospheric conditions.
 * **Extensible Framework**: Add custom functionality through C++ and Python-based plugins. 

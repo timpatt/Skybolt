@@ -77,29 +77,6 @@ std::optional<ScenarioWorkspace::ErrorMessage> ScenarioWorkspace::loadScenario(Q
 	return std::nullopt;
 }
 
-std::optional<ScenarioWorkspace::ErrorMessage> ScenarioWorkspace::saveScenario(const QString& filename)
-{
-	QSaveFile file(filename);
-	if (!file.open(QIODevice::WriteOnly))
-	{
-		return "Could not open file '" + filename + "' for writing. " + file.errorString();
-	}
-
-	setScenarioFilename(file.fileName());
-
-	nlohmann::json json;
-	saveScenario(json);
-
-	int indent = 4;
-	file.write(json.dump(indent).c_str());
-	if (!file.commit())
-	{
-		return "Could not save scenario to file '" + filename + "'. " + file.errorString();
-	}
-
-	return std::nullopt;
-}
-
 void ScenarioWorkspace::createDefaultNewScenarioEntities(sim::World& world, EntityFactory& factory)
 {
 	// Create earth
@@ -143,15 +120,6 @@ void ScenarioWorkspace::loadScenario(const nlohmann::json& json)
 	});
 
 	emit scenarioLoaded(json);
-}
-
-void ScenarioWorkspace::saveScenario(nlohmann::json& json) const
-{
-	json["scenario"] = writeScenario(*mEngineRoot->typeRegistry, *mEngineRoot->scenario);
-	emit scenarioSaved(json);
-
-	// NOTE: we intentionally don't save the scenario to the file here. It's up to the caller to save to the file.
-	// TODO: Make this behaviour clearer.
 }
 
 void ScenarioWorkspace::setScenarioFilename(const QString& filename)

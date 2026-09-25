@@ -5,7 +5,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "CameraControllerWidget.h"
-#include "EntityCreationToolBar.h"
 #include "MainWindow.h"
 #include "ScenarioTreeWidget.h"
 #include "ScenarioWorkspace.h"
@@ -430,26 +429,6 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 	auto scenarioPropertiesModel = std::make_shared<ScenarioPropertiesModel>(engineRoot->scenario.get());
 
-	// Create entity creation toolbar
-	EntityCreationToolBar* entityCreationToolbar;
-	{
-		auto poseEntityInFrontOfCamera = [world = &engineRoot->scenario->world, viewportCamera] (Entity& entity) {
-			sim::EntityPtr camera = world->getEntityById(*viewportCamera);
-			if (camera)
-			{
-				placeEntityOnPlanetInFrontOfCamera(*camera, entity);
-			}
-			};
-
-		entityCreationToolbar = new EntityCreationToolBar(EntityCreationToolBarConfig{
-			.world = &engineRoot->scenario->world,
-			.entityFactory = engineRoot->entityFactory.get(),
-			.onEntityCreated = poseEntityInFrontOfCamera,
-			.fileLocator = engineRoot->fileLocator,
-			.parent = &mainWindow
-			});
-	}
-
 	// Create scenario tree widget
 	{
 		auto scenarioTree = new ScenarioTreeWidget(ScenarioTreeWidgetConfig{
@@ -458,7 +437,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 			});
 
 		auto scenarioPanelWidget = new QWidget(&mainWindow);
-		QBoxLayout* layout = createBoxLayoutWithWidgets(std::vector<QWidget*>{entityCreationToolbar, scenarioTree}, scenarioPanelWidget, QBoxLayout::Direction::TopToBottom);
+		QBoxLayout* layout = createBoxLayoutWithWidgets(std::vector<QWidget*>{scenarioTree}, scenarioPanelWidget, QBoxLayout::Direction::TopToBottom);
 
 		auto* scenarioDock = new QDockWidget("Entities", &mainWindow);
 		scenarioDock->setWidget(scenarioPanelWidget);
@@ -466,8 +445,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 		scenarioDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 		mainWindow.addDockWidget(Qt::LeftDockWidgetArea, scenarioDock);
 
-		QObject::connect(scenarioTree, &ScenarioTreeWidget::entitySelected, [entityPropertiesModel, world = &engineRoot->scenario->world, entityCreationToolbar, propertyEditor](const skybolt::sim::EntityId& entityId) {
-			entityCreationToolbar->setSelectedEntity(entityId);
+		QObject::connect(scenarioTree, &ScenarioTreeWidget::entitySelected, [entityPropertiesModel, world = &engineRoot->scenario->world, propertyEditor](const skybolt::sim::EntityId& entityId) {
 			EntityPtr entity = world->getEntityById(entityId);
 			entityPropertiesModel->setEntity(entity.get());
 
@@ -549,45 +527,6 @@ static int createAndExecuteApplication(int argc, char** argv)
 					recentFileMenuPopulator->addRecentFilename(filename);
 				}
 			});
-		}
-
-		fileMenu->addSeparator();
-
-		// Save
-		{
-			auto saveAsFn = [&mainWindow, recentFileMenuPopulator, &scenarioWorkspace]() {
-				QString filename = QFileDialog::getSaveFileName(&mainWindow, "Save Scenario", QString(), "Scenario Files (*.scenaro.json)");
-				if (!filename.isEmpty())
-				{
-					if (auto error = scenarioWorkspace.saveScenario(filename); error)
-					{
-						displayApplicationError(&mainWindow, *error);
-					}
-					recentFileMenuPopulator->addRecentFilename(filename);
-				}
-			};
-
-			auto saveAction = new QAction("&Save...", &mainWindow);
-			fileMenu->addAction(saveAction);
-
-			QObject::connect(saveAction, &QAction::triggered, &mainWindow, [saveAsFn, &scenarioWorkspace, &mainWindow]() {
-				if (scenarioWorkspace.getScenarioFilename().isEmpty())
-				{
-					saveAsFn();
-				}
-				else
-				{
-					if (auto error = scenarioWorkspace.saveScenario(scenarioWorkspace.getScenarioFilename()); error)
-					{
-						displayApplicationError(&mainWindow, *error);
-					}
-				}
-			});
-
-			auto saveAsAction = new QAction("Save &As...", &mainWindow);
-			fileMenu->addAction(saveAsAction);
-
-			QObject::connect(saveAsAction, &QAction::triggered, &mainWindow, saveAsFn);
 		}
 
 		fileMenu->addSeparator();
