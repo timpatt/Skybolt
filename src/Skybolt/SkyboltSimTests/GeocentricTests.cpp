@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TestHelpers.h"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -69,7 +70,7 @@ TEST_CASE("Calculate LTP orientation at a geocentric point")
 
 		// Convert position to NED axes
 		Vector3 posNed = northDir * ori;
-		CHECK(glm::dot(posNed, Vector3(1, 0, 0)) == Approx(1.0).margin(epsilon));
+		CHECK(glm::dot(posNed, Vector3(1, 0, 0)) == Catch::Approx(1.0).margin(epsilon));
 	}
 
 	SECTION("LTP +Z axis is down")

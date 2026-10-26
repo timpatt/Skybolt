@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TestHelpers.h"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltEngine/Sequence/Interpolator/CubicBSplineInterpolator.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
@@ -26,8 +27,8 @@ TEST_CASE("CubicBSplineInterpolator has expected values")
 		[&](int i) { return t[i]; });
 
 	double epsilon = 1e-7;
-	CHECK(interpolator.interpolate(0, 1, 1.0) == Approx(1.0).margin(epsilon));
-	CHECK(interpolator.interpolate(0, 1, 0.5) == Approx(0.75).margin(epsilon));
+	CHECK(interpolator.interpolate(0, 1, 1.0) == Catch::Approx(1.0).margin(epsilon));
+	CHECK(interpolator.interpolate(0, 1, 0.5) == Catch::Approx(0.75).margin(epsilon));
 }
 
 TEST_CASE("CubicBSplineInterpolator has expected tangent at middle vertex")
@@ -47,13 +48,13 @@ TEST_CASE("CubicBSplineInterpolator has expected tangent at middle vertex")
 	{
 		double dt = 0.5 * epsilon;
 		double measuredGradient = (interpolator.interpolate(0, 1, 1.0) - interpolator.interpolate(0, 1, 1.0 - epsilon)) / dt;
-		CHECK(glm::tan(22.5 * math::degToRadD()) == Approx(measuredGradient).margin(1e-6));
+		CHECK(glm::tan(22.5 * math::degToRadD()) == Catch::Approx(measuredGradient).margin(1e-6));
 	}
 
 	SECTION("Tangent slightly to right of point")
 	{
 		double dt = 4.0 * epsilon;
 		double measuredGradient = (interpolator.interpolate(1, 2, epsilon) - interpolator.interpolate(1, 2, 0.0)) / dt;
-		CHECK(glm::tan(22.5 * math::degToRadD()) == Approx(measuredGradient).margin(1e-6));
+		CHECK(glm::tan(22.5 * math::degToRadD()) == Catch::Approx(measuredGradient).margin(1e-6));
 	}
 }

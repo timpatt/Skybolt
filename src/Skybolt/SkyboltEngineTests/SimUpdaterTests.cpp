@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TestHelpers.h"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltEngine/Scenario/Scenario.h>
 #include <SkyboltEngine/UpdateLoop/SimUpdater.h>
 #include <SkyboltSim/System/SystemRegistry.h>
@@ -45,7 +46,7 @@ TEST_CASE("SimUpdater: update advances time", "[SimUpdater]")
     SECTION("Update with small wall clock time advances sim time by same amount") 
     {
         updater.update(0.1);
-        CHECK(scenario.timeSource->getTime() == Approx(0.1));
+        CHECK(scenario.timeSource->getTime() == Catch::Approx(0.1));
     }
 
     SECTION("Update with delta time does not advance sim time") 
@@ -58,16 +59,16 @@ TEST_CASE("SimUpdater: update advances time", "[SimUpdater]")
     {
 		updater.setMaxSimTimeStep(10.0);
         updater.update(100);
-        CHECK(scenario.timeSource->getTime() == Approx(10.0));
-        CHECK(updater.getActualTimeRate() == Approx(0.1));
+        CHECK(scenario.timeSource->getTime() == Catch::Approx(10.0));
+        CHECK(updater.getActualTimeRate() == Catch::Approx(0.1));
     }
 
     SECTION("Sim time advances at requested rate") 
     {
         updater.setRequestedTimeRate(2.0);
         updater.update(0.1);
-        CHECK(scenario.timeSource->getTime() == Approx(0.2));
-        CHECK(updater.getActualTimeRate() == Approx(2.0));
+        CHECK(scenario.timeSource->getTime() == Catch::Approx(0.2));
+        CHECK(updater.getActualTimeRate() == Catch::Approx(2.0));
     }
 
     SECTION("Sim time does not update when TimeSource is stopped") 
@@ -84,8 +85,8 @@ TEST_CASE("SimUpdater: update advances time", "[SimUpdater]")
         CHECK(scenario.timeSource->getTime() == 0.0);
 
         updater.update(0.05);
-        CHECK(scenario.timeSource->getTime() == Approx(0.1));
-        CHECK(updater.getActualTimeRate() == Approx(1.0));
+        CHECK(scenario.timeSource->getTime() == Catch::Approx(0.1));
+        CHECK(updater.getActualTimeRate() == Catch::Approx(1.0));
     }
 
     SECTION("Updater waits for system to be ready to advance time when requireLockstep enabled") 
@@ -102,12 +103,12 @@ TEST_CASE("SimUpdater: update advances time", "[SimUpdater]")
 		// When the system is ready, the updater should advance time.
         system->ready = true;
         updater.update(0.05);
-        CHECK(scenario.timeSource->getTime() == Approx(0.05));
+        CHECK(scenario.timeSource->getTime() == Catch::Approx(0.05));
 
 		// When lockstep is not required, the updater should advance time regardless of system readiness.
         system->ready = false;
 		updater.requireLockstep = false;
         updater.update(0.05);
-        CHECK(scenario.timeSource->getTime() == Approx(0.1));
+        CHECK(scenario.timeSource->getTime() == Catch::Approx(0.1));
     }
 }

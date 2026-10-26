@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
@@ -64,25 +65,25 @@ TEST_CASE("getOrthonormalBasis")
 
 TEST_CASE("fmodNeg")
 {
-	CHECK(fmodNeg(-5.0, 6.5) == Approx(1.5).epsilon(1e-8));
-	CHECK(fmodNeg(2.0, 6.5) == Approx(2).epsilon(1e-8));
-	CHECK(fmodNeg(7.0, 6.5) == Approx(0.5).epsilon(1e-8));
+	CHECK(fmodNeg(-5.0, 6.5) == Catch::Approx(1.5).epsilon(1e-8));
+	CHECK(fmodNeg(2.0, 6.5) == Catch::Approx(2).epsilon(1e-8));
+	CHECK(fmodNeg(7.0, 6.5) == Catch::Approx(0.5).epsilon(1e-8));
 }
 
 TEST_CASE("normalizeAngleTwoPi")
 {
-	CHECK(normalizeAngleTwoPi(0.123) == Approx(0.123).epsilon(1e-8));
-	CHECK(normalizeAngleTwoPi(-0.123) == Approx(twoPiD() - 0.123).epsilon(1e-8));
-	CHECK(normalizeAngleTwoPi(twoPiD() + 0.123) == Approx(0.123).epsilon(1e-8));
+	CHECK(normalizeAngleTwoPi(0.123) == Catch::Approx(0.123).epsilon(1e-8));
+	CHECK(normalizeAngleTwoPi(-0.123) == Catch::Approx(twoPiD() - 0.123).epsilon(1e-8));
+	CHECK(normalizeAngleTwoPi(twoPiD() + 0.123) == Catch::Approx(0.123).epsilon(1e-8));
 }
 
 TEST_CASE("calcSmallestAngleFromTo")
 {
-	CHECK(calcSmallestAngleFromTo<double>(1, 2) == Approx(1).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo<double>(2, 1) == Approx(-1).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo<double>(2, -1) == Approx(-3).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo<double>(-1, 2) == Approx(3).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo<double>(3, 5) == Approx(2).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo<double>(-piD(), piD()) == Approx(0).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo<double>(5 * piD(), piD()) == Approx(0).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(1, 2) == Catch::Approx(1).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(2, 1) == Catch::Approx(-1).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(2, -1) == Catch::Approx(-3).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(-1, 2) == Catch::Approx(3).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(3, 5) == Catch::Approx(2).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(-piD(), piD()) == Catch::Approx(0).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(5 * piD(), piD()) == Catch::Approx(0).epsilon(1e-8f));
 }

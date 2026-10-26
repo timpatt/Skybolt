@@ -7,17 +7,18 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 inline void check(const glm::dvec2& a, const glm::dvec2& b, double eps)
 {
-	CHECK(a.x == Approx(b.x).margin(eps));
-	CHECK(a.y == Approx(b.y).margin(eps));
+	CHECK(a.x == Catch::Approx(b.x).margin(eps));
+	CHECK(a.y == Catch::Approx(b.y).margin(eps));
 }
 
 inline void check(const glm::dvec3& a, const glm::dvec3& b, double eps)
 {
-	CHECK(a.x == Approx(b.x).margin(eps));
-	CHECK(a.y == Approx(b.y).margin(eps));
-	CHECK(a.z == Approx(b.z).margin(eps));
+	CHECK(a.x == Catch::Approx(b.x).margin(eps));
+	CHECK(a.y == Catch::Approx(b.y).margin(eps));
+	CHECK(a.z == Catch::Approx(b.z).margin(eps));
 }

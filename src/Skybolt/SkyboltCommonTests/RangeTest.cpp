@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltCommon/Range.h>
 
 using namespace skybolt;
@@ -30,7 +31,7 @@ TEST_CASE("RangeInclusive<double> properties")
 {
     DoubleRangeInclusive r(1.0, 2.0);
     REQUIRE(!r.isEmpty());
-    REQUIRE(r.size() == Approx(1.0));
+    REQUIRE(r.size() == Catch::Approx(1.0));
     REQUIRE(r.contains(1.0));
     REQUIRE(r.contains(2.0));
     REQUIRE(!r.contains(2.1));

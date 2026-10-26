@@ -21,7 +21,6 @@ class SkyboltConan(ConanFile):
         "enable_osg_curl_plugin": [True, False], # Whether to link the OSG curl plugin into the static build. Only relavent if shared = False.
         "enable_python": [True, False],
         "enable_qt": [True, False],
-        "enable_tests": [True, False],
         "shared": [True, False],
         "shared_plugins": [True, False], # Build plugins as shared libraries.
         "fPIC": [True, False]
@@ -38,7 +37,6 @@ class SkyboltConan(ConanFile):
         "enable_osg_curl_plugin": True,
         "enable_python": True,
         "enable_qt": True,
-        "enable_tests": True,
         "shared": False,
         "shared_plugins": True,
         "fPIC": True
@@ -56,6 +54,8 @@ class SkyboltConan(ConanFile):
 
     implements = ["auto_shared_fpic"]
 
+    test_requires = "catch2/3.16.0"
+
     def configure(self):
         if self.options.enable_osg:
             self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
@@ -66,7 +66,6 @@ class SkyboltConan(ConanFile):
 
     def requirements(self):
         self.requires("boost/1.85.0", transitive_headers=True)
-        self.requires("catch2/2.13.8")
         self.requires("cpp-httplib/0.10.1")
         self.requires("earcut/2.2.3")
         self.requires("glm/0.9.9.8", transitive_headers=True)
@@ -77,7 +76,7 @@ class SkyboltConan(ConanFile):
         self.requires("px_sched/1.0.0", transitive_headers=True)
         if self.options.enable_osg:
             self.requires("openscenegraph-mr/3.7.0", transitive_headers=True)
-        self.requires("skybolt-reflect/1.0.0", transitive_headers=True)
+        self.requires("skybolt-reflect/1.1.0", transitive_headers=True)
 
         if self.options.enable_bullet:
             self.requires("bullet3/3.22a")
@@ -97,7 +96,7 @@ class SkyboltConan(ConanFile):
             
         if self.options.enable_qt:
             self.requires("qt/6.10.1", transitive_headers=True)
-            self.requires("skybolt-widgets/1.0.0", transitive_headers=True)
+            self.requires("skybolt-widgets/1.1.0", transitive_headers=True)
 
     def _is_cmake_multi_generator(self) -> bool:
         gen = self.conf.get("tools.cmake.cmaketoolchain:generator")
@@ -142,7 +141,6 @@ class SkyboltConan(ConanFile):
         tc.variables["BUILD_WITH_QT"] = bool(self.options.enable_qt)
         tc.variables["BUILD_WITH_OSG"] = bool(self.options.enable_osg)
         tc.variables["BUILD_WITH_OSG_CURL_PLUGIN"] = bool(self.options.enable_osg_curl_plugin)
-        tc.variables["BUILD_TESTING"] = bool(self.options.enable_tests)
 
         tc.variables["SKYBOLT_BUILD_DOCS"] = bool(self.options.enable_docs)
         tc.variables["SKYBOLT_BUILD_EXAMPLES"] = bool(self.options.enable_examples)
@@ -156,6 +154,8 @@ class SkyboltConan(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+		# Use `tools.build:skip_test=True` configuration option to skip tests
+        cmake.test()
 		
     def package(self):
         cmake = CMake(self)

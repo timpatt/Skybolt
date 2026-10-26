@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <SkyboltVis/CaptureTexture.h>
 #include <SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphereGenerator.h>
@@ -140,29 +141,29 @@ TEST_CASE("Precomputed BruentonAtmosphere matches Bruenton's reference implement
 	{
 		auto image = callback->capturedImages.at(0);
 		const float* data = reinterpret_cast<const float*>(image->getDataPointer());
-		CHECK(data[10000] == Approx(0.283131).margin(epsilon));
-		CHECK(data[20000] == Approx(0.581288).margin(epsilon));
-		CHECK(data[30000] == Approx(0.823351).margin(epsilon));
-		CHECK(data[40000] == Approx(0.970999).margin(epsilon));
+		CHECK(data[10000] == Catch::Approx(0.283131).margin(epsilon));
+		CHECK(data[20000] == Catch::Approx(0.581288).margin(epsilon));
+		CHECK(data[30000] == Catch::Approx(0.823351).margin(epsilon));
+		CHECK(data[40000] == Catch::Approx(0.970999).margin(epsilon));
 	}
 
 	// Check scattering texture
 	{
 		auto image = callback->capturedImages.at(1);
 		const float* data = reinterpret_cast<const float*>(image->getDataPointer());
-		CHECK(data[100000] == Approx(0.093628).margin(epsilon));
-		CHECK(data[200000] == Approx(0.085327).margin(epsilon));
-		CHECK(data[300000] == Approx(0.190308).margin(epsilon));
-		CHECK(data[400000] == Approx(0.0).margin(epsilon));
+		CHECK(data[100000] == Catch::Approx(0.093628).margin(epsilon));
+		CHECK(data[200000] == Catch::Approx(0.085327).margin(epsilon));
+		CHECK(data[300000] == Catch::Approx(0.190308).margin(epsilon));
+		CHECK(data[400000] == Catch::Approx(0.0).margin(epsilon));
 	}
 
 	// Check irradiance texture
 	{
 		auto image = callback->capturedImages.at(2);
 		const float* data = reinterpret_cast<const float*>(image->getDataPointer());
-		CHECK(data[1000] == Approx(0.008781).margin(epsilon));
-		CHECK(data[2000] == Approx(0.001163).margin(epsilon));
-		CHECK(data[3000] == Approx(0.000130).margin(epsilon));
-		CHECK(data[4000] == Approx(0.000000).margin(epsilon));
+		CHECK(data[1000] == Catch::Approx(0.008781).margin(epsilon));
+		CHECK(data[2000] == Catch::Approx(0.001163).margin(epsilon));
+		CHECK(data[3000] == Catch::Approx(0.000130).margin(epsilon));
+		CHECK(data[4000] == Catch::Approx(0.000000).margin(epsilon));
 	}
 }

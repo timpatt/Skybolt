@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltCommon/Math/QuadTreeUtility.h>
 
@@ -31,10 +32,10 @@ TEST_CASE("getKeyLatLonBounds")
 
 	float epsilon = 1e-7f;
 	auto bounds = getKeyLonLatBounds<glm::dvec2>(key);
-	CHECK(bounds.minimum.x == Approx(-math::halfPiF()).margin(epsilon));
-	CHECK(bounds.maximum.x == Approx(0).margin(epsilon));
-	CHECK(bounds.minimum.y == Approx(0).margin(epsilon));
-	CHECK(bounds.maximum.y == Approx(math::halfPiF()).margin(epsilon));
+	CHECK(bounds.minimum.x == Catch::Approx(-math::halfPiF()).margin(epsilon));
+	CHECK(bounds.maximum.x == Catch::Approx(0).margin(epsilon));
+	CHECK(bounds.minimum.y == Catch::Approx(0).margin(epsilon));
+	CHECK(bounds.maximum.y == Catch::Approx(math::halfPiF()).margin(epsilon));
 }
 
 

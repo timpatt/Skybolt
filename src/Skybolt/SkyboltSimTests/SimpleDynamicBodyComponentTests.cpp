@@ -9,7 +9,8 @@
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Components/SimpleDynamicBodyComponent.h>
 #include <SkyboltSim/SimMath.h>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <assert.h>
 
@@ -47,9 +48,9 @@ TEST_CASE("Body accelerates under force")
 		body.applyCentralForce(Vector3(f, 0, 0));
 	});
 
-	CHECK(node.getPosition().x == Approx(s).epsilon(0.01));
-	CHECK(node.getPosition().y == Approx(0).epsilon(1e-8f));
-	CHECK(node.getPosition().z == Approx(0).epsilon(1e-8f));
+	CHECK(node.getPosition().x == Catch::Approx(s).epsilon(0.01));
+	CHECK(node.getPosition().y == Catch::Approx(0).epsilon(1e-8f));
+	CHECK(node.getPosition().z == Catch::Approx(0).epsilon(1e-8f));
 }
 
 TEST_CASE("Body rotates under torque")
@@ -74,9 +75,9 @@ TEST_CASE("Body rotates under torque")
 
 	Vector3 euler = math::eulerFromQuat(node.getOrientation());
 
-	CHECK(euler.x == Approx(theta).epsilon(0.01));
-	CHECK(euler.y == Approx(0).epsilon(1e-8f));
-	CHECK(euler.z == Approx(0).epsilon(1e-8f));
+	CHECK(euler.x == Catch::Approx(theta).epsilon(0.01));
+	CHECK(euler.y == Catch::Approx(0).epsilon(1e-8f));
+	CHECK(euler.z == Catch::Approx(0).epsilon(1e-8f));
 }
 
 TEST_CASE("Force at distance produces torque")
@@ -104,7 +105,7 @@ TEST_CASE("Force at distance produces torque")
 
 	Vector3 euler = math::eulerFromQuat(node.getOrientation());
 
-	CHECK(euler.x == Approx(theta).epsilon(0.01));
-	CHECK(euler.y == Approx(0).epsilon(1e-8f));
-	CHECK(euler.z == Approx(0).epsilon(1e-8f));
+	CHECK(euler.x == Catch::Approx(theta).epsilon(0.01));
+	CHECK(euler.y == Catch::Approx(0).epsilon(1e-8f));
+	CHECK(euler.z == Catch::Approx(0).epsilon(1e-8f));
 }

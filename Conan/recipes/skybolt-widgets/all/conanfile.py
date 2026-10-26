@@ -4,10 +4,10 @@ from conan.tools import files
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
 from conan.tools.scm import Git
 
-class SkybolyWidgetsConan(ConanFile):
+class SkyboltWidgetsConan(ConanFile):
 	implements = ["auto_shared_fpic"]
 	name = "skybolt-widgets"
-	version = "1.0.0"
+	version = "1.1.0"
 	settings = "os", "compiler", "arch", "build_type"
 	options = {
 		"shared": [True, False],
@@ -23,16 +23,15 @@ class SkybolyWidgetsConan(ConanFile):
 	no_copy_source = True
 
 	def requirements(self):
-		self.requires("catch2/2.13.8")
 		self.requires("qt/6.10.1", transitive_headers=True)
 
 		if self.options.with_skybolt_reflect:
-			self.requires("skybolt-reflect/1.0.0", transitive_headers=True)
+			self.requires("skybolt-reflect/1.1.0", transitive_headers=True)
 
 	def source(self):
 		git = Git(self, folder=self.name)
 		git.clone('https://github.com/prograda/skybolt-widgets', target=".")
-		git.checkout("5be89e3a384debb4787f43de8a7d1ba23b0d60dd")
+		git.checkout("v1.1.0")
 
 	def generate(self):
 		tc = CMakeToolchain(self)

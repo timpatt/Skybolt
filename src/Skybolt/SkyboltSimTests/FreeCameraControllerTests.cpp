@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TestHelpers.h"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/CameraController/FreeCameraController.h>
@@ -31,17 +32,17 @@ TEST_CASE("FreeCameraController FOV and zoom level are synchronized")
 	CHECK(controller.maxFovY > controller.minFovY);
 
 	controller.setZoom(0);
-	CHECK(camera->getFovY() == Approx(controller.maxFovY));
+	CHECK(camera->getFovY() == Catch::Approx(controller.maxFovY));
 
 	controller.setZoom(1);
-	CHECK(camera->getFovY() == Approx(controller.minFovY));
+	CHECK(camera->getFovY() == Catch::Approx(controller.minFovY));
 
 	// Test zoom level changes when FOV changes
 	camera->setFovY(controller.minFovY);
-	CHECK(controller.getZoom() == Approx(1));
+	CHECK(controller.getZoom() == Catch::Approx(1));
 
 	camera->setFovY(controller.maxFovY);
-	CHECK(controller.getZoom() == Approx(0));
+	CHECK(controller.getZoom() == Catch::Approx(0));
 
 	// Test zoom level increases with positive input zoom rate
 	controller.setZoom(0);
@@ -51,7 +52,7 @@ TEST_CASE("FreeCameraController FOV and zoom level are synchronized")
 	controller.setInput(input);
 	controller.updateTimeStep(CameraController::UpdateTimeStepArgs{.wallTimeStep = 1});
 
-	CHECK(controller.getZoom() == Approx(0.2));
+	CHECK(controller.getZoom() == Catch::Approx(0.2));
 }
 
 //! Dummy modifier that sets position and FOV to fixed values
@@ -96,6 +97,6 @@ TEST_CASE("CameraModifierStack applies dummy modifier")
 	controller.updateTimeStep(CameraController::UpdateTimeStepArgs{});
 
 	// Check that the camera's position and FOV were updated by the modifier
-	CHECK(glm::distance(*getPosition(entity), expectedPosition) == Approx(0));
-	CHECK(camera->getFovY() == Approx(expectedFov));
+	CHECK(glm::distance(*getPosition(entity), expectedPosition) == Catch::Approx(0));
+	CHECK(camera->getFovY() == Catch::Approx(expectedFov));
 }

@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #define GLM_FORCE_SWIZZLE
 #include <SkyboltVis/CaptureTexture.h>
@@ -84,8 +85,8 @@ TEST_CASE("Principled BRDF matches reference under directional light")
 		args.normal = glm::normalize(glm::vec3(-1, 0, -1));
 		args.dotNL = glm::dot(args.lightDirection, args.normal);
 		PrincipledBrdfDirectionalLightResult result = evalPrincipledBrdfDirectionalLight(args);
-		CHECK(result.diffuse.r == Approx(0.23).margin(0.02));
-		CHECK(result.specular.r == Approx(2.93).margin(0.02));
+		CHECK(result.diffuse.r == Catch::Approx(0.23).margin(0.02));
+		CHECK(result.specular.r == Catch::Approx(2.93).margin(0.02));
 	}
 }
 

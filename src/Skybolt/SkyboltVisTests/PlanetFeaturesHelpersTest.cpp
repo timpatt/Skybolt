@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesHelpers.h>
@@ -90,19 +91,19 @@ TEST_CASE("Join two small roads to a big road")
 
 		// Left small road moved to left lanes
 		CHECK(smallRoadLeft->points[1].lon > 0);
-		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadLeft->points[1])) == Approx(laneWidth * 1).epsilon(1e-8));
+		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadLeft->points[1])) == Catch::Approx(laneWidth * 1).epsilon(1e-8));
 
 		// Right small road moved to right lanes
 		CHECK(smallRoadRight->points[1].lon < 0);
-		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadRight->points[1])) == Approx(laneWidth * 1.5).epsilon(1e-8));
+		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadRight->points[1])) == Catch::Approx(laneWidth * 1.5).epsilon(1e-8));
 
 		// Small roads had second vertex added to ensure road aligns with big road
 		CHECK(smallRoadLeft->points.size() == 3);
-		CHECK(smallRoadLeft->points[0].lon == Approx(smallRoadLeft->points[1].lon).epsilon(1e-8));
+		CHECK(smallRoadLeft->points[0].lon == Catch::Approx(smallRoadLeft->points[1].lon).epsilon(1e-8));
 		CHECK(smallRoadLeft->points[0].lat > smallRoadLeft->points[1].lat);
 
 		CHECK(smallRoadRight->points.size() == 3);
-		CHECK(smallRoadRight->points[0].lon == Approx(smallRoadRight->points[1].lon).epsilon(1e-8));
+		CHECK(smallRoadRight->points[0].lon == Catch::Approx(smallRoadRight->points[1].lon).epsilon(1e-8));
 		CHECK(smallRoadRight->points[0].lat > smallRoadRight->points[1].lat);
 	}
 
@@ -119,11 +120,11 @@ TEST_CASE("Join two small roads to a big road")
 
 		// Left small road moved to left lanes
 		CHECK(smallRoadLeft->points[0].lon > 0);
-		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadLeft->points[1])) == Approx(laneWidth * 1).epsilon(1e-8));
+		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadLeft->points[1])) == Catch::Approx(laneWidth * 1).epsilon(1e-8));
 
 		// Right small road moved to right lanes
 		CHECK(smallRoadRight->points[0].lon < 0);
-		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadRight->points[1])) == Approx(laneWidth * 0.5).epsilon(1e-8));
+		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadRight->points[1])) == Catch::Approx(laneWidth * 0.5).epsilon(1e-8));
 	}
 
 	SECTION("Two small roads overlap and turn in same direction")
@@ -142,11 +143,11 @@ TEST_CASE("Join two small roads to a big road")
 
 		// Left small road moved to left lanes
 		CHECK(smallRoadLeft->points[0].lon > 0);
-		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadLeft->points[1])) == Approx(laneWidth * 1).epsilon(1e-8));
+		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadLeft->points[1])) == Catch::Approx(laneWidth * 1).epsilon(1e-8));
 
 		// Right small road moved to right lanes
 		CHECK(smallRoadRight->points[0].lon < 0);
-		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadRight->points[1])) == Approx(laneWidth * 0.5).epsilon(1e-8));
+		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadRight->points[1])) == Catch::Approx(laneWidth * 0.5).epsilon(1e-8));
 	}
 
 	SECTION("Small road ignored if it turns too perpendicularly")
@@ -168,6 +169,6 @@ TEST_CASE("Join two small roads to a big road")
 
 		// Right small road moved to right lanes
 		CHECK(smallRoadRight->points[0].lon < 0);
-		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadRight->points[1])) == Approx(laneWidth * 0.5).epsilon(1e-8));
+		CHECK(calcDistance(toLatLon(bigRoad->points[0]), toLatLon(smallRoadRight->points[1])) == Catch::Approx(laneWidth * 0.5).epsilon(1e-8));
 	}
 }

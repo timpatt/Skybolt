@@ -6,7 +6,8 @@
 
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/SimMath.h>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <cmath>
 
@@ -56,7 +57,7 @@ TEST_CASE("calculateBladeElementAirflow returns correct blade speed relative to 
 		auto result = MainRotorComponent::calculateBladeElementAirflow(
 			-Vector3(0, 0, 0), meanBladeSpeed, travelX, /*bladePitch=*/0.1);
 		REQUIRE(result.has_value());
-		CHECK(result->bladeSpeedRelAirflow == Approx(meanBladeSpeed));
+		CHECK(result->bladeSpeedRelAirflow == Catch::Approx(meanBladeSpeed));
 	}
 
 	SECTION("Advancing blade: forward flight adds to blade speed")
@@ -68,7 +69,7 @@ TEST_CASE("calculateBladeElementAirflow returns correct blade speed relative to 
 		auto result = MainRotorComponent::calculateBladeElementAirflow(
 			-Vector3(heliSpeed, 0, 0), rotationalSpeed, travelX, /*bladePitch=*/0.1);
 		REQUIRE(result.has_value());
-		CHECK(result->bladeSpeedRelAirflow == Approx(rotationalSpeed + heliSpeed));
+		CHECK(result->bladeSpeedRelAirflow == Catch::Approx(rotationalSpeed + heliSpeed));
 	}
 
 	SECTION("Retreating blade: forward flight reduces blade speed")
@@ -80,7 +81,7 @@ TEST_CASE("calculateBladeElementAirflow returns correct blade speed relative to 
 		auto result = MainRotorComponent::calculateBladeElementAirflow(
 			-Vector3(heliSpeed, 0, 0), rotationalSpeed, travelNegX, /*bladePitch=*/0.1);
 		REQUIRE(result.has_value());
-		CHECK(result->bladeSpeedRelAirflow == Approx(rotationalSpeed - heliSpeed));
+		CHECK(result->bladeSpeedRelAirflow == Catch::Approx(rotationalSpeed - heliSpeed));
 	}
 
 	SECTION("Forward flight does not affect blade speed when blade travels perpendicular to flight direction")
@@ -90,7 +91,7 @@ TEST_CASE("calculateBladeElementAirflow returns correct blade speed relative to 
 		auto result = MainRotorComponent::calculateBladeElementAirflow(
 			-Vector3(50, 0, 0), /*meanBladeSpeedRelHeli=*/100.0, travelY, /*bladePitch=*/0.1);
 		REQUIRE(result.has_value());
-		CHECK(result->bladeSpeedRelAirflow == Approx(100.0));
+		CHECK(result->bladeSpeedRelAirflow == Catch::Approx(100.0));
 	}
 
 	SECTION("Vertical (Z) inflow does not contribute to blade speed relative to wind")
@@ -101,7 +102,7 @@ TEST_CASE("calculateBladeElementAirflow returns correct blade speed relative to 
 		auto result = MainRotorComponent::calculateBladeElementAirflow(
 			-Vector3(0, 0, 20), meanBladeSpeed, travelX, /*bladePitch=*/0.1);
 		REQUIRE(result.has_value());
-		CHECK(result->bladeSpeedRelAirflow == Approx(meanBladeSpeed));
+		CHECK(result->bladeSpeedRelAirflow == Catch::Approx(meanBladeSpeed));
 	}
 }
 
@@ -115,7 +116,7 @@ TEST_CASE("calculateBladeElementAirflow returns correct angle of attack")
 		auto result = MainRotorComponent::calculateBladeElementAirflow(
 			-Vector3(0, 0, 0), /*meanBladeSpeedRelHeli=*/100.0, travelX, bladePitch);
 		REQUIRE(result.has_value());
-		CHECK(result->angleOfAttack == Approx(bladePitch));
+		CHECK(result->angleOfAttack == Catch::Approx(bladePitch));
 	}
 
 	SECTION("Descending increases angle of attack above blade pitch")
@@ -127,7 +128,7 @@ TEST_CASE("calculateBladeElementAirflow returns correct angle of attack")
 		auto result = MainRotorComponent::calculateBladeElementAirflow(
 			-Vector3(0, 0, verticalSpeed), bladeSpeed, travelX, bladePitch);
 		REQUIRE(result.has_value());
-		CHECK(result->angleOfAttack == Approx(bladePitch + std::atan(verticalSpeed / bladeSpeed)));
+		CHECK(result->angleOfAttack == Catch::Approx(bladePitch + std::atan(verticalSpeed / bladeSpeed)));
 		CHECK(result->angleOfAttack > bladePitch);
 	}
 
@@ -140,7 +141,7 @@ TEST_CASE("calculateBladeElementAirflow returns correct angle of attack")
 		auto result = MainRotorComponent::calculateBladeElementAirflow(
 			-Vector3(0, 0, verticalSpeed), bladeSpeed, travelX, bladePitch);
 		REQUIRE(result.has_value());
-		CHECK(result->angleOfAttack == Approx(bladePitch + std::atan(verticalSpeed / bladeSpeed)));
+		CHECK(result->angleOfAttack == Catch::Approx(bladePitch + std::atan(verticalSpeed / bladeSpeed)));
 		CHECK(result->angleOfAttack < bladePitch);
 	}
 
@@ -155,6 +156,6 @@ TEST_CASE("calculateBladeElementAirflow returns correct angle of attack")
 		auto result = MainRotorComponent::calculateBladeElementAirflow(
 			-Vector3(50, 0, verticalSpeed), bladeSpeed, travelY, bladePitch);
 		REQUIRE(result.has_value());
-		CHECK(result->angleOfAttack == Approx(bladePitch + std::atan(verticalSpeed / bladeSpeed)));
+		CHECK(result->angleOfAttack == Catch::Approx(bladePitch + std::atan(verticalSpeed / bladeSpeed)));
 	}
 }

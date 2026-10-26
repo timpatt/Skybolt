@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltVis/Shadow/CascadedShadowMapGenerator.h>
 #include <SkyboltVis/Shadow/ShadowMapGenerator.h>
@@ -45,9 +46,9 @@ TEST_CASE("Calculate cascade to cascade transform")
 	osg::Vec3 q1 = applyTransform(q0, transform);
 
 	float eps = 1e-8f;
-	CHECK(q1Expected.x() == Approx(q1.x()).margin(eps));
-	CHECK(q1Expected.y() == Approx(q1.y()).margin(eps));
-	CHECK(q1Expected.z() == Approx(q1.z()).margin(eps));
+	CHECK(q1Expected.x() == Catch::Approx(q1.x()).margin(eps));
+	CHECK(q1Expected.y() == Catch::Approx(q1.y()).margin(eps));
+	CHECK(q1Expected.z() == Catch::Approx(q1.z()).margin(eps));
 }
 
 TEST_CASE("Calculate minimal enclosing sphere of frustum")
@@ -62,8 +63,8 @@ TEST_CASE("Calculate minimal enclosing sphere of frustum")
 		CascadedShadowMapGenerator::FrustumMinimalEnclosingSphere result = CascadedShadowMapGenerator::calculateMinimalEnclosingSphere(frustum);
 
 		float eps = 1e-8f;
-		CHECK(100 == Approx(result.centerDistance).margin(eps));
-		CHECK(2.f * osg::Vec2(100, 50).length() == Approx(result.radius).margin(eps));
+		CHECK(100 == Catch::Approx(result.centerDistance).margin(eps));
+		CHECK(2.f * osg::Vec2(100, 50).length() == Catch::Approx(result.radius).margin(eps));
 	}
 
 	SECTION("Wide field of view is 0, the sphere exactly encompases the center view vector from near to far plane") {
@@ -76,7 +77,7 @@ TEST_CASE("Calculate minimal enclosing sphere of frustum")
 		CascadedShadowMapGenerator::FrustumMinimalEnclosingSphere result = CascadedShadowMapGenerator::calculateMinimalEnclosingSphere(frustum);
 
 		float eps = 1e-8f;
-		CHECK(55 == Approx(result.centerDistance).margin(eps));
-		CHECK(45 == Approx(result.radius).margin(eps));
+		CHECK(55 == Catch::Approx(result.centerDistance).margin(eps));
+		CHECK(45 == Catch::Approx(result.radius).margin(eps));
 	}
 }

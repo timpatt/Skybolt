@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include "SkyboltVis/Image/SimpleImageFactory.h"
 
@@ -21,10 +22,10 @@ TEST_CASE("SimpleImageFactory creates basic in-memory images")
 
 	image->setColor(1, 2, glm::vec4(0.25f, 0.5f, 0.75f, 1.0f));
 	glm::vec4 color = image->getColor(1, 2);
-	CHECK(color.r == Approx(0.25f).margin(0.01f));
-	CHECK(color.g == Approx(0.5f).margin(0.01f));
-	CHECK(color.b == Approx(0.75f).margin(0.01f));
-	CHECK(color.a == Approx(1.0f).margin(0.01f));
+	CHECK(color.r == Catch::Approx(0.25f).margin(0.01f));
+	CHECK(color.g == Catch::Approx(0.5f).margin(0.01f));
+	CHECK(color.b == Catch::Approx(0.75f).margin(0.01f));
+	CHECK(color.a == Catch::Approx(1.0f).margin(0.01f));
 
 	image->addMetadata("answer", 42);
 	REQUIRE(image->getMetadata("answer").has_value());
@@ -60,25 +61,25 @@ TEST_CASE("SimpleImageFactory round-trips PNG images through streams")
 	CHECK(decoded->getFormat() == Image::Format::RGBA8);
 	CHECK(decoded->getColorSpace() == Image::ColorSpace::Srgb);
 
-	CHECK(decoded->getColor(0, 0).r == Approx(1.0f).margin(0.01f));
-	CHECK(decoded->getColor(0, 0).g == Approx(0.0f).margin(0.01f));
-	CHECK(decoded->getColor(0, 0).b == Approx(0.0f).margin(0.01f));
-	CHECK(decoded->getColor(0, 0).a == Approx(1.0f).margin(0.01f));
+	CHECK(decoded->getColor(0, 0).r == Catch::Approx(1.0f).margin(0.01f));
+	CHECK(decoded->getColor(0, 0).g == Catch::Approx(0.0f).margin(0.01f));
+	CHECK(decoded->getColor(0, 0).b == Catch::Approx(0.0f).margin(0.01f));
+	CHECK(decoded->getColor(0, 0).a == Catch::Approx(1.0f).margin(0.01f));
 
-	CHECK(decoded->getColor(1, 0).r == Approx(0.0f).margin(0.01f));
-	CHECK(decoded->getColor(1, 0).g == Approx(1.0f).margin(0.01f));
-	CHECK(decoded->getColor(1, 0).b == Approx(0.0f).margin(0.01f));
-	CHECK(decoded->getColor(1, 0).a == Approx(0.5f).margin(0.01f));
+	CHECK(decoded->getColor(1, 0).r == Catch::Approx(0.0f).margin(0.01f));
+	CHECK(decoded->getColor(1, 0).g == Catch::Approx(1.0f).margin(0.01f));
+	CHECK(decoded->getColor(1, 0).b == Catch::Approx(0.0f).margin(0.01f));
+	CHECK(decoded->getColor(1, 0).a == Catch::Approx(0.5f).margin(0.01f));
 
-	CHECK(decoded->getColor(0, 1).r == Approx(0.0f).margin(0.01f));
-	CHECK(decoded->getColor(0, 1).g == Approx(0.0f).margin(0.01f));
-	CHECK(decoded->getColor(0, 1).b == Approx(1.0f).margin(0.01f));
-	CHECK(decoded->getColor(0, 1).a == Approx(0.25f).margin(0.01f));
+	CHECK(decoded->getColor(0, 1).r == Catch::Approx(0.0f).margin(0.01f));
+	CHECK(decoded->getColor(0, 1).g == Catch::Approx(0.0f).margin(0.01f));
+	CHECK(decoded->getColor(0, 1).b == Catch::Approx(1.0f).margin(0.01f));
+	CHECK(decoded->getColor(0, 1).a == Catch::Approx(0.25f).margin(0.01f));
 
-	CHECK(decoded->getColor(1, 1).r == Approx(1.0f).margin(0.01f));
-	CHECK(decoded->getColor(1, 1).g == Approx(1.0f).margin(0.01f));
-	CHECK(decoded->getColor(1, 1).b == Approx(0.0f).margin(0.01f));
-	CHECK(decoded->getColor(1, 1).a == Approx(0.75f).margin(0.01f));
+	CHECK(decoded->getColor(1, 1).r == Catch::Approx(1.0f).margin(0.01f));
+	CHECK(decoded->getColor(1, 1).g == Catch::Approx(1.0f).margin(0.01f));
+	CHECK(decoded->getColor(1, 1).b == Catch::Approx(0.0f).margin(0.01f));
+	CHECK(decoded->getColor(1, 1).a == Catch::Approx(0.75f).margin(0.01f));
 }
 
 TEST_CASE("SimpleImageFactory round-trips images through files")
@@ -110,21 +111,21 @@ TEST_CASE("SimpleImageFactory round-trips images through files")
 		CHECK(decoded->getFormat() == image->getFormat());
 		CHECK(decoded->getColorSpace() == image->getColorSpace());
 
-		CHECK(decoded->getColor(0, 0).r == Approx(1.0f).margin(0.05f));
-		CHECK(decoded->getColor(0, 0).g == Approx(0.0f).margin(0.05f));
-		CHECK(decoded->getColor(0, 0).b == Approx(0.0f).margin(0.05f));
+		CHECK(decoded->getColor(0, 0).r == Catch::Approx(1.0f).margin(0.05f));
+		CHECK(decoded->getColor(0, 0).g == Catch::Approx(0.0f).margin(0.05f));
+		CHECK(decoded->getColor(0, 0).b == Catch::Approx(0.0f).margin(0.05f));
 
-		CHECK(decoded->getColor(1, 0).r == Approx(0.0f).margin(0.05f));
-		CHECK(decoded->getColor(1, 0).g == Approx(1.0f).margin(0.05f));
-		CHECK(decoded->getColor(1, 0).b == Approx(0.0f).margin(0.05f));
+		CHECK(decoded->getColor(1, 0).r == Catch::Approx(0.0f).margin(0.05f));
+		CHECK(decoded->getColor(1, 0).g == Catch::Approx(1.0f).margin(0.05f));
+		CHECK(decoded->getColor(1, 0).b == Catch::Approx(0.0f).margin(0.05f));
 
-		CHECK(decoded->getColor(0, 1).r == Approx(0.0f).margin(0.05f));
-		CHECK(decoded->getColor(0, 1).g == Approx(0.0f).margin(0.05f));
-		CHECK(decoded->getColor(0, 1).b == Approx(1.0f).margin(0.05f));
+		CHECK(decoded->getColor(0, 1).r == Catch::Approx(0.0f).margin(0.05f));
+		CHECK(decoded->getColor(0, 1).g == Catch::Approx(0.0f).margin(0.05f));
+		CHECK(decoded->getColor(0, 1).b == Catch::Approx(1.0f).margin(0.05f));
 
-		CHECK(decoded->getColor(1, 1).r == Approx(1.0f).margin(0.05f));
-		CHECK(decoded->getColor(1, 1).g == Approx(1.0f).margin(0.05f));
-		CHECK(decoded->getColor(1, 1).b == Approx(0.0f).margin(0.05f));
+		CHECK(decoded->getColor(1, 1).r == Catch::Approx(1.0f).margin(0.05f));
+		CHECK(decoded->getColor(1, 1).g == Catch::Approx(1.0f).margin(0.05f));
+		CHECK(decoded->getColor(1, 1).b == Catch::Approx(0.0f).margin(0.05f));
 
 		std::filesystem::remove(filename);
 	}

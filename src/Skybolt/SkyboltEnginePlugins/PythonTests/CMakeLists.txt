@@ -5,7 +5,7 @@ file(GLOB SOURCE_FILES *.cpp *.h)
 include_directories("../")
 include_directories("../../")
 
-find_package(Catch2 REQUIRED)
+find_package(Catch2 3 REQUIRED)
 find_package(Python3 REQUIRED COMPONENTS Development Interpreter)
 find_package(pybind11 REQUIRED)
 

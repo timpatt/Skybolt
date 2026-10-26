@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TestHelpers.h"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltSim/Spatial/Frustum.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
@@ -25,16 +26,16 @@ TEST_CASE("transformToScreenSpace transforms points")
 	// Point at origin
 	{
 		Vector3 pos = transformToScreenSpace(f, f.origin);
-		CHECK(pos.x == Approx(0.0).margin(epsilon));
-		CHECK(pos.y == Approx(0.0).margin(epsilon));
-		CHECK(pos.z == Approx(0.0).margin(epsilon));
+		CHECK(pos.x == Catch::Approx(0.0).margin(epsilon));
+		CHECK(pos.y == Catch::Approx(0.0).margin(epsilon));
+		CHECK(pos.z == Catch::Approx(0.0).margin(epsilon));
 	}
 
 	// Point at screen corner
 	{
 		Vector3 pos = transformToScreenSpace(f, f.origin + Vector3(-10, 10, -10));
-		CHECK(pos.x == Approx(1.0).margin(epsilon));
-		CHECK(pos.y == Approx(1.0).margin(epsilon));
-		CHECK(pos.z == Approx(10.0).margin(epsilon));
+		CHECK(pos.x == Catch::Approx(1.0).margin(epsilon));
+		CHECK(pos.y == Catch::Approx(1.0).margin(epsilon));
+		CHECK(pos.z == Catch::Approx(10.0).margin(epsilon));
 	}
 }

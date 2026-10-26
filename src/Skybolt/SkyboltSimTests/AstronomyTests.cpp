@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 
@@ -46,7 +46,7 @@ TEST_CASE("calcHourAngleOfVernalEquinox")
 		greenwich_mean_sidreal_time = astronomy.gmst(d)
 	*/
 
-	CHECK(calcHourAngleOfVernalEquinox(1721458.5) == Approx(2.317479475338125).margin(1e-14));
+	CHECK(calcHourAngleOfVernalEquinox(1721458.5) == Catch::Approx(2.317479475338125).margin(1e-14));
 }
 
 TEST_CASE("convertEclipticToEquatorial")

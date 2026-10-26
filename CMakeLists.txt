@@ -93,7 +93,10 @@ endif()
 #-------------------------------------------------------------
 include(AddSourceGroup)
 include(SetPluginTargetProperties)
-include(Catch)
+if(BUILD_TESTING)
+	find_package(Catch2 3 REQUIRED)
+	include(Catch)
+endif()
 include(SkyboltInstall)
 include(SkyboltPythonStubs)
 

@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TestHelpers.h"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltSim/Spatial/AzimuthElevation.h>
 
@@ -18,42 +19,42 @@ TEST_CASE("AzimuthElevation to direction and back")
 	Vector3 dir = azimuthAndElevationToDirection(azEl);
 	AzimuthElevation azEl2 = directionToAzimuthElevation(dir);
 	
-	CHECK(azEl.x == Approx(azEl.x));
-	CHECK(azEl.y == Approx(azEl.y));
+	CHECK(azEl.x == Catch::Approx(azEl.x));
+	CHECK(azEl.y == Catch::Approx(azEl.y));
 }
 
 TEST_CASE("Zero azimuth and elevation is due north")
 {
 	Vector3 dir = azimuthAndElevationToDirection(AzimuthElevation(0, 0));
 	
-	CHECK(dir[0] == Approx(1));
-	CHECK(dir[1] == Approx(0));
-	CHECK(dir[2] == Approx(0));
+	CHECK(dir[0] == Catch::Approx(1));
+	CHECK(dir[1] == Catch::Approx(0));
+	CHECK(dir[2] == Catch::Approx(0));
 }
 
 TEST_CASE("Half pi azimuth and zero elevation is due east")
 {
 	Vector3 dir = azimuthAndElevationToDirection(AzimuthElevation(math::halfPiD(), 0));
 	
-	CHECK(dir[0] == Approx(0).margin(1e-8));
-	CHECK(dir[1] == Approx(1));
-	CHECK(dir[2] == Approx(0));
+	CHECK(dir[0] == Catch::Approx(0).margin(1e-8));
+	CHECK(dir[1] == Catch::Approx(1));
+	CHECK(dir[2] == Catch::Approx(0));
 }
 
 TEST_CASE("Half pi elevation is up")
 {
 	Vector3 dir = azimuthAndElevationToDirection(AzimuthElevation(0, math::halfPiD()));
 	
-	CHECK(dir[0] == Approx(0).margin(1e-8));
-	CHECK(dir[1] == Approx(0));
-	CHECK(dir[2] == Approx(-1));
+	CHECK(dir[0] == Catch::Approx(0).margin(1e-8));
+	CHECK(dir[1] == Catch::Approx(0));
+	CHECK(dir[2] == Catch::Approx(-1));
 }
 
 TEST_CASE("Negative half pi elevation is down")
 {
 	Vector3 dir = azimuthAndElevationToDirection(AzimuthElevation(0, -math::halfPiD()));
 	
-	CHECK(dir[0] == Approx(0).margin(1e-8));
-	CHECK(dir[1] == Approx(0));
-	CHECK(dir[2] == Approx(1));
+	CHECK(dir[0] == Catch::Approx(0).margin(1e-8));
+	CHECK(dir[1] == Catch::Approx(0));
+	CHECK(dir[2] == Catch::Approx(1));
 }

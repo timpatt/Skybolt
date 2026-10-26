@@ -11,7 +11,8 @@
 #include <SkyboltSim/SimMath.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <cmath>
 
@@ -144,7 +145,7 @@ TEST_CASE("FuselageComponent::calcLiftCoefficent is linear below stall")
 	const double alpha = 0.2;
 	const double expected = params.liftSlope * (alpha - params.zeroLiftAlpha);
 
-	CHECK(component.calcLiftCoefficent(alpha) == Approx(expected));
+	CHECK(component.calcLiftCoefficent(alpha) == Catch::Approx(expected));
 }
 
 TEST_CASE("FuselageComponent::calcLiftCoefficent returns zero at zero-lift angle")
@@ -155,7 +156,7 @@ TEST_CASE("FuselageComponent::calcLiftCoefficent returns zero at zero-lift angle
 	FuselageParams params = createParams();
 	FuselageComponent component = createComponent(params, node, motion, body);
 
-	CHECK(component.calcLiftCoefficent(params.zeroLiftAlpha) == Approx(0.0));
+	CHECK(component.calcLiftCoefficent(params.zeroLiftAlpha) == Catch::Approx(0.0));
 }
 
 TEST_CASE("FuselageComponent::calcLiftCoefficent clamps to stalled lift beyond positive stall angle")
@@ -168,7 +169,7 @@ TEST_CASE("FuselageComponent::calcLiftCoefficent clamps to stalled lift beyond p
 
 	const double alphaSlightlyAboveStall = params.zeroLiftAlpha + params.stallAlpha + 0.01;
 
-	CHECK(component.calcLiftCoefficent(alphaSlightlyAboveStall) == Approx(params.stallLift));
+	CHECK(component.calcLiftCoefficent(alphaSlightlyAboveStall) == Catch::Approx(params.stallLift));
 }
 
 TEST_CASE("FuselageComponent::calcLiftCoefficent clamps to stalled lift beyond negative stall angle")
@@ -181,7 +182,7 @@ TEST_CASE("FuselageComponent::calcLiftCoefficent clamps to stalled lift beyond n
 
 	const double negativeAlphaSlightlyAboveStall = params.zeroLiftAlpha - params.stallAlpha - 0.01;
 
-	CHECK(component.calcLiftCoefficent(negativeAlphaSlightlyAboveStall) == Approx(params.stallLift));
+	CHECK(component.calcLiftCoefficent(negativeAlphaSlightlyAboveStall) == Catch::Approx(params.stallLift));
 }
 
 TEST_CASE("FuselageComponent::calcParasiteDragScalar uses axis-weighted quadratic drag")
@@ -201,7 +202,7 @@ TEST_CASE("FuselageComponent::calcParasiteDragScalar uses axis-weighted quadrati
 		+ velocityLocal.y * velocityLocal.y * params.dragConstant.y
 		+ velocityLocal.z * velocityLocal.z * params.dragConstant.z);
 
-	CHECK(component.calcParasiteDragScalar(velocityLocal, density) == Approx(expected));
+	CHECK(component.calcParasiteDragScalar(velocityLocal, density) == Catch::Approx(expected));
 }
 
 TEST_CASE("FuselageComponent::calcInducedDragScalar returns zero when effective wing span is non-positive")
@@ -213,7 +214,7 @@ TEST_CASE("FuselageComponent::calcInducedDragScalar returns zero when effective 
 	params.effectiveWingSpan = 0.0;
 	FuselageComponent component = createComponent(params, node, motion, body);
 
-	CHECK(component.calcInducedDragScalar(Vector3(50.0, 0.0, 0.0), 1.225, 1000.0) == Approx(0.0));
+	CHECK(component.calcInducedDragScalar(Vector3(50.0, 0.0, 0.0), 1.225, 1000.0) == Catch::Approx(0.0));
 }
 
 TEST_CASE("FuselageComponent::calcInducedDragScalar increases with lift, but decreases with density and velocity for constant lift")
@@ -243,9 +244,9 @@ TEST_CASE("FuselageComponent::calcTotalDragForceInWorldAxes returns zero for zer
 
 	const Vector3 drag = component.calcTotalDragForceInWorldAxes(math::dvec3Zero(), 1.225, 1000.0);
 
-	CHECK(drag.x == Approx(0.0));
-	CHECK(drag.y == Approx(0.0));
-	CHECK(drag.z == Approx(0.0));
+	CHECK(drag.x == Catch::Approx(0.0));
+	CHECK(drag.y == Catch::Approx(0.0));
+	CHECK(drag.z == Catch::Approx(0.0));
 }
 
 TEST_CASE("FuselageComponent::calcTotalDragForceInWorldAxes opposes velocity with parasite and induced drag magnitude")
@@ -266,9 +267,9 @@ TEST_CASE("FuselageComponent::calcTotalDragForceInWorldAxes opposes velocity wit
 	const double induced = component.calcInducedDragScalar(velocityLocal, density, liftForce);
 	const Vector3 drag = component.calcTotalDragForceInWorldAxes(velocityLocal, density, liftForce);
 
-	CHECK(drag.x == Approx(-(parasite + induced)));
-	CHECK(drag.y == Approx(0.0));
-	CHECK(drag.z == Approx(0.0));
+	CHECK(drag.x == Catch::Approx(-(parasite + induced)));
+	CHECK(drag.y == Catch::Approx(0.0));
+	CHECK(drag.z == Catch::Approx(0.0));
 }
 
 TEST_CASE("FuselageComponent::calcMomentInBodyAxes scales with speed squared and air density")
@@ -315,9 +316,9 @@ TEST_CASE("FuselageComponent::calcMomentInBodyAxes scales with speed squared and
 			.angularVelocityInBodyAxes = args.angularVelocityInBodyAxes
 		});
 
-		CHECK(doubledDensity.x == Approx(baseline.x * 2.0));
-		CHECK(doubledDensity.y == Approx(baseline.y * 2.0));
-		CHECK(doubledDensity.z == Approx(baseline.z * 2.0));
+		CHECK(doubledDensity.x == Catch::Approx(baseline.x * 2.0));
+		CHECK(doubledDensity.y == Catch::Approx(baseline.y * 2.0));
+		CHECK(doubledDensity.z == Catch::Approx(baseline.z * 2.0));
 	}
 
 	SECTION("aerodynamic contributions scale with square of speed ratio below reference speed")
@@ -325,13 +326,13 @@ TEST_CASE("FuselageComponent::calcMomentInBodyAxes scales with speed squared and
 		motion.linearVelocity = Vector3(100.0, 0.0, 0.0);
 		const Vector3 referenceSpeedMoment = component.calcMomentInBodyAxes(args);
 
-		CHECK(referenceSpeedMoment.x != Approx(0.0));
-		CHECK(referenceSpeedMoment.y != Approx(0.0));
-		CHECK(referenceSpeedMoment.z != Approx(0.0));
+		CHECK(referenceSpeedMoment.x != Catch::Approx(0.0));
+		CHECK(referenceSpeedMoment.y != Catch::Approx(0.0));
+		CHECK(referenceSpeedMoment.z != Catch::Approx(0.0));
 
-		CHECK(referenceSpeedMoment.x == Approx(baseline.x * 4.0));
-		CHECK(referenceSpeedMoment.y == Approx(baseline.y * 4.0));
-		CHECK(referenceSpeedMoment.z == Approx(baseline.z * 4.0));
+		CHECK(referenceSpeedMoment.x == Catch::Approx(baseline.x * 4.0));
+		CHECK(referenceSpeedMoment.y == Catch::Approx(baseline.y * 4.0));
+		CHECK(referenceSpeedMoment.z == Catch::Approx(baseline.z * 4.0));
 	}
 }
 
@@ -364,9 +365,9 @@ TEST_CASE("FuselageComponent::calcMomentInBodyAxes clamps speed scaling at refer
 		.angularVelocityInBodyAxes = math::dvec3Zero()
 	});
 
-	CHECK(actual.x == Approx(expectedRollMoment));
-	CHECK(actual.y == Approx(0.0));
-	CHECK(actual.z == Approx(std::get<double>(params.yawAccelDueToSideSlipAngle) * std::sin(sideSlipAngle)));
+	CHECK(actual.x == Catch::Approx(expectedRollMoment));
+	CHECK(actual.y == Catch::Approx(0.0));
+	CHECK(actual.z == Catch::Approx(std::get<double>(params.yawAccelDueToSideSlipAngle) * std::sin(sideSlipAngle)));
 }
 
 TEST_CASE("FuselageComponent::calcLiftForceInWorldAxes returns zero when lift coefficient is zero")
@@ -386,9 +387,9 @@ TEST_CASE("FuselageComponent::calcLiftForceInWorldAxes returns zero when lift co
 		.airDensity = 1.225
 	});
 
-	CHECK(lift.x == Approx(0.0));
-	CHECK(lift.y == Approx(0.0));
-	CHECK(lift.z == Approx(0.0));
+	CHECK(lift.x == Catch::Approx(0.0));
+	CHECK(lift.y == Catch::Approx(0.0));
+	CHECK(lift.z == Catch::Approx(0.0));
 }
 
 TEST_CASE("FuselageComponent::updatePreDynamicsSubstep caches angle of attack and sideslip from local velocity")
@@ -408,8 +409,8 @@ TEST_CASE("FuselageComponent::updatePreDynamicsSubstep caches angle of attack an
 	component.advanceSimTime(SecondsD(0.1), SecondsD(0.1));
 	component.updatePreDynamicsSubstep();
 
-	CHECK(component.getAngleOfAttack() == Approx(std::atan2(20.0, 100.0)));
-	CHECK(component.getSideSlipAngle() == Approx(std::atan2(10.0, 100.0)));
+	CHECK(component.getAngleOfAttack() == Catch::Approx(std::atan2(20.0, 100.0)));
+	CHECK(component.getSideSlipAngle() == Catch::Approx(std::atan2(10.0, 100.0)));
 }
 
 TEST_CASE("FuselageComponent::calcTrimRotationalMomentInBodyAxes calculates moment for trim condition of zero angular velocity")
@@ -446,9 +447,9 @@ TEST_CASE("FuselageComponent::calcTrimRotationalMomentInBodyAxes calculates mome
 
 	const Vector3 actual = component.calcTrimRotationalMomentInBodyAxes(controls);
 
-	CHECK(actual.x == Approx(expected.x));
-	CHECK(actual.y == Approx(expected.y));
-	CHECK(actual.z == Approx(expected.z));
+	CHECK(actual.x == Catch::Approx(expected.x));
+	CHECK(actual.y == Catch::Approx(expected.y));
+	CHECK(actual.z == Catch::Approx(expected.z));
 }
 
 TEST_CASE("FuselageComponent::calcTrimNetForceInWorldAxes ignores vertical velocity for level flight trim")
@@ -488,7 +489,7 @@ TEST_CASE("FuselageComponent::calcTrimNetForceInWorldAxes ignores vertical veloc
 	const Vector3 expected = expectedLift + expectedDrag;
 	const Vector3 actual = component.calcTrimNetForceInWorldAxes(controls);
 
-	CHECK(actual.x == Approx(expected.x));
-	CHECK(actual.y == Approx(expected.y));
-	CHECK(actual.z == Approx(expected.z));
+	CHECK(actual.x == Catch::Approx(expected.x));
+	CHECK(actual.y == Catch::Approx(expected.y));
+	CHECK(actual.z == Catch::Approx(expected.z));
 }

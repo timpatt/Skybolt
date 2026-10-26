@@ -5,10 +5,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#define CATCH_CONFIG_MAIN
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltCommon/Math/IntersectionUtility.h>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 using namespace skybolt;
 
@@ -91,8 +91,8 @@ TEST_CASE("Intersect ray vs sphere")
 	float sr = 2;
 	auto result = intersectRaySphere(r0, rd, s0, sr);
 	REQUIRE(result);
-	CHECK(result->first == Approx(1.0).margin(epsilon));
-	CHECK(result->second == Approx(5.0).margin(epsilon));
+	CHECK(result->first == Catch::Approx(1.0).margin(epsilon));
+	CHECK(result->second == Catch::Approx(5.0).margin(epsilon));
 
 	// Test miss
 	result = intersectRaySphere(r0, glm::vec3(0,1,0), s0, sr);

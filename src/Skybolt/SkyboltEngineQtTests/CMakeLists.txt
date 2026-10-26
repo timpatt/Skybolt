@@ -4,7 +4,7 @@ file(GLOB SOURCE_FILES *.cpp *.h)
 
 include_directories("../")
 
-find_package(Catch2)
+find_package(Catch2 3 REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
@@ -13,7 +13,7 @@ add_executable(${APP_NAME} ${SOURCE_FILES})
 
 target_link_libraries(${APP_NAME}
 	SkyboltEngineQt
-	Catch2::Catch2
+	Catch2::Catch2WithMain
 )
 
 catch_discover_tests(${APP_NAME})

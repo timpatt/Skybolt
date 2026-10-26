@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <FftOcean/FftOceanGenerator.h>
 #include <SkyboltVis/Image/SimpleImageFactory.h>
 
@@ -120,6 +120,6 @@ TEST_CASE("FFT ocean wave height is as expected")
 	for (float height = 0; height < 20.f; height += 2.f)
 	{
 		float measuredHeight = measureSignificantWaveHeightFromModelForConfiguredHeight(height);
-		CHECK(measuredHeight == Approx(height).epsilon(espilon));
+		CHECK(measuredHeight == Catch::Approx(height).epsilon(espilon));
 	}
 }

@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TestHelpers.h"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltSim/Spatial/LatLon.h>
 
 using namespace skybolt;
@@ -23,8 +24,8 @@ TEST_CASE("LatLon element plus operator")
 	sim::LatLon a(0.1, 0.2);
 	sim::LatLon b(0.02, 0.01);
 	sim::LatLon r = a + b;
-	CHECK(r[0] == Approx(0.12));
-	CHECK(r[1] == Approx(0.21));
+	CHECK(r[0] == Catch::Approx(0.12));
+	CHECK(r[1] == Catch::Approx(0.21));
 }
 
 TEST_CASE("LatLon element minus operator")
@@ -32,6 +33,6 @@ TEST_CASE("LatLon element minus operator")
 	sim::LatLon a(0.1, 0.2);
 	sim::LatLon b(0.02, 0.01);
 	sim::LatLon r = a - b;
-	CHECK(r[0] == Approx(0.08));
-	CHECK(r[1] == Approx(0.19));
+	CHECK(r[0] == Catch::Approx(0.08));
+	CHECK(r[1] == Catch::Approx(0.19));
 }

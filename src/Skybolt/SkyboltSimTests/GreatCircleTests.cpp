@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -29,13 +30,13 @@ TEST_CASE("Lat Lon to North East")
 
 TEST_CASE("Calc bearing from/to LatLon points")
 {
-	CHECK(calcBearing(sim::LatLon(0.1, 0.2), sim::LatLon(0.2, 0.2)) == Approx(0.0).margin(epsilon));
-	CHECK(calcBearing(sim::LatLon(0.0, 0.2), sim::LatLon(0.0, 0.3)) == Approx(math::halfPiD()).margin(epsilon));
+	CHECK(calcBearing(sim::LatLon(0.1, 0.2), sim::LatLon(0.2, 0.2)) == Catch::Approx(0.0).margin(epsilon));
+	CHECK(calcBearing(sim::LatLon(0.0, 0.2), sim::LatLon(0.0, 0.3)) == Catch::Approx(math::halfPiD()).margin(epsilon));
 }
 
 TEST_CASE("Move distance and bearing from a point")
 {
 	auto result = moveDistanceAndBearing(sim::LatLon(0.1, 0.2), 1000000, 0.123);
-	CHECK(calcDistance(sim::LatLon(0.1, 0.2), result) == Approx(1000000).margin(epsilon));
-	CHECK(calcBearing(sim::LatLon(0.1, 0.2), result) == Approx(0.123).margin(epsilon));
+	CHECK(calcDistance(sim::LatLon(0.1, 0.2), result) == Catch::Approx(1000000).margin(epsilon));
+	CHECK(calcBearing(sim::LatLon(0.1, 0.2), result) == Catch::Approx(0.123).margin(epsilon));
 }

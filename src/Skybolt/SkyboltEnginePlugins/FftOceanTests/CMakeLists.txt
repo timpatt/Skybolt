@@ -5,11 +5,11 @@ file(GLOB SOURCE_FILES *.cpp *.h)
 include_directories("../")
 include_directories("../../")
 
-find_package(Catch2)
+find_package(Catch2 3 REQUIRED)
 
 add_executable(${APP_NAME} ${SOURCE_FILES})
 
-target_link_libraries (${APP_NAME} FftOcean Catch2::Catch2)
+target_link_libraries (${APP_NAME} FftOcean Catch2::Catch2WithMain)
 
 set_target_properties(${APP_NAME} PROPERTIES FOLDER SkyboltPlugins)
 

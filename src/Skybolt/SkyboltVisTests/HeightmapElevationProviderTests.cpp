@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <SkyboltVis/Elevation/HeightMapElevationProvider.h>
 #include <SkyboltVis/Image/SimpleImageFactory.h>
 #include <SkyboltCommon/NumericComparison.h>
@@ -41,16 +42,16 @@ TEST_CASE("Test HeightMapElevationProvider returns correct elevations")
 	const float epsilon = 0.01f;
 
 	// Check height at opposite corners
-	CHECK(provider.get(1, 2) == Approx(0).margin(epsilon));
-	CHECK(provider.get(3, 6) == Approx(9).margin(epsilon));
+	CHECK(provider.get(1, 2) == Catch::Approx(0).margin(epsilon));
+	CHECK(provider.get(3, 6) == Catch::Approx(9).margin(epsilon));
 
 	// Check height in center of image
-	CHECK(provider.get(2, 4) == Approx(heightFunction(2, 2)).margin(epsilon));
+	CHECK(provider.get(2, 4) == Catch::Approx(heightFunction(2, 2)).margin(epsilon));
 
 	// Check height in center of first texel
-	CHECK(provider.get(1.25, 2.5) == Approx(heightFunction(0.5, 0.5)).margin(epsilon));
+	CHECK(provider.get(1.25, 2.5) == Catch::Approx(heightFunction(0.5, 0.5)).margin(epsilon));
 
 	// Check that out of bounds coordinates are clamped to nearest edge
-	CHECK(provider.get(-1, -1) == Approx(0).margin(epsilon));
-	CHECK(provider.get(10, 10) == Approx(9).margin(epsilon));
+	CHECK(provider.get(-1, -1) == Catch::Approx(0).margin(epsilon));
+	CHECK(provider.get(10, 10) == Catch::Approx(9).margin(epsilon));
 }

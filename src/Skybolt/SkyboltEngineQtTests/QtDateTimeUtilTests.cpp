@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <SkyboltEngineQt/Util/QtDateTimeUtil.h>
 
@@ -33,7 +34,7 @@ TEST_CASE("qdateTimeToJulianDate returns correct Julian date for known date")
 	QDateTime dt(QDate(2018, 3, 2), QTime(18, 0, 0), QTimeZone::utc());
 	double jd = qdateTimeToJulianDate(dt);
 
-	CHECK(jd == Approx(2458180.25).margin(1e-5));
+	CHECK(jd == Catch::Approx(2458180.25).margin(1e-5));
 }
 
 TEST_CASE("julianDateToQDateTime and qdateTimeToJulianDate are inverse operations")
@@ -42,5 +43,5 @@ TEST_CASE("julianDateToQDateTime and qdateTimeToJulianDate are inverse operation
 	QDateTime dt = julianDateToQDateTime(originalJd);
 	double roundTripJd = qdateTimeToJulianDate(dt);
 
-	CHECK(roundTripJd == Approx(originalJd).margin(1e-5));
+	CHECK(roundTripJd == Catch::Approx(originalJd).margin(1e-5));
 }

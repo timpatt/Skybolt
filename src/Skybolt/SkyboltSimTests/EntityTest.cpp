@@ -8,7 +8,8 @@
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltCommon/NumericComparison.h>
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <assert.h>
 
@@ -32,7 +33,7 @@ TEST_CASE("Get Entity Transform")
 	auto transform = getTransform(*entity);
 	CHECK(transform.has_value());
 	Vector3 transformedPoint = *transform * glm::dvec4(1, 2, 3, 1);
-	CHECK(transformedPoint.x == Approx(9).margin(epsilon));
-	CHECK(transformedPoint.y == Approx(18).margin(epsilon));
-	CHECK(transformedPoint.z == Approx(33).margin(epsilon));
+	CHECK(transformedPoint.x == Catch::Approx(9).margin(epsilon));
+	CHECK(transformedPoint.y == Catch::Approx(18).margin(epsilon));
+	CHECK(transformedPoint.z == Catch::Approx(33).margin(epsilon));
 }
