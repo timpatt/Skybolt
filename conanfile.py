@@ -31,7 +31,7 @@ class SkyboltConan(ConanFile):
         "enable_docs": False,
         "enable_examples": True,
         "enable_fft_ocean": True,
-		"enable_jsbsim": False,
+        "enable_jsbsim": False,
         "enable_map_features_converter": True,
         "enable_osg": True,
         "enable_osg_curl_plugin": True,
@@ -145,9 +145,9 @@ class SkyboltConan(ConanFile):
         tc.variables["SKYBOLT_BUILD_DOCS"] = bool(self.options.enable_docs)
         tc.variables["SKYBOLT_BUILD_EXAMPLES"] = bool(self.options.enable_examples)
 
-		# catch_discover_tests should run just prior to tests as part of the host context to 
-		# ensure the runtime dependencies are available to it.
-		tc.variables["CMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE"] = "PRE_TEST"
+        # catch_discover_tests should run just prior to tests as part of the host context to 
+        # ensure the runtime dependencies are available to it.
+        tc.variables["CMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE"] = "PRE_TEST"
 
         tc.generate()
 
@@ -158,9 +158,9 @@ class SkyboltConan(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
-		# Use `tools.build:skip_test=True` configuration option to skip tests
+        # Use `tools.build:skip_test=True` configuration option to skip tests
         cmake.test()
-		
+        
     def package(self):
         cmake = CMake(self)
         # Install Skybolt binaries (excluding dependencies)
