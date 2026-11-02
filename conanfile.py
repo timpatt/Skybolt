@@ -54,7 +54,7 @@ class SkyboltConan(ConanFile):
 
     implements = ["auto_shared_fpic"]
 
-    test_requires = "catch2/3.16.0"
+    test_requires = "catch2/3.16.1"
 
     def configure(self):
         if self.options.enable_osg:
@@ -111,7 +111,7 @@ class SkyboltConan(ConanFile):
 
     def _build_type_path_if_multi_generator(self) -> bool:
         # Multi-config generators like Visual Studio put libs under a configuration directory e.g lib/Release, lib/Debug etc.
-        return f"/{self.settings.build_type}" if self._is_cmake_multi_generator() else ""
+        return f"{self.settings.build_type}" if self._is_cmake_multi_generator() else ""
 
     def layout(self):
         cmake_layout(self)
@@ -144,6 +144,10 @@ class SkyboltConan(ConanFile):
 
         tc.variables["SKYBOLT_BUILD_DOCS"] = bool(self.options.enable_docs)
         tc.variables["SKYBOLT_BUILD_EXAMPLES"] = bool(self.options.enable_examples)
+
+		# catch_discover_tests should run just prior to tests as part of the host context to 
+		# ensure the runtime dependencies are available to it.
+		tc.variables["CMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE"] = "PRE_TEST"
 
         tc.generate()
 
