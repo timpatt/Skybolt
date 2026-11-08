@@ -21,7 +21,14 @@ def build_only(context, source_dir: str = str(DEFAULT_SOURCE_DIR), build_config_
 
     context.run(f"conan remote add skybolt-deps {source_dir_path / 'Conan'} --force")
 
+   
     build_config_args = "-s skybolt/*:build_type=RelWithDebInfo -s skybolt-widgets/*:build_type=RelWithDebInfo" if build_config_name == "RelWithDebInfo" else ""
+
+    # Ensure Skybolt's python project venv is initialised and available
+    logging.info("Syncing skybolt's pyproject.toml")
+    context.run(f'uv sync --no-active --directory "{source_dir}"')
+    python_executable = context.run(f'uv python --directory "{source_dir}" find').stdout.strip().replace("\\", "/")
+    build_config_args += f' -o skybolt/*:python_executable="{python_executable}'
 
     context.run(f"conan build {source_dir_path} -pr:a=default -pr:a={profile_path} --build=missing {build_config_args}")
 

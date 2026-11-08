@@ -22,7 +22,7 @@ TEST_CASE("CubicBSplineInterpolator has expected values")
 	std::vector<double> y = { 0.5, 1.0, 0.5 };
 
 	CubicBSplineInterpolatorD interpolator(
-		[&] { return t.size(); },
+		[&] { return (int)t.size(); },
 		[&](int i) { return y[i]; },
 		[&](int i) { return t[i]; });
 
@@ -38,7 +38,7 @@ TEST_CASE("CubicBSplineInterpolator has expected tangent at middle vertex")
 	std::vector<double> y = { 2.0, 2.0, 6.0 };
 
 	CubicBSplineInterpolatorD interpolator(
-		[&] { return t.size(); },
+		[&] { return (int)t.size(); },
 		[&](int i) { return y[i]; },
 		[&](int i) { return t[i]; });
 
