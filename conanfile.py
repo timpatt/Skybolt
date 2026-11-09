@@ -1,13 +1,8 @@
 from conan import ConanFile
-from conan.errors import ConanException, ConanInvalidConfiguration
+from conan.errors import ConanInvalidConfiguration
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.cmake.utils import is_multi_configuration
-from conan.tools.env import Environment
-from io import StringIO
-import json
-import os
 from pathlib import Path
-from typing import Optional
 
 class SkyboltConan(ConanFile):
     name = "skybolt"
@@ -66,54 +61,6 @@ class SkyboltConan(ConanFile):
 
     test_requires = "catch2/3.16.1"
 
-    # python configuration approach borrowed from boost:
-    # https://github.com/conan-io/conan-center-index/blob/master/recipes/boost/all/conanfile.py
-    def _run_python_script(self, script) -> Optional[str]:
-        output = StringIO()
-        command = f'"{self._python_executable}" -c "{script}"'
-        try:
-            self.run(command, output, scope="run")
-        except ConanException:
-            self.output.info("(failed)")
-            return None
-        output = output.getvalue()
-        # Conan is broken when run_to_output = True
-        if "\n-----------------\n" in output:
-            output = output.split("\n-----------------\n", 1)[1]
-        output = output.strip()
-        return output if output != "None" else None
-        
-    def _detect_python_version(self) -> str:
-        return self._run_python_script("from __future__ import print_function; "
-                                       "import sys; "
-                                       "print('{}.{}'.format(sys.version_info[0], sys.version_info[1]))")
-
-    def _python_executable_sysconfig(self):
-        if self._python_sysconfig is None:
-            self._python_sysconfig = json.loads(self._run_python_script(
-                "import sys;"
-                "import sysconfig;"
-                "import json; "
-                "print(json.dumps({'prefix': sys.base_prefix, 'version': sys.version_info, 'config_vars': sysconfig.get_config_vars(), 'paths': sysconfig.get_paths()}))"
-            ))
-        return self._python_sysconfig
-        
-    @property
-    def _python_executable(self) -> str:
-            # Fallback to using the python executable used by conan itself
-        exe = self.options.python_executable if self.options.python_executable else sys.executable
-        return str(exe).replace("\\", "/")
-
-    @property
-    def _python_version(self) -> str:
-        version = self._detect_python_version()
-        if self.options.python_version and version != self.options.python_version:
-            raise ConanInvalidConfiguration(f"detected python version {version} doesn't match conan option {str(self.options.python_version)}")
-        return version
-
-    def init(self): 
-        self._python_sysconfig = None
-
     def configure(self):
         if self.options.enable_osg:
             self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
@@ -121,20 +68,6 @@ class SkyboltConan(ConanFile):
 
         if self.options.get_safe("shared"):
             self.options.rm_safe("fPIC")
-
-        if self.options.enable_python:
-            if not self.options.python_executable:
-                self.options.python_executable = self._python_executable
-            
-            if not self.options.python_version:
-                self.options.python_version = self._detect_python_version()
-            
-            ext_sysconfig = self._python_executable_sysconfig()
-            python_has_devel_libs = ext_sysconfig["paths"]["include"]
-            if not python_has_devel_libs:
-                raise ConanInvalidConfiguration(f"detected python executable '{self._python_executable}' doesn't have required development libraries.")
-                
-            self.output.info(f"Selected 'Python {self._python_version}' found at '{self._python_executable}'")
 
     def requirements(self):
         self.requires("boost/1.85.0", transitive_headers=True)
@@ -164,11 +97,45 @@ class SkyboltConan(ConanFile):
             self.requires("readosm/1.1.0a")
 
         if self.options.enable_python:
+            python_options = {}
+            if self.options.python_executable:
+                python_options["python_executable"] = self.options.python_executable
+            if self.options.python_version:
+                python_options["python_version"] = self.options.python_version
+            self.requires("system-python/1.0.0", options=python_options)
             self.requires("pybind11/2.13.6")
             
         if self.options.enable_qt:
             self.requires("qt/6.10.1", transitive_headers=True)
             self.requires("skybolt-widgets/1.1.0", transitive_headers=True)
+
+    @staticmethod
+    def _is_unset_option(value):
+        return value is None or str(value).strip().lower() in ("", "none")
+
+    def validate(self):
+        if not self.options.enable_python:
+            return
+
+        dependency_options = self.dependencies["system-python"].options
+        for option_name in ("python_executable", "python_version"):
+            skybolt_value = self.options.get_safe(option_name)
+            system_python_value = dependency_options.get_safe(option_name)
+            if self._is_unset_option(skybolt_value) or self._is_unset_option(system_python_value):
+                continue
+
+            if option_name == "python_executable":
+                skybolt_value = str(Path(str(skybolt_value)).expanduser().resolve()).casefold()
+                system_python_value = str(Path(str(system_python_value)).expanduser().resolve()).casefold()
+            else:
+                skybolt_value = str(skybolt_value)
+                system_python_value = str(system_python_value)
+
+            if skybolt_value != system_python_value:
+                raise ConanInvalidConfiguration(
+                    f"Conflicting {option_name} values were selected for skybolt "
+                    f"('{skybolt_value}') and system-python ('{system_python_value}')."
+                )
 
     def package_id(self):
         del self.info.options.python_executable  # PATH to the interpreter is not important, only version matters
@@ -189,12 +156,6 @@ class SkyboltConan(ConanFile):
 
         self.cpp.build.libdirs = [f"lib{self._build_type_path_if_multi_generator()}", f"lib{self._build_type_path_if_multi_generator()}/plugins"]
         self.cpp.build.set_property("cmake_build_modules", [f"conan-skybolt-init-buildtree.cmake"])
-
-        if self.options.enable_python and self.settings.os == "Windows":
-            dll_path = self._python_executable_sysconfig()["prefix"].replace("\\", "/")
-#            self.layouts.build.bindirs = [dll_path]
-#            self.layouts.package.runenv_info.define_path("PATH", dll_path)
-
 
     def generate(self):
         tc = CMakeToolchain(self)
@@ -218,31 +179,10 @@ class SkyboltConan(ConanFile):
         tc.variables["BUILD_WITH_OSG_CURL_PLUGIN"] = bool(self.options.enable_osg_curl_plugin)
         
         if self.options.enable_python:
-            # Configure CMake to ensure that the find_python module finds the requested version of python
-            tc. variables["Python3_EXECUTABLE"] = self._python_executable
-            
-            ext_sysconfig = self._python_executable_sysconfig()            
-            tc.variables["Python3_INCLUDE_DIR"] = ext_sysconfig["paths"]["include"].replace("\\", "/")
-            
-            if self.settings.os == "Windows":
-                python_lib_version = f'{ext_sysconfig["version"][0]}{ext_sysconfig["version"][1]}'
-                tc.variables["Python3_LIBRARY"] = os.path.join(
-                    ext_sysconfig["prefix"], "libs", f"python{python_lib_version}.lib"
-                ).replace("\\", "/")
-
-                # Make sure the cmake.test() call in build() call can find the python dll file
-                env = Environment()
-                python_dll_path = ext_sysconfig["prefix"].replace("\\", "/")
-                env.append_path("PATH", python_dll_path)
-                env.vars(self, scope="run").save_script("python_test_env")
-            else:
-                libdir = ext_sysconfig["config_var"]["LIBDIR"]
-                library = ext_sysconfig["config_var"].get("LDLIBRARY", None)
-
-                if not library:
-                    library = sysconfig["config_var"]["LIBRARY"]
-
-                tc.variables["Python3_LIBRARY"] = os.path.join(libdir, library)
+            python_info = self.dependencies["system-python"].cpp_info
+            tc.variables["Python3_EXECUTABLE"] = python_info.get_property("system_python_executable")
+            tc.variables["Python3_INCLUDE_DIR"] = python_info.includedirs[0]
+            tc.variables["Python3_LIBRARY"] = python_info.get_property("system_python_library")
 
         tc.variables["SKYBOLT_BUILD_DOCS"] = bool(self.options.enable_docs)
         tc.variables["SKYBOLT_BUILD_EXAMPLES"] = bool(self.options.enable_examples)
