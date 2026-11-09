@@ -30,7 +30,7 @@ def build_only(context, source_dir: str = str(DEFAULT_SOURCE_DIR), build_config_
     python_executable = context.run(f'uv python --directory "{source_dir}" find').stdout.strip().replace("\\", "/")
     build_config_args += f' -o skybolt/*:python_executable="{python_executable}'
 
-    context.run(f"conan build {source_dir_path} -pr:a=default -pr:a={profile_path} --build=missing {build_config_args}")
+    context.run(f"conan build {source_dir_path} -vvv -pr:a=default -pr:a={profile_path} --build=missing {build_config_args}")
 
 
 @task

@@ -18,17 +18,20 @@ target_compile_definitions(${APP_NAME} PRIVATE
 )
 
 target_include_directories(${APP_NAME} PRIVATE
-    ${Python3_INCLUDE_DIRS}
     ${pybind11_INCLUDE_DIRS}
 )
 
 target_link_libraries(${APP_NAME}
     Catch2::Catch2
-    ${Python3_LIBRARIES}
+    Python3::Python
     pybind11::embed
     SkyboltPython
 )
 
 set_target_properties(${APP_NAME} PROPERTIES FOLDER SkyboltPlugins)
+# On Windows, make sure the test executable can find the SkyboltPython plugin at runtime
+set_property(TARGET ${APP_NAME} APPEND_STRING PROPERTY 
+    VS_DEBUGGER_ENVIRONMENT "\nPATH=$<TARGET_FILE_DIR:SkyboltPython>;%PATH%"
+)
 
 catch_discover_tests(${APP_NAME})

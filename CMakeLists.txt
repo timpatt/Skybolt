@@ -22,6 +22,8 @@ set(Skybolt_BUILD_SCRIPTS_DIR "${CMAKE_SOURCE_DIR}/Tools/BuildScripts")
 #-------------------------------------------------------------
 # Compiler flags
 #-------------------------------------------------------------
+# FIXME: We shouldn't be setting CMAKE_xxx variables here; these variables should be controlled 
+# externally by the user or by a toolchain file.
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

@@ -12,8 +12,7 @@ class SystemCPythonTestPackageConan(ConanFile):
         cmake_layout(self)
 
     def requirements(self):
-        # To request a particular version, add `options={"python_version": "3.14"}`
-        self.requires("system-cpython/1.0.0", options={"python_version": "3.14"}) 
+        self.requires("system-cpython/1.0.0") 
 
     def generate(self):
         python_info = self.dependencies["system-cpython"].cpp_info

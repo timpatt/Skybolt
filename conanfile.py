@@ -1,7 +1,10 @@
+import os
+
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.cmake.utils import is_multi_configuration
+from conan.tools.env import Environment
 from pathlib import Path
 
 class SkyboltConan(ConanFile):
@@ -102,7 +105,7 @@ class SkyboltConan(ConanFile):
                 python_options["python_executable"] = self.options.python_executable
             if self.options.python_version:
                 python_options["python_version"] = self.options.python_version
-            self.requires("system-python/1.0.0", options=python_options)
+            self.requires("system-cpython/1.0.0", options=python_options)
             self.requires("pybind11/2.13.6")
             
         if self.options.enable_qt:
@@ -117,7 +120,7 @@ class SkyboltConan(ConanFile):
         if not self.options.enable_python:
             return
 
-        dependency_options = self.dependencies["system-python"].options
+        dependency_options = self.dependencies["system-cpython"].options
         for option_name in ("python_executable", "python_version"):
             skybolt_value = self.options.get_safe(option_name)
             system_python_value = dependency_options.get_safe(option_name)
@@ -134,7 +137,7 @@ class SkyboltConan(ConanFile):
             if skybolt_value != system_python_value:
                 raise ConanInvalidConfiguration(
                     f"Conflicting {option_name} values were selected for skybolt "
-                    f"('{skybolt_value}') and system-python ('{system_python_value}')."
+                    f"('{skybolt_value}') and system-cpython ('{system_python_value}')."
                 )
 
     def package_id(self):
@@ -142,22 +145,37 @@ class SkyboltConan(ConanFile):
         if not self.info.options.enable_python:
             del self.info.options.python_version
 
-    def _is_cmake_multi_generator(self) -> bool:
-        return 
+    def _is_multi_configuration(self) -> bool:
+        if self.conf.get("tools.cmake.cmaketoolchain:generator") is None:
+            compiler = self.settings.get_safe("compiler")
+            if compiler == "msvc":
+                return True
+            else:
+                return False
+
+        return is_multi_configuration(self.conf.get("tools.cmake.cmaketoolchain:generator"))
 
     def _build_type_path_if_multi_generator(self) -> bool:
-        is_cmake_multi_configuration = is_multi_configuration(self.conf.get("tools.cmake.cmaketoolchain:generator"))
-        return f"{self.settings.build_type}" if is_cmake_multi_configuration else ""
+        return f"{self.settings.build_type}" if self._is_multi_configuration() else ""
 
     def layout(self):
         cmake_layout(self)
         self.cpp.source.includedirs = ["src"]
         self.cpp.source.builddirs = ["CMake"]
-
-        self.cpp.build.libdirs = [f"lib{self._build_type_path_if_multi_generator()}", f"lib{self._build_type_path_if_multi_generator()}/plugins"]
+        
+        _extra_path = self._build_type_path_if_multi_generator()
+        self.cpp.build.libdirs = [f"lib/{_extra_path}", f"lib/{_extra_path}/plugins"]
+        self.cpp.build.bindirs = [f"bin/{_extra_path}", f"bin/{_extra_path}/plugins"]
         self.cpp.build.set_property("cmake_build_modules", [f"conan-skybolt-init-buildtree.cmake"])
 
     def generate(self):
+        env = Environment()
+
+        # Make sure the SkyboltEnginePlugins can find the Skybolt plugins at runtime on Windows, 
+        # even if they are built as shared libraries
+        _extra_path = self._build_type_path_if_multi_generator()
+        env.prepend_path("PATH", os.path.join(self.build_folder, "bin", _extra_path, "plugins"))
+
         tc = CMakeToolchain(self)
         # FIXME: We shouldn't be configuring flags for dependencies here; that should be done by the dependency itself
         tc.variables["Boost_STATIC_LIBS"] = bool(not self.dependencies["boost"].options.shared)
@@ -179,10 +197,15 @@ class SkyboltConan(ConanFile):
         tc.variables["BUILD_WITH_OSG_CURL_PLUGIN"] = bool(self.options.enable_osg_curl_plugin)
         
         if self.options.enable_python:
-            python_info = self.dependencies["system-python"].cpp_info
-            tc.variables["Python3_EXECUTABLE"] = python_info.get_property("system_python_executable")
+            python_info = self.dependencies["system-cpython"].cpp_info
+            tc.variables["Python3_EXECUTABLE"] = python_info.get_property("system_cpython_executable")
             tc.variables["Python3_INCLUDE_DIR"] = python_info.includedirs[0]
-            tc.variables["Python3_LIBRARY"] = python_info.get_property("system_python_library")
+            tc.variables["Python3_LIBRARY"] = python_info.get_property("system_cpython_library")
+
+            # Make sure we can find the Python interpreter and libraries at runtime, 
+            # even if they are not installed system-wide
+            env.prepend_path("PATH", python_info.get_property("system_cpython_runtime_dir"))
+            env.define("SKYBOLT_PYTHON_HOME", python_info.get_property("system_cpython_python_home"))
 
         tc.variables["SKYBOLT_BUILD_DOCS"] = bool(self.options.enable_docs)
         tc.variables["SKYBOLT_BUILD_EXAMPLES"] = bool(self.options.enable_examples)
@@ -192,6 +215,8 @@ class SkyboltConan(ConanFile):
         tc.variables["CMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE"] = "PRE_TEST"
 
         tc.generate()
+
+        env.vars(self, scope="run").save_script("skybolt_extra_paths")
 
         deps = CMakeDeps(self)
         deps.generate()

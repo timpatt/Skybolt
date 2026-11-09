@@ -5,7 +5,7 @@ import shutil
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 from conan import ConanFile
 from conan.errors import ConanException, ConanInvalidConfiguration
@@ -44,7 +44,7 @@ class SystemCPythonConan(ConanFile):
         self._python_info = None
 
     @staticmethod
-    def _normalized_path(path):
+    def _normalized_path(path: Union[Path, str]):
         return str(Path(path).resolve()).replace("\\", "/")
 
     @property
@@ -63,6 +63,7 @@ class SystemCPythonConan(ConanFile):
             "import platform; "
             "print(json.dumps({"
             "'version': [sys.version_info[0], sys.version_info[1]], "
+            "'prefix': sys.prefix, "
             "'base_prefix': sys.base_prefix, "
             "'machine': platform.machine(), "
             "'paths': sysconfig.get_paths(), "
@@ -125,7 +126,7 @@ class SystemCPythonConan(ConanFile):
                 "the required development header Python.h."
             )
 
-        prefix = Path(python_info["base_prefix"])
+        base_prefix = Path(python_info["base_prefix"])
         config_vars = python_info.get("config_vars", {})
         library_candidates = []
         if self.settings.os == "Windows":
@@ -133,10 +134,10 @@ class SystemCPythonConan(ConanFile):
             debug_build = bool(config_vars.get("Py_DEBUG"))
             library_suffix = "_d" if debug_build else ""
             library_names = [f"python{version}{library_suffix}.lib"]
-            for directory in (config_vars.get("LIBDIR"), str(prefix / "libs")):
+            for directory in (config_vars.get("LIBDIR"), str(base_prefix / "libs")):
                 if directory:
                     library_candidates.extend(Path(directory) / name for name in library_names)
-            runtime_dll = prefix / f"python{version}{library_suffix}.dll"
+            runtime_dll = base_prefix / f"python{version}{library_suffix}.dll"
         else:
             library_dir = config_vars.get("LIBDIR")
             names = [
@@ -170,6 +171,7 @@ class SystemCPythonConan(ConanFile):
         binary_dirs = [executable.parent]
         if config_vars.get("BINDIR"):
             binary_dirs.append(Path(config_vars["BINDIR"]))
+        python_info["prefix_dir"] = self._normalized_path(python_info["prefix"])
         python_info["binary_dirs"] = list(dict.fromkeys(self._normalized_path(path) for path in binary_dirs))
         python_info["runtime_dir"] = self._normalized_path(runtime_dll.parent if runtime_dll else executable.parent)
         python_info["runtime_library"] = self._normalized_path(runtime_dll) if runtime_dll else None
@@ -224,6 +226,10 @@ class SystemCPythonConan(ConanFile):
         self.cpp_info.set_property("system_cpython_version", python_info["version"])
         self.cpp_info.set_property("system_cpython_library", python_info["library"])
         self.cpp_info.set_property("system_cpython_runtime_dir", python_info["runtime_dir"])
+        self.cpp_info.set_property("system_cpython_python_home", python_info["prefix_dir"])
+
+        print("system_cpython_bin_dirs" + ', '.join(python_info["binary_dirs"]))
+        print("system_cpython_runtime_dir" + python_info["runtime_dir"])
 
         for env_info in (self.buildenv_info, self.runenv_info):
             for binary_dir in python_info["binary_dirs"]:
