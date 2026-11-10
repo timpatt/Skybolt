@@ -1,0 +1,23 @@
+sources:
+  "0.13.7":
+    Windows:
+      x86_64:
+        filename: uv-x86_64-pc-windows-msvc.zip
+        sha256: 0cdc5b38fe5a8168ed6a25814f5ba43c21d313dd3187314fccb37b7cec46e021
+      armv8:
+        filename: uv-aarch64-pc-windows-msvc.zip
+        sha256: 505d9e65e7692bac3ddf98c66754aa26c5050c409c184af30a881a0a72cc85e3
+    Linux:
+      x86_64:
+        filename: uv-x86_64-unknown-linux-gnu.tar.gz
+        sha256: c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83
+      armv8:
+        filename: uv-aarch64-unknown-linux-gnu.tar.gz
+        sha256: 71279f8d3c67241e807b9d8db872d1bf541579fb9f08b7d1eb1682196d1e57dc
+    Macos:
+      x86_64:
+        filename: uv-x86_64-apple-darwin.tar.gz
+        sha256: 20c47e4c1f630b8abaff8c291fa9b9aa300fef92c4fbff95adf198b55287cda7
+      armv8:
+        filename: uv-aarch64-apple-darwin.tar.gz
+        sha256: 81b811b57e4624df7ed3aac148e0359100d9962f3d9dce00aec533dc2e086731
