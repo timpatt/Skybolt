@@ -12,3 +12,8 @@ dependencies = [
     "pyorbital>=1.12.1",
     "scipy>=1.18.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

@@ -216,6 +216,8 @@ class SkyboltConan(ConanFile):
 
         tc.generate()
 
+        # TODO: VirtualxxxEnv scripts don't get loaded into CMAKE_VS_DEBUGGER_ENVIRONMENT.
+        # We need to find a way to get the environment variables into the debugger environment for Visual Studio
         env.vars(self, scope="run").save_script("skybolt_extra_paths")
 
         deps = CMakeDeps(self)

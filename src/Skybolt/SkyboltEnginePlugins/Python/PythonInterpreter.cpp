@@ -7,6 +7,7 @@
 #include "PythonInterpreter.h"
 #include <SkyboltEngine/AssetPackage.h>
 #include <SkyboltEngine/EngineRoot.h>
+#include <iostream>
 
 #pragma push_macro("slots")
 #undef slots
@@ -30,6 +31,7 @@ PythonInterpreter::PythonInterpreter()
 
 			if (const char* pythonHome = std::getenv("SKYBOLT_PYTHON_HOME"); pythonHome)
 			{
+				std::cout << (std::string("SKYBOLT_PYTHON_HOME = ") + pythonHome) << "\n";
 				wchar_t* wpath = Py_DecodeLocale(pythonHome, nullptr);
 				if (!wpath)
 				{
